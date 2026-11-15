@@ -5,7 +5,8 @@ waiting on you, with everything stored locally on the Mac. The full plan is in
 [docs/HANDOVER.md](docs/HANDOVER.md).
 
 It is a web app (React and TypeScript) inside a thin [Tauri](https://tauri.app) wrapper, which
-supplies the menu bar item, the global shortcut and the Mac app bundle.
+supplies the menu bar item, the global shortcut and the Mac app bundle. Controls come from
+[Ant Design](https://github.com/ant-design/ant-design); the glass look is the app's own CSS.
 
 ## What exists so far
 

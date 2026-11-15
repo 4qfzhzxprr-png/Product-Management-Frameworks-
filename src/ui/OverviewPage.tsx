@@ -1,4 +1,5 @@
-import { ArrowUpRight, Hourglass, Inbox, PenLine, Trophy } from "lucide-react";
+import { Button, Checkbox } from "antd";
+import { ArrowUpRight, Hourglass, Inbox, PenLine, Plus, Trophy } from "lucide-react";
 import { overviewStats } from "../core/insights";
 import { KIND_LABELS, type Capture } from "../core/models";
 import { CircularProgress, GlassCard, Sparkline, StatCard } from "./components";
@@ -20,6 +21,7 @@ export function OverviewPage({
   personName,
   onOpenCaptures,
   onOpenAnalytics,
+  onCapture,
   onDone,
 }: {
   captures: Capture[];
@@ -27,12 +29,19 @@ export function OverviewPage({
   personName: (id: number | null) => string | undefined;
   onOpenCaptures: (selection: Selection) => void;
   onOpenAnalytics: () => void;
+  onCapture: () => void;
   onDone: (capture: Capture) => void;
 }) {
   const stats = overviewStats(captures, now);
   const clear = stats.clearTotal === 0;
   const change = stats.capturedThisWeek - stats.capturedLastWeek;
   const oldest = stats.waitingList[0];
+  const today = new Date(now);
+  // The current week, Monday first.
+  const week = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7) + index);
+    return { date, isToday: date.getDate() === today.getDate() && date.getMonth() === today.getMonth() };
+  });
 
   return (
     <div className="page">
@@ -48,26 +57,69 @@ export function OverviewPage({
       </header>
 
       <div className="overview-top">
-        <section className="hero" style={{ "--i": 0 } as React.CSSProperties}>
+        <section className="hero" style={{ "--i": 0 } as React.CSSProperties} aria-labelledby="hero-title">
           <div className="hero-text">
-            <p className="hero-kicker">This week</p>
-            <h2>
-              {clear
-                ? "You're all clear"
-                : stats.waitingOnMe === 0
-                  ? "Everything is cleared"
-                  : `${stats.waitingOnMe} still waiting on you`}
+            <p className="hero-chip">
+              Last 7 days · {stats.capturedThisWeek} {stats.capturedThisWeek === 1 ? "capture" : "captures"}
+            </p>
+            <h2 id="hero-title">
+              {clear ? (
+                <>
+                  You're all <em>clear</em>
+                </>
+              ) : stats.waitingOnMe === 0 ? (
+                <>
+                  Everything is <em>cleared</em>
+                </>
+              ) : (
+                <>
+                  {stats.waitingOnMe} {stats.waitingOnMe === 1 ? "thing is" : "things are"} still <em>waiting</em> on
+                  you
+                </>
+              )}
             </h2>
             <p>
               {clear
                 ? "No commitments or asks are open. Capture one with Control-Option-Space."
                 : `You closed ${stats.clearedThisWeek} of ${stats.clearTotal} commitments and asks in the last 7 days.`}
             </p>
-            {stats.waitingOnMe > 0 && (
-              <button className="hero-cta" onClick={() => onOpenCaptures({ type: "open" })}>
-                Review open items <ArrowUpRight size={16} aria-hidden="true" />
-              </button>
-            )}
+            <dl className="hero-stats">
+              <div>
+                <dd>{stats.clearedThisWeek}</dd>
+                <dt>cleared</dt>
+              </div>
+              <div>
+                <dd>{stats.waitingOnMe}</dd>
+                <dt>waiting</dt>
+              </div>
+              <div>
+                <dd>{oldest ? age(oldest.createdAt, now) : "none"}</dd>
+                <dt>oldest open</dt>
+              </div>
+            </dl>
+            <div className="hero-actions">
+              {stats.waitingOnMe > 0 && (
+                <Button
+                  className="pill solid"
+                  shape="round"
+                  size="large"
+                  icon={<ArrowUpRight size={16} aria-hidden="true" />}
+                  iconPlacement="end"
+                  onClick={() => onOpenCaptures({ type: "open" })}
+                >
+                  Review open items
+                </Button>
+              )}
+              <Button
+                className="pill outline"
+                shape="round"
+                size="large"
+                icon={<Plus size={16} aria-hidden="true" />}
+                onClick={onCapture}
+              >
+                Quick capture
+              </Button>
+            </div>
           </div>
           <CircularProgress
             value={clear ? 1 : stats.clearedThisWeek / stats.clearTotal}
@@ -77,19 +129,33 @@ export function OverviewPage({
         </section>
 
         <GlassCard className="waiting" index={1} aria-labelledby="waiting-title">
-          <h2 id="waiting-title">Waiting on you</h2>
+          <div className="cal-head">
+            <span className="cal-day" aria-hidden="true">
+              {String(today.getDate()).padStart(2, "0")}
+            </span>
+            <div>
+              <h2 id="waiting-title">Waiting on you</h2>
+              <p className="muted small">
+                {today.toLocaleDateString(undefined, { weekday: "long" })},{" "}
+                {today.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              </p>
+            </div>
+          </div>
+          <ol className="week" aria-hidden="true">
+            {week.map(({ date, isToday }) => (
+              <li key={date.getTime()} className={isToday ? "today" : ""}>
+                <span>{date.toLocaleDateString(undefined, { weekday: "narrow" })}</span>
+                {date.getDate()}
+              </li>
+            ))}
+          </ol>
           {stats.waitingList.length === 0 ? (
             <p className="muted">Nothing open. Commitments and asks of you appear here, oldest first.</p>
           ) : (
             <ul>
               {stats.waitingList.slice(0, 5).map((item) => (
                 <li key={item.id}>
-                  <input
-                    type="checkbox"
-                    checked={false}
-                    aria-label={`Mark done: ${item.body}`}
-                    onChange={() => onDone(item)}
-                  />
+                  <Checkbox checked={false} aria-label={`Mark done: ${item.body}`} onChange={() => onDone(item)} />
                   <div>
                     <p>{item.body}</p>
                     <p className="muted small">
@@ -103,9 +169,9 @@ export function OverviewPage({
             </ul>
           )}
           {stats.waitingList.length > 5 && (
-            <button className="link" onClick={() => onOpenCaptures({ type: "open" })}>
+            <Button type="link" className="see-all" onClick={() => onOpenCaptures({ type: "open" })}>
               See all {stats.waitingList.length}
-            </button>
+            </Button>
           )}
         </GlassCard>
       </div>
@@ -115,6 +181,7 @@ export function OverviewPage({
           index={2}
           icon={Inbox}
           label="Waiting on me"
+          accent
           value={String(stats.waitingOnMe)}
           detail={oldest ? `oldest: ${age(oldest.createdAt, now)}` : "all clear"}
           onClick={() => onOpenCaptures({ type: "open" })}
@@ -143,7 +210,8 @@ export function OverviewPage({
           icon={PenLine}
           label="Captured this week"
           value={String(stats.capturedThisWeek)}
-          detail={change === 0 ? "same as last week" : `${change > 0 ? "+" : "−"}${Math.abs(change)} vs last week`}
+          detail={`${stats.capturedLastWeek} last week`}
+          chip={change === 0 ? undefined : `${change > 0 ? "+" : "−"}${Math.abs(change)}`}
           onClick={onOpenAnalytics}
           actionLabel="Open analytics"
         >

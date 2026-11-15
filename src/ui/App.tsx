@@ -1,3 +1,4 @@
+import { Alert, Button, Modal } from "antd";
 import { BarChart3, Inbox, LayoutDashboard, NotebookPen, Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { Capture, Person, Project } from "../core/models";
@@ -119,21 +120,27 @@ function Shell({ store }: { store: CaptureStore }) {
         </nav>
 
         <div className="sidebar-foot">
-          <button
+          <Button
             className="capture-button"
+            type="primary"
+            shape="round"
+            size="large"
+            block
+            icon={<Plus size={16} aria-hidden="true" />}
             aria-label="Quick capture"
-            onClick={() => void openCapture()}
             title="Control-Option-Space from anywhere"
+            onClick={() => void openCapture()}
           >
-            <Plus size={16} aria-hidden="true" />
-            <span>Quick capture</span>
-          </button>
+            <span className="capture-button-label">Quick capture</span>
+          </Button>
           <p>{isTauri ? "Stored on this Mac" : "Browser preview with sample data. Nothing is saved."}</p>
         </div>
       </aside>
 
-      <main className="main">
-        {error && <p className="error banner">{error}</p>}
+      <main className="main glass-panel">
+        {error && (
+          <Alert className="banner" type="error" showIcon title={error} closable onClose={() => setError(null)} />
+        )}
         {view === "overview" && (
           <OverviewPage
             captures={captures}
@@ -141,6 +148,7 @@ function Shell({ store }: { store: CaptureStore }) {
             personName={personName}
             onOpenCaptures={openCaptures}
             onOpenAnalytics={() => setView("analytics")}
+            onCapture={() => void openCapture()}
             onDone={(capture) =>
               void change(async () => {
                 await store.setCaptureDone(capture.id, true);
@@ -164,20 +172,22 @@ function Shell({ store }: { store: CaptureStore }) {
         )}
       </main>
 
-      {inlineCapture && (
-        <div className="overlay" onClick={() => setInlineCapture(false)}>
-          <div className="dialog" role="dialog" aria-label="Quick capture" onClick={(event) => event.stopPropagation()}>
-            <CaptureForm
-              store={store}
-              onSaved={() => {
-                setInlineCapture(false);
-                void refresh();
-              }}
-              onCancel={() => setInlineCapture(false)}
-            />
-          </div>
-        </div>
-      )}
+      <Modal
+        open={inlineCapture}
+        title="Quick capture"
+        footer={null}
+        destroyOnHidden
+        onCancel={() => setInlineCapture(false)}
+      >
+        <CaptureForm
+          store={store}
+          onSaved={() => {
+            setInlineCapture(false);
+            void refresh();
+          }}
+          onCancel={() => setInlineCapture(false)}
+        />
+      </Modal>
     </div>
   );
 }

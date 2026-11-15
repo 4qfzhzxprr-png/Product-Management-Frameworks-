@@ -1,3 +1,4 @@
+import { Progress, Tag } from "antd";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
@@ -20,10 +21,8 @@ export function GlassCard({
   );
 }
 
-/** A ring that fills to `value` (0 to 1) after mounting. */
+/** A white ring for the coral hero that fills to `value` (0 to 1) after mounting. */
 export function CircularProgress({ value, label, caption }: { value: number; label: string; caption: string }) {
-  const radius = 52;
-  const circumference = 2 * Math.PI * radius;
   const [shown, setShown] = useState(0);
   useEffect(() => {
     const frame = requestAnimationFrame(() => setShown(value));
@@ -32,21 +31,21 @@ export function CircularProgress({ value, label, caption }: { value: number; lab
 
   return (
     <div className="ring" role="img" aria-label={`${label} ${caption}`}>
-      <svg viewBox="0 0 120 120" aria-hidden="true">
-        <circle className="ring-track" cx="60" cy="60" r={radius} />
-        <circle
-          className="ring-value"
-          cx="60"
-          cy="60"
-          r={radius}
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * (1 - Math.min(Math.max(shown, 0), 1))}
-        />
-      </svg>
-      <div className="ring-text" aria-hidden="true">
-        <strong>{label}</strong>
-        <span>{caption}</span>
-      </div>
+      <Progress
+        type="circle"
+        aria-hidden="true"
+        percent={Math.round(Math.min(Math.max(shown, 0), 1) * 100)}
+        size={148}
+        strokeWidth={7}
+        strokeColor="#ffffff"
+        railColor="rgba(255, 255, 255, 0.28)"
+        format={() => (
+          <span className="ring-text">
+            <strong>{label}</strong>
+            <span>{caption}</span>
+          </span>
+        )}
+      />
     </div>
   );
 }
@@ -54,7 +53,7 @@ export function CircularProgress({ value, label, caption }: { value: number; lab
 /** A tiny trend line with no axes; the numbers it summarizes are stated beside it. */
 export function Sparkline({ values }: { values: number[] }) {
   const max = Math.max(...values, 1);
-  const width = 96;
+  const width = 84;
   const height = 28;
   const points = values.map((value, index) => {
     const x = (index / (values.length - 1)) * (width - 4) + 2;
@@ -76,6 +75,8 @@ export function StatCard({
   index,
   onClick,
   actionLabel,
+  chip,
+  accent = false,
   children,
 }: {
   icon: LucideIcon;
@@ -86,26 +87,44 @@ export function StatCard({
   onClick?: () => void;
   /** What clicking does, for screen readers. */
   actionLabel?: string;
+  /** A short note in the top corner, such as a change since last week. */
+  chip?: string;
+  /** The one card per row drawn in coral glass. */
+  accent?: boolean;
+  /** A sparkline, drawn in the bottom corner. */
   children?: ReactNode;
 }) {
   const content = (
     <>
-      <span className="stat-icon" aria-hidden="true">
-        <Icon size={18} />
+      <span className="stat-top">
+        <span className="stat-icon" aria-hidden="true">
+          <Icon size={17} />
+        </span>
+        {chip && (
+          <Tag className="stat-chip" variant="filled">
+            {chip}
+          </Tag>
+        )}
       </span>
-      <span className="stat-label">{label}</span>
       <span className="stat-value">{value}</span>
+      <span className="stat-label">{label}</span>
       <span className="stat-detail">{detail}</span>
       {children}
     </>
   );
   const style = { "--i": index } as React.CSSProperties;
+  const className = accent ? "glass stat accent" : "glass stat";
   return onClick ? (
-    <button className="glass stat lift" style={style} onClick={onClick} aria-label={`${label}: ${value}. ${actionLabel}`}>
+    <button
+      className={`${className} lift`}
+      style={style}
+      onClick={onClick}
+      aria-label={`${label}: ${value}, ${detail}. ${actionLabel}`}
+    >
       {content}
     </button>
   ) : (
-    <div className="glass stat" style={style}>
+    <div className={className} style={style}>
       {content}
     </div>
   );

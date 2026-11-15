@@ -1,3 +1,4 @@
+import { Button, Table } from "antd";
 import { useState } from "react";
 import { axisTicks, type Bucket } from "../core/insights";
 
@@ -25,30 +26,24 @@ export function BarChart({ buckets, unit }: { buckets: Bucket[]; unit: string })
     <div className="chart">
       <div className="chart-head">
         <p className="chart-note">Captures per {unit}</p>
-        <button className="link" onClick={() => setAsTable(!asTable)} aria-pressed={asTable}>
+        <Button type="link" onClick={() => setAsTable(!asTable)}>
           {asTable ? "Show chart" : "Show as table"}
-        </button>
+        </Button>
       </div>
 
       {asTable ? (
-        <div className="chart-table">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">{unit === "day" ? "Day" : "Week"}</th>
-                <th scope="col">Captures</th>
-              </tr>
-            </thead>
-            <tbody>
-              {buckets.map((bucket) => (
-                <tr key={bucket.start}>
-                  <td>{bucketLabel(bucket)}</td>
-                  <td>{bucket.captured}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table
+          className="chart-table"
+          size="small"
+          pagination={false}
+          scroll={{ y: 280 }}
+          rowKey="start"
+          dataSource={buckets}
+          columns={[
+            { title: unit === "day" ? "Day" : "Week", key: "period", render: (_, bucket) => bucketLabel(bucket) },
+            { title: "Captures", dataIndex: "captured", align: "right", width: 120 },
+          ]}
+        />
       ) : (
         <div className="plot">
           <div className="plot-axis" aria-hidden="true">

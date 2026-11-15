@@ -1,4 +1,5 @@
-import { Star, X } from "lucide-react";
+import { Badge, Button, Checkbox, Empty, Input, Tag } from "antd";
+import { Search, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isActionable, KIND_LABELS, type Capture, type CaptureFilter, type Person, type Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
@@ -90,7 +91,7 @@ export function CapturesPage({
         onClick={() => onSelect(target)}
       >
         <span className="filter-label">{label}</span>
-        {badge ? <span className="badge">{badge}</span> : null}
+        {badge ? <Badge count={badge} color="var(--accent)" /> : null}
       </button>
       {actions}
     </li>
@@ -103,8 +104,10 @@ export function CapturesPage({
           <h1>{title}</h1>
           <p>Everything you have captured, newest first.</p>
         </div>
-        <input
-          type="search"
+        <Input
+          className="search"
+          allowClear
+          prefix={<Search size={15} aria-hidden="true" />}
           placeholder="Search captures"
           aria-label="Search captures"
           value={search}
@@ -129,25 +132,26 @@ export function CapturesPage({
                 person.name,
                 undefined,
                 <span className="row-actions">
-                  <button
-                    className={person.isPM ? "chip on" : "chip"}
-                    title={person.isPM ? "One of my PMs. Click to unmark." : "Mark as one of my PMs"}
-                    aria-pressed={person.isPM}
-                    onClick={() => change(() => store.setPersonIsPM(person.id, !person.isPM))}
-                  >
-                    PM
-                  </button>
-                  <button
-                    className="icon"
+                  <span title={person.isPM ? "One of my PMs. Click to unmark." : "Mark as one of my PMs"}>
+                    <Tag.CheckableTag
+                      checked={person.isPM}
+                      onChange={(checked) => change(() => store.setPersonIsPM(person.id, checked))}
+                    >
+                      PM
+                    </Tag.CheckableTag>
+                  </span>
+                  <Button
+                    type="text"
+                    size="small"
+                    shape="circle"
+                    icon={<X size={14} aria-hidden="true" />}
                     title={`Remove ${person.name}`}
                     aria-label={`Remove ${person.name}`}
                     onClick={() => {
                       if (sameSelection(selection, { type: "person", id: person.id })) onSelect({ type: "all" });
                       void change(() => store.deletePerson(person.id));
                     }}
-                  >
-                    <X size={14} aria-hidden="true" />
-                  </button>
+                  />
                 </span>,
               ),
             )}
@@ -162,17 +166,18 @@ export function CapturesPage({
                 project.name,
                 undefined,
                 <span className="row-actions">
-                  <button
-                    className="icon"
+                  <Button
+                    type="text"
+                    size="small"
+                    shape="circle"
+                    icon={<X size={14} aria-hidden="true" />}
                     title={`Remove ${project.name}`}
                     aria-label={`Remove ${project.name}`}
                     onClick={() => {
                       if (sameSelection(selection, { type: "project", id: project.id })) onSelect({ type: "all" });
                       void change(() => store.deleteProject(project.id));
                     }}
-                  >
-                    <X size={14} aria-hidden="true" />
-                  </button>
+                  />
                 </span>,
               ),
             )}
@@ -183,10 +188,13 @@ export function CapturesPage({
         <GlassCard className="capture-list" index={1} aria-label={title}>
           {error && <p className="error">{error}</p>}
           {captures.length === 0 ? (
-            <div className="empty">
-              <p className="empty-title">{search ? "No matches" : "Nothing here yet"}</p>
-              <p>Press Control-Option-Space anywhere to capture a note.</p>
-            </div>
+            <Empty
+              className="empty"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                search ? "No matches" : "Nothing here yet. Press Control-Option-Space anywhere to capture a note."
+              }
+            />
           ) : (
             <ul className="captures">
               {captures.map((capture) => {
@@ -200,8 +208,7 @@ export function CapturesPage({
                 return (
                   <li key={capture.id} className={done ? "capture done" : "capture"}>
                     {isActionable(capture.kind) ? (
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={done}
                         aria-label={done ? "Mark not done" : "Mark done"}
                         onChange={() => change(() => store.setCaptureDone(capture.id, !done))}
@@ -213,23 +220,24 @@ export function CapturesPage({
                       <p className="capture-body">{capture.body}</p>
                       <p className="capture-detail">{detail.join(" · ")}</p>
                     </div>
-                    <button
-                      className={capture.isWin ? "icon star on" : "icon star"}
+                    <Button
+                      type="text"
+                      shape="circle"
+                      className={capture.isWin ? "star on" : "star"}
+                      icon={<Star size={16} aria-hidden="true" fill={capture.isWin ? "currentColor" : "none"} />}
                       title={capture.isWin ? "Remove from wins" : "Mark as a win"}
                       aria-label={capture.isWin ? "Remove from wins" : "Mark as a win"}
                       aria-pressed={capture.isWin}
                       onClick={() => change(() => store.setCaptureWin(capture.id, !capture.isWin))}
-                    >
-                      <Star size={16} aria-hidden="true" fill={capture.isWin ? "currentColor" : "none"} />
-                    </button>
-                    <button
-                      className="icon"
+                    />
+                    <Button
+                      type="text"
+                      shape="circle"
+                      icon={<X size={16} aria-hidden="true" />}
                       title="Delete"
                       aria-label="Delete capture"
                       onClick={() => change(() => store.deleteCapture(capture.id))}
-                    >
-                      <X size={16} aria-hidden="true" />
-                    </button>
+                    />
                   </li>
                 );
               })}
@@ -253,7 +261,7 @@ function AddField({ placeholder, onAdd }: { placeholder: string; onAdd: (name: s
         setValue("");
       }}
     >
-      <input
+      <Input
         placeholder={placeholder}
         aria-label={placeholder}
         value={value}

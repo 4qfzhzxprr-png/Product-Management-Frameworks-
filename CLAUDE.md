@@ -14,12 +14,17 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 
 ## Design
 
-- Warm rose glass look, taken from a short "Glassy Dashboard" reference clip David shared
-  (2026-11-15). Tokens are at the top of `src/ui/styles.css`; use `GlassCard` and `StatCard`
-  from `src/ui/components.tsx` rather than restyling per page.
-- Plain CSS, `lucide-react` icons, CSS-only motion, and a hand-built bar chart. No Tailwind,
-  Framer Motion or chart library.
-- Text and accent colors are darker than the clip's pastels so small text keeps 4.5:1 contrast.
+- Warm rose glass look, matched to a "Glassy Dashboard" reference clip and screenshot David
+  shared (2026-11-15). He asked for glass throughout, not solid color: the sidebar, the main
+  panel, the cards and the coral hero are all translucent over one blurred backdrop.
+- Tokens are at the top of `src/ui/styles.css`, mirrored for Ant Design in `src/ui/theme.tsx`.
+  Use `GlassCard` and `StatCard` from `src/ui/components.tsx` rather than restyling per page.
+- David asked for Ant Design (`antd`) as the component library. Use it for controls: buttons,
+  inputs, checkboxes, Segmented, Table, Progress, Modal, Tag, Badge, Alert, Empty. Layout,
+  navigation, the glass surfaces and the bar chart are the app's own. The capture form keeps
+  native `<select>`s because Ant Design's dropdowns do not fit in the small capture window.
+- `lucide-react` icons and CSS-only motion. No Tailwind, Framer Motion or chart library.
+- Text and accent colors are darker than the clip's pastels so small text stays readable.
 - Dashboard numbers come only from stored captures. Sample data exists solely for the browser
   preview (`src/platform/sampleData.ts`) and is labelled as such in the sidebar.
 

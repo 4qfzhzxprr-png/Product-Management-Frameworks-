@@ -1,3 +1,4 @@
+import { Segmented } from "antd";
 import { CheckCircle2, CircleDashed, PenLine, Trophy } from "lucide-react";
 import { useState } from "react";
 import { analyticsStats, RANGES, type RangeId } from "../core/insights";
@@ -18,18 +19,12 @@ export function AnalyticsPage({ captures, now }: { captures: Capture[]; now: num
           <h1>Analytics</h1>
           <p>What you captured and closed, from the notes stored on this Mac.</p>
         </div>
-        <div className="segmented" role="group" aria-label="Period">
-          {RANGES.map((option) => (
-            <button
-              key={option.id}
-              className={option.id === rangeId ? "selected" : ""}
-              aria-pressed={option.id === rangeId}
-              onClick={() => setRangeId(option.id)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <Segmented<RangeId>
+          aria-label="Period"
+          value={rangeId}
+          onChange={setRangeId}
+          options={RANGES.map((option) => ({ value: option.id, label: option.label }))}
+        />
       </header>
 
       <div className="stats">

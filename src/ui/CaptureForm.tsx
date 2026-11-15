@@ -1,3 +1,5 @@
+import { Button, Checkbox, Input } from "antd";
+import type { TextAreaRef } from "antd/es/input/TextArea";
 import { useEffect, useRef, useState } from "react";
 import { CAPTURE_KINDS, KIND_LABELS, type CaptureKind, type Person, type Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
@@ -20,7 +22,7 @@ export function CaptureForm({ store, onSaved, onCancel }: Props) {
   const [people, setPeople] = useState<Person[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const textRef = useRef<HTMLTextAreaElement>(null);
+  const textRef = useRef<TextAreaRef>(null);
 
   useEffect(() => {
     textRef.current?.focus();
@@ -62,11 +64,12 @@ export function CaptureForm({ store, onSaved, onCancel }: Props) {
         if (event.key === "Escape") onCancel();
       }}
     >
-      <textarea
+      <Input.TextArea
         ref={textRef}
+        variant="borderless"
         aria-label="Capture text"
         placeholder="Thought, commitment or note"
-        rows={3}
+        autoSize={{ minRows: 3, maxRows: 3 }}
         value={body}
         onChange={(event) => setBody(event.target.value)}
         onKeyDown={(event) => {
@@ -106,13 +109,15 @@ export function CaptureForm({ store, onSaved, onCancel }: Props) {
       {error && <p className="error">{error}</p>}
 
       <div className="capture-actions">
-        <label title="Wins are collected for later updates and decks">
-          <input type="checkbox" checked={isWin} onChange={(event) => setIsWin(event.target.checked)} /> Win
-        </label>
+        <span title="Wins are collected for later updates and decks">
+          <Checkbox checked={isWin} onChange={(event) => setIsWin(event.target.checked)}>
+            Win
+          </Checkbox>
+        </span>
         <span className="hint">Return to save, Esc to cancel</span>
-        <button type="submit" className="primary" disabled={!canSave}>
+        <Button type="primary" htmlType="submit" disabled={!canSave}>
           Save
-        </button>
+        </Button>
       </div>
     </form>
   );
