@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
 import { CaptureStore } from "../core/store";
-import { openDb } from "../platform";
+import { isTauri, openDb } from "../platform";
 
 let storePromise: Promise<CaptureStore> | undefined;
+
+async function openStore(): Promise<CaptureStore> {
+  const store = await CaptureStore.open(await openDb());
+  if (!isTauri) {
+    const { seedSampleData } = await import("../platform/sampleData");
+    await seedSampleData(store);
+  }
+  return store;
+}
 
 /** One store per window, opened on first use. */
 export function useStore(): { store: CaptureStore | null; error: string | null } {
@@ -10,7 +19,7 @@ export function useStore(): { store: CaptureStore | null; error: string | null }
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    storePromise ??= openDb().then((db) => CaptureStore.open(db));
+    storePromise ??= openStore();
     storePromise.then(setStore, (cause) => setError(`Could not open the local database. ${message(cause)}`));
   }, []);
 

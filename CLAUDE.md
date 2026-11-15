@@ -12,6 +12,17 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 - **Google access:** not yet requested from the Workspace admin. Build that connector last.
 - **Atlassian:** Cloud or self-hosted is unknown. Confirm before building the connector.
 
+## Design
+
+- Warm rose glass look, taken from a short "Glassy Dashboard" reference clip David shared
+  (2026-11-15). Tokens are at the top of `src/ui/styles.css`; use `GlassCard` and `StatCard`
+  from `src/ui/components.tsx` rather than restyling per page.
+- Plain CSS, `lucide-react` icons, CSS-only motion, and a hand-built bar chart. No Tailwind,
+  Framer Motion or chart library.
+- Text and accent colors are darker than the clip's pastels so small text keeps 4.5:1 contrast.
+- Dashboard numbers come only from stored captures. Sample data exists solely for the browser
+  preview (`src/platform/sampleData.ts`) and is labelled as such in the sidebar.
+
 ## Working here
 
 - `npm test` runs the storage tests; `npm run build` type-checks and bundles.

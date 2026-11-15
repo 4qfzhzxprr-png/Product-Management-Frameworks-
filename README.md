@@ -12,11 +12,14 @@ supplies the menu bar item, the global shortcut and the Mac app bundle.
 - **Quick capture.** Control-Option-Space from any app opens a small window. Type a thought,
   commitment, ask or 1:1 note, optionally attach a person and a project, tag it as a win, and
   press Return.
-- **Main window.** Browse and search captures by person, project, open items and wins. Mark
+- **Overview.** What is waiting on you, how much you cleared this week, and four headline counts.
+- **Analytics.** Captures per day or week over 7 days, 30 days or 13 weeks, with totals for the period.
+- **Captures.** Browse and search captures by person, project, open items and wins. Mark
   commitments and asks done.
 - **Menu bar item.** Shows how many open commitments and asks of you there are.
 
-Nothing connects to Gmail, Calendar, Jira or Confluence yet, and no data leaves the Mac.
+Every number comes from the captures stored on the Mac. Nothing connects to Gmail, Calendar,
+Jira or Confluence yet, and no data leaves the Mac.
 
 ## Build and run on a Mac
 
@@ -37,12 +40,12 @@ Data lives in `~/Library/Application Support/app.dailywork.desktop/dailywork.db`
 
 ```sh
 npm test        # storage tests
-npm run dev     # the UI alone in a browser at localhost:1420, with a throwaway in-memory database
+npm run dev     # the UI alone in a browser at localhost:1420, with invented sample data that is not saved
 ```
 
 ## Layout
 
-- `src/core`: models and storage logic. No UI, no platform code. Tested.
+- `src/core`: models, storage and the dashboard's calculations. No UI, no platform code. Tested.
 - `src/platform`: everything that differs between the Mac app and a browser tab.
-- `src/ui`: the main window and the capture form.
+- `src/ui`: the pages, shared components and the capture form. `styles.css` holds the design tokens.
 - `src-tauri`: the wrapper: menu bar item, global shortcut, windows, permissions.
