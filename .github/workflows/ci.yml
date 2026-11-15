@@ -6,11 +6,47 @@ on:
   pull_request:
 
 jobs:
-  build-and-test:
+  web:
+    name: Tests and wrapper check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Install wrapper build libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev libssl-dev
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Compile the wrapper
+        working-directory: src-tauri
+        run: cargo check --locked
+
+  mac:
+    name: Mac app
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Build
-        run: swift build
-      - name: Test
-        run: swift test
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - name: Build the app
+        run: npm run tauri build -- --bundles app
+      - name: Zip the app
+        run: ditto -c -k --keepParent "src-tauri/target/release/bundle/macos/Daily Work.app" "Daily Work.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Daily Work (unsigned Mac app)
+          path: Daily Work.zip
