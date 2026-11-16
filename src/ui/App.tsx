@@ -1,5 +1,16 @@
 import { Alert, Button, Modal } from "antd";
-import { BarChart3, Inbox, LayoutDashboard, ListChecks, NotebookPen, Plus, Sunrise, Truck, Users } from "lucide-react";
+import {
+  BarChart3,
+  Handshake,
+  Inbox,
+  LayoutDashboard,
+  ListChecks,
+  NotebookPen,
+  Plus,
+  Sunrise,
+  Truck,
+  Users,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { Bucket, SourceItem } from "../core/items";
 import type { Capture, CaptureKind, Person, Project } from "../core/models";
@@ -10,6 +21,7 @@ import { AnalyticsPage } from "./AnalyticsPage";
 import { BriefPage } from "./BriefPage";
 import { CaptureForm } from "./CaptureForm";
 import { CapturesPage, type Selection } from "./CapturesPage";
+import { CommitmentsPage } from "./CommitmentsPage";
 import { DeliveryPage } from "./DeliveryPage";
 import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
@@ -17,13 +29,14 @@ import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
 import { message, useStore } from "./useStore";
 
-type View = "overview" | "brief" | "queue" | "team" | "delivery" | "analytics" | "captures";
+type View = "overview" | "brief" | "queue" | "team" | "commitments" | "delivery" | "analytics" | "captures";
 
 const NAV = [
   { view: "overview", label: "Overview", icon: LayoutDashboard },
   { view: "brief", label: "Brief", icon: Sunrise },
   { view: "queue", label: "Queue", icon: ListChecks },
   { view: "team", label: "Team", icon: Users },
+  { view: "commitments", label: "Commitments", icon: Handshake },
   { view: "delivery", label: "Delivery", icon: Truck },
   { view: "analytics", label: "Analytics", icon: BarChart3 },
   { view: "captures", label: "Captures", icon: NotebookPen },
@@ -237,6 +250,15 @@ function Shell({ store }: { store: CaptureStore }) {
                 if (!person.isPM) await store.setPersonIsPM(person.id, true);
               })
             }
+          />
+        )}
+        {view === "commitments" && (
+          <CommitmentsPage
+            captures={captures}
+            now={now}
+            personName={personName}
+            onDone={(capture) => void change(() => store.setCaptureDone(capture.id, true))}
+            onEdit={(capture) => setInlineCapture({ editing: capture })}
           />
         )}
         {view === "delivery" && <DeliveryPage work={work} now={now} />}

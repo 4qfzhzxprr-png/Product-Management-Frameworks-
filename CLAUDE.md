@@ -61,9 +61,12 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 - Phase 1 done except connectors: quick capture, the menu bar count, the team board
   (capture-based parts), and the brief and queue pages with storage and rule-based sorting.
 - Phase 2 (David chose it over Phase 3). Done: the 1:1 workspace; delivery pulse, the blocker
-  and stale-ticket sweep, and epic health on PM cards, all on the neutral `WorkRecord` in
-  `src/core/work.ts`. Remaining: commitment tracker, review tracker, handoff window (the
-  last needs a neutral calendar record and the offshore time zone).
+  and stale-ticket sweep, and epic health on PM cards (on the neutral `WorkRecord` in
+  `src/core/work.ts`); the commitment tracker (captures can carry a due date); the review
+  tracker (a rule-based "Awaiting my review" list in the brief). Remaining: the handoff
+  window, which needs a neutral calendar record, the offshore time zone and working hours.
+- The commitment tracker only knows promises David captures. Finding promises inside email
+  or meeting notes needs the AI provider, so it waits for that decision.
 - Epics are matched to a PM by the owner's display name. If names differ between the tracker
   and the app, add aliases to people rather than special-casing a tracker.
 - A ticket deleted in the tracker stays in `work_items` until its connection is removed.

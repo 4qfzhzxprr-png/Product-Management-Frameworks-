@@ -26,14 +26,15 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
     projectId: number | null,
     isWin?: boolean,
     doneDaysAgo?: number,
+    dueInDays?: number,
   ];
   const samples: Sample[] = [
     ["Decide the scope of refill reminders for the pilot", "ask_of_me", 4, priya.id, refills.id],
-    ["Send Marco feedback on the portal PRD", "commitment", 2, marco.id, portal.id],
+    ["Send Marco feedback on the portal PRD", "commitment", 2, marco.id, portal.id, false, undefined, 1],
     ["Review the offshore handoff template", "ask_of_me", 1, lena.id, null],
-    ["Confirm the Q1 roadmap themes with the CPO", "commitment", 6, null, null],
-    ["Estimate for the eligibility check API", "ask_of_them", 3, marco.id, refills.id],
-    ["Usability test recruiting plan", "ask_of_them", 5, priya.id, portal.id],
+    ["Confirm the Q1 roadmap themes with the CPO", "commitment", 6, null, null, false, undefined, -2],
+    ["Estimate for the eligibility check API", "ask_of_them", 3, marco.id, refills.id, false, undefined, -1],
+    ["Usability test recruiting plan", "ask_of_them", 5, priya.id, portal.id, false, undefined, 4],
     ["Portal beta cut support tickets by a third", "note", 1, priya.id, portal.id, true],
     ["Refill flow shipped to the first 20 pharmacies", "note", 5, marco.id, refills.id, true],
     ["CPO quoted our onboarding numbers in the board deck", "note", 12, null, null, true],
@@ -64,11 +65,12 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
   ];
 
   let hour = 9;
-  for (const [body, kind, daysAgo, personId, projectId, isWin, doneDaysAgo] of samples) {
+  for (const [body, kind, daysAgo, personId, projectId, isWin, doneDaysAgo, dueInDays] of samples) {
     hour = hour >= 16 ? 9 : hour + 1;
     // Nothing later than the present moment.
     const created = Math.min(at(daysAgo, hour), now - 60_000);
-    const capture = await store.addCapture({ body, kind, personId, projectId, isWin, at: created });
+    const dueAt = dueInDays === undefined ? null : dayStart(now, -dueInDays) + 86_399_000;
+    const capture = await store.addCapture({ body, kind, personId, projectId, isWin, dueAt, at: created });
     if (doneDaysAgo !== undefined) {
       await store.setCaptureDone(capture.id, true, Math.min(at(doneDaysAgo, 17), now));
     }
@@ -90,6 +92,11 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
       sourceName: "Email", kind: "", author: "Offshore QA lead", addressedToMe: true, fromMe: false, occurredAt: hoursAgo(5),
       title: "Release 4.2 regression results", url: "https://mail.google.com/",
       snippet: "Two medium defects remain. We need your go/no-go for Thursday's release.",
+    },
+    {
+      sourceName: "Wiki", kind: "Review requested", author: "Priya", addressedToMe: true, fromMe: false, occurredAt: hoursAgo(74),
+      title: "Refill flow PRD", url: "https://www.atlassian.com/software/confluence",
+      snippet: "Ready for your review. Could you read through the open questions section first?",
     },
     {
       sourceName: "Email", kind: "", author: "Lena", addressedToMe: false, fromMe: false, occurredAt: hoursAgo(6),

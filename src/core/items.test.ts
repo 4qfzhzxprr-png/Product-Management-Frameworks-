@@ -66,6 +66,7 @@ describe("buildBrief", () => {
     [
       item({ title: "new decision", bucket: "decision", occurredAt: hoursAgo(3) }),
       item({ title: "old decision", bucket: "decision", occurredAt: hoursAgo(80) }),
+      item({ title: "PRD v3", snippet: "Please review before Friday", bucket: "decision", occurredAt: hoursAgo(50) }),
       item({ title: "overnight fyi", occurredAt: hoursAgo(5) }),
       item({ title: "yesterday afternoon", occurredAt: hoursAgo(20) }),
       item({ title: "my own reply", fromMe: true, occurredAt: hoursAgo(4) }),
@@ -78,6 +79,10 @@ describe("buildBrief", () => {
 
   it("lists every open decision, longest wait first", () => {
     expect(brief.decisions.map((entry) => entry.title)).toEqual(["old decision", "new decision"]);
+  });
+
+  it("lists review requests apart from other decisions", () => {
+    expect(brief.reviews.map((entry) => entry.title)).toEqual(["PRD v3"]);
   });
 
   it("lists other people's activity since last evening, newest first", () => {

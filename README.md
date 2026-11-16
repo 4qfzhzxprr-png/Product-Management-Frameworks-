@@ -15,7 +15,7 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
   press Return.
 - **Overview.** What is waiting on you, how much you cleared this week, and four headline counts.
 - **Brief and Queue.** The morning brief (what needs your decision, what happened since last
-  evening, what has gone three days without a reply) and the decision queue (three lists you can
+  evening, what is awaiting your review, what has gone three days without a reply) and the decision queue (three lists you can
   move items between or dismiss from). Both read activity synced from connected systems, so
   in the Mac app they are empty until a connector exists. Any system can be connected by
   writing one small adapter; see `src/core/connectors.ts`. The sorting is rule-based, with no AI.
@@ -23,6 +23,8 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
   last 1:1 note. Each card also lists the PM's epics with a health call once an issue tracker is connected.
 - **1:1 workspace.** Open it from a PM's card: a running agenda whose untouched topics carry over,
   what each of you owes the other, and your 1:1 notes over time.
+- **Commitments.** Every open promise in both directions. Give one a date when you capture or edit
+  it, and it is flagged once it slips.
 - **Delivery.** Sprint progress per team, what is at risk of missing, everything blocked or waiting on
   a product answer, and in-progress tickets nobody has touched for a week. Empty until an issue
   tracker is connected.

@@ -79,6 +79,14 @@ export function classify(item: Pick<Activity, "title" | "snippet" | "addressedTo
   return "fyi";
 }
 
+// Phrases that mean someone wants a document looked at rather than a yes or no.
+const REVIEW = /\b(review(s|ed)?|feedback on|take a look|look over|read through|comments on)\b/i;
+
+/** True when an item asks David to review something: a spec, a PRD, a draft. */
+export function needsReview(item: Pick<SourceItem, "kind" | "title" | "snippet" | "bucket" | "fromMe">): boolean {
+  return item.bucket === "decision" && !item.fromMe && REVIEW.test(`${item.kind}\n${item.title}\n${item.snippet}`);
+}
+
 /**
  * When "overnight" began: 6pm on the last working day before today,
  * so Monday morning covers the weekend.
@@ -91,8 +99,10 @@ export function overnightStart(now: number): number {
 
 export interface Brief {
   since: number;
-  /** Open decisions, oldest first: the longest wait is at the top. */
+  /** Open decisions other than reviews, oldest first: the longest wait is at the top. */
   decisions: SourceItem[];
+  /** Specs, PRDs and drafts waiting for David to read them, longest wait first. */
+  reviews: SourceItem[];
   /** What changed since `since`, newest first, without the decisions above. */
   overnight: SourceItem[];
   /** Things David is waiting on that have gone three days without a reply. */
@@ -106,7 +116,10 @@ export function buildBrief(items: SourceItem[], now: number): Brief {
   const staleBefore = now - 3 * 86_400_000;
   return {
     since,
-    decisions: open.filter((item) => item.bucket === "decision").sort((a, b) => a.occurredAt - b.occurredAt),
+    decisions: open
+      .filter((item) => item.bucket === "decision" && !needsReview(item))
+      .sort((a, b) => a.occurredAt - b.occurredAt),
+    reviews: open.filter(needsReview).sort((a, b) => a.occurredAt - b.occurredAt),
     overnight: open
       .filter((item) => item.bucket !== "decision" && !item.fromMe && item.occurredAt >= since)
       .sort((a, b) => b.occurredAt - a.occurredAt),

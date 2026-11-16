@@ -14,7 +14,19 @@ import {
   type Project,
 } from "./models";
 
-const MIGRATIONS: string[][] = [
+type Step = string | ((db: Db) => Promise<void>);
+
+/** Adds a column unless it is already there, so the step can safely run twice. */
+function addColumn(table: string, column: string, type: string): Step {
+  return async (db) => {
+    const columns = await db.all<{ name: string }>(`PRAGMA table_info(${table})`);
+    if (!columns.some((existing) => existing.name === column)) {
+      await db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+    }
+  };
+}
+
+const MIGRATIONS: Step[][] = [
   [
     `CREATE TABLE IF NOT EXISTS people (
        id INTEGER PRIMARY KEY,
@@ -120,6 +132,8 @@ const MIGRATIONS: string[][] = [
        UNIQUE (source, external_id)
      )`,
   ],
+  // A date a commitment or ask was promised for.
+  [addColumn("captures", "due_at", "INTEGER")],
 ];
 
 interface PersonRow {
@@ -137,6 +151,7 @@ interface CaptureRow {
   project_id: number | null;
   is_win: number;
   done_at: number | null;
+  due_at: number | null;
 }
 
 /** Local storage for people, projects and quick captures. */
@@ -160,7 +175,10 @@ export class CaptureStore {
     const version = rows[0]?.user_version ?? 0;
     // Statements are idempotent, so a migration interrupted part-way can simply run again.
     for (let next = version; next < MIGRATIONS.length; next++) {
-      for (const statement of MIGRATIONS[next]) await db.run(statement);
+      for (const step of MIGRATIONS[next]) {
+        if (typeof step === "string") await db.run(step);
+        else await step(db);
+      }
       await db.run(`PRAGMA user_version = ${next + 1}`);
     }
     return new CaptureStore(db);
@@ -232,10 +250,14 @@ export class CaptureStore {
       projectId: input.projectId ?? null,
       isWin: input.isWin ?? false,
       doneAt: null,
+      dueAt: input.dueAt ?? null,
     };
     const { lastInsertId } = await this.db.run(
-      "INSERT INTO captures (created_at, kind, body, person_id, project_id, is_win) VALUES (?, ?, ?, ?, ?, ?)",
-      [capture.createdAt, capture.kind, capture.body, capture.personId, capture.projectId, capture.isWin ? 1 : 0],
+      "INSERT INTO captures (created_at, kind, body, person_id, project_id, is_win, due_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [
+        capture.createdAt, capture.kind, capture.body, capture.personId, capture.projectId,
+        capture.isWin ? 1 : 0, capture.dueAt,
+      ],
     );
     return { id: lastInsertId, ...capture };
   }
@@ -245,8 +267,11 @@ export class CaptureStore {
     const body = input.body.trim();
     if (!body) throw new Error("A capture needs some text.");
     await this.db.run(
-      "UPDATE captures SET kind = ?, body = ?, person_id = ?, project_id = ?, is_win = ? WHERE id = ?",
-      [input.kind ?? "note", body, input.personId ?? null, input.projectId ?? null, input.isWin ? 1 : 0, id],
+      "UPDATE captures SET kind = ?, body = ?, person_id = ?, project_id = ?, is_win = ?, due_at = ? WHERE id = ?",
+      [
+        input.kind ?? "note", body, input.personId ?? null, input.projectId ?? null,
+        input.isWin ? 1 : 0, input.dueAt ?? null, id,
+      ],
     );
   }
 
@@ -254,7 +279,7 @@ export class CaptureStore {
   async captures(filter: CaptureFilter = {}): Promise<Capture[]> {
     const { clause, params } = whereClause(filter);
     const rows = await this.db.all<CaptureRow>(
-      `SELECT id, created_at, kind, body, person_id, project_id, is_win, done_at
+      `SELECT id, created_at, kind, body, person_id, project_id, is_win, done_at, due_at
        FROM captures ${clause}
        ORDER BY created_at DESC, id DESC LIMIT ?`,
       [...params, filter.limit ?? 500],
@@ -331,6 +356,7 @@ function toCapture(row: CaptureRow): Capture[] {
       projectId: row.project_id,
       isWin: row.is_win === 1,
       doneAt: row.done_at,
+      dueAt: row.due_at,
     },
   ];
 }

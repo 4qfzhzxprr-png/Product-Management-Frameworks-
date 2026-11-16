@@ -833,6 +833,35 @@ button.item-title:hover {
   flex: none;
 }
 
+.slipped.ant-tag {
+  margin: 0 0 0 6px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--gold-text);
+  font-weight: 700;
+}
+
+.item > .ant-checkbox-wrapper {
+  margin-top: 2px;
+}
+
+.due {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.due input {
+  font: inherit;
+  color: var(--text);
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 3px 6px;
+}
+
 /* Delivery */
 
 .pulse-grid {

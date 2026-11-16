@@ -79,10 +79,16 @@ describe("CaptureStore", () => {
     const original = await store.addCapture({ body: "draft", kind: "commitment", at: 100 });
     await store.setCaptureDone(original.id, true, 200);
 
-    await store.updateCapture(original.id, { body: " final ", kind: "ask_of_me", personId: sam.id, isWin: true });
+    await store.updateCapture(original.id, { body: " final ", kind: "ask_of_me", personId: sam.id, isWin: true, dueAt: 900 });
     expect(await store.captures()).toMatchObject([
-      { body: "final", kind: "ask_of_me", personId: sam.id, projectId: null, isWin: true, createdAt: 100, doneAt: 200 },
+      {
+        body: "final", kind: "ask_of_me", personId: sam.id, projectId: null,
+        isWin: true, createdAt: 100, doneAt: 200, dueAt: 900,
+      },
     ]);
+    const dated = await store.addCapture({ body: "dated", kind: "commitment", dueAt: 5000 });
+    expect((await store.captures()).find((entry) => entry.id === dated.id)?.dueAt).toBe(5000);
+    expect(original.dueAt).toBeNull();
     await expect(store.updateCapture(original.id, { body: " " })).rejects.toThrow();
   });
 

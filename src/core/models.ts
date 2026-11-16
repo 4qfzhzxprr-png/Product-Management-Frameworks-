@@ -60,6 +60,8 @@ export interface Capture {
   isWin: boolean;
   /** Milliseconds since the epoch, or null while open. */
   doneAt: number | null;
+  /** When it was promised for: the end of that day, local time. Null when no date was given. */
+  dueAt: number | null;
 }
 
 export interface CaptureFilter {
@@ -80,5 +82,6 @@ export interface NewCapture {
   personId?: number | null;
   projectId?: number | null;
   isWin?: boolean;
+  dueAt?: number | null;
   at?: number;
 }

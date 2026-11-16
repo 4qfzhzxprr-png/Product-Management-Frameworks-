@@ -66,7 +66,10 @@ export function BriefPage({
         <NotConnected />
       ) : (
         <div className="brief-grid">
-          {section("Needs my decision", "Nothing is waiting on a decision from you.", brief.decisions, 0)}
+          <div className="brief-side">
+            {section("Needs my decision", "Nothing is waiting on a decision from you.", brief.decisions, 0)}
+            {brief.reviews.length > 0 && section("Awaiting my review", "", brief.reviews, 1)}
+          </div>
           <div className="brief-side">
             {section(
               "While you were away",

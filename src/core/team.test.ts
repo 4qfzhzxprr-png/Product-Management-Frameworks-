@@ -16,6 +16,7 @@ function capture(kind: CaptureKind, personId: number | null, createdDaysAgo: num
     projectId: null,
     isWin: false,
     doneAt: null,
+    dueAt: null,
     ...extra,
   };
 }

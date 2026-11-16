@@ -1,7 +1,8 @@
 import { Button, Checkbox, Input } from "antd";
 import type { TextAreaRef } from "antd/es/input/TextArea";
 import { useEffect, useRef, useState } from "react";
-import { CAPTURE_KINDS, KIND_LABELS, type Capture, type CaptureKind, type Person, type Project } from "../core/models";
+import { dateInputFromDue, dueFromDateInput } from "../core/commitments";
+import { CAPTURE_KINDS, isActionable, KIND_LABELS, type Capture, type CaptureKind, type Person, type Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import { message } from "./useStore";
 
@@ -23,6 +24,9 @@ export function CaptureForm({ store, onSaved, onCancel, initial, editing }: Prop
   const [personId, setPersonId] = useState(String(editing?.personId ?? initial?.personId ?? ""));
   const [projectId, setProjectId] = useState(String(editing?.projectId ?? ""));
   const [isWin, setIsWin] = useState(editing?.isWin ?? false);
+  const [due, setDue] = useState(dateInputFromDue(editing?.dueAt ?? null));
+  // A date only means something on a promise.
+  const datable = isActionable(kind) && kind !== "agenda";
   const [people, setPeople] = useState<Person[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +54,7 @@ export function CaptureForm({ store, onSaved, onCancel, initial, editing }: Prop
         personId: personId ? Number(personId) : null,
         projectId: projectId ? Number(projectId) : null,
         isWin,
+        dueAt: datable ? dueFromDateInput(due) : null,
       };
       if (editing) await store.updateCapture(editing.id, values);
       else await store.addCapture(values);
@@ -120,6 +125,12 @@ export function CaptureForm({ store, onSaved, onCancel, initial, editing }: Prop
             Win
           </Checkbox>
         </span>
+        {datable && (
+          <label className="due">
+            Due
+            <input type="date" value={due} onChange={(event) => setDue(event.target.value)} />
+          </label>
+        )}
         <span className="hint">Return to save, Esc to cancel</span>
         <Button type="primary" htmlType="submit" disabled={!canSave}>
           Save
