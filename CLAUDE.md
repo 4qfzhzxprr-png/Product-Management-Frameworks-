@@ -42,7 +42,7 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 
 - `src/core/connectors.ts` is the whole contract. A `Connector` is an adapter for one kind of
   system: it declares the fields a user fills in and has one read-only `sync()` that returns
-  plain `Activity` records. A `Connection` is one configured use of a connector; there can be
+  plain `Activity` records and, for issue trackers, `WorkRecord`s. A `Connection` is one configured use of a connector; there can be
   several per connector. `syncAll()` runs every enabled connection independently and records
   each one's last sync time and error, so one failure never blocks the rest.
 - Pages read only the neutral records (`SourceItem` in `src/core/items.ts`). A source is a
@@ -60,11 +60,16 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 
 - Phase 1 done except connectors: quick capture, the menu bar count, the team board
   (capture-based parts), and the brief and queue pages with storage and rule-based sorting.
-- Phase 2 started (David chose it over Phase 3): the 1:1 workspace is done. Remaining:
-  delivery pulse, blocker radar and stale ticket sweep, commitment tracker, review tracker,
-  handoff window. Each needs a neutral record type first (work items, calendar events).
-- Nothing writes activity except the browser preview's sample data, so in the Mac app the
-  brief and queue say nothing is connected.
+- Phase 2 (David chose it over Phase 3). Done: the 1:1 workspace; delivery pulse, the blocker
+  and stale-ticket sweep, and epic health on PM cards, all on the neutral `WorkRecord` in
+  `src/core/work.ts`. Remaining: commitment tracker, review tracker, handoff window (the
+  last needs a neutral calendar record and the offshore time zone).
+- Epics are matched to a PM by the owner's display name. If names differ between the tracker
+  and the app, add aliases to people rather than special-casing a tracker.
+- A ticket deleted in the tracker stays in `work_items` until its connection is removed.
+  Handle that when the first tracker connector is written.
+- Nothing writes activity or tickets except the browser preview's sample data, so in the Mac
+  app the brief, queue and delivery pages say nothing is connected.
 - The sorting rules in `classify()` were written without seeing real mail. Expect to tune them
   once a connector delivers real items.
 - Still open with David: the approved AI vendor, and what "distribution through Apple" means

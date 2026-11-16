@@ -35,7 +35,15 @@ async function setup(...connectors: Connector[]) {
   connectors.forEach((connector) => registry.register(connector));
   const secrets = new MemorySecretStore();
   const sync = (now = 5000) =>
-    syncAll({ registry, connections: store.connections, items: store.items, secrets, http: noHttp, now: () => now });
+    syncAll({
+      registry,
+      connections: store.connections,
+      items: store.items,
+      work: store.work,
+      secrets,
+      http: noHttp,
+      now: () => now,
+    });
   return { store, registry, secrets, sync };
 }
 
@@ -142,6 +150,35 @@ describe("syncAll", () => {
     await store.connections.remove(first.id);
     expect((await store.items.list()).map((item) => item.sourceName)).toEqual(["Shared inbox"]);
     expect(await store.connections.list()).toHaveLength(1);
+  });
+
+  it("stores tickets a connector reports, and removes them with the connection", async () => {
+    const tracker: Connector = {
+      id: "any-tracker",
+      name: "Any tracker",
+      description: "",
+      fields: [],
+      sync: async () => ({
+        activities: [],
+        work: [
+          {
+            externalId: "T-1", kind: "Story", level: "item", title: "Build it", url: "https://t.test/T-1",
+            status: "blocked", statusLabel: "On hold", ownerName: "Sam", team: "Offshore", parentExternalId: null,
+            sprint: "Sprint 9", sprintEndsAt: 9000, dueAt: null, createdAt: 1, updatedAt: 2, waitingOnProduct: true,
+          },
+        ],
+      }),
+    };
+    const { store, sync } = await setup(tracker);
+    const connection = await store.connections.add("any-tracker", "Delivery board");
+    await sync();
+    await sync();
+
+    expect(await store.work.list()).toMatchObject([
+      { externalId: "T-1", sourceName: "Delivery board", status: "blocked", statusLabel: "On hold", waitingOnProduct: true },
+    ]);
+    await store.connections.remove(connection.id);
+    expect(await store.work.list()).toEqual([]);
   });
 
   it("refuses two connectors with the same id", () => {

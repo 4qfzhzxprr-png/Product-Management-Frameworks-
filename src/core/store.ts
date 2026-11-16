@@ -1,6 +1,7 @@
 import type { Db, SqlParam } from "./db";
 import { ConnectionStore } from "./connectors";
 import { ItemStore } from "./itemStore";
+import { WorkStore } from "./work";
 import {
   CAPTURE_KINDS,
   isActionable,
@@ -94,6 +95,31 @@ const MIGRATIONS: string[][] = [
        last_error TEXT
      )`,
   ],
+  [
+    // Tickets and epics from any issue tracker; see work.ts.
+    `CREATE TABLE IF NOT EXISTS work_items (
+       id INTEGER PRIMARY KEY,
+       source TEXT NOT NULL,
+       source_name TEXT NOT NULL DEFAULT '',
+       external_id TEXT NOT NULL,
+       kind TEXT NOT NULL DEFAULT '',
+       level TEXT NOT NULL DEFAULT 'item',
+       title TEXT NOT NULL,
+       url TEXT NOT NULL DEFAULT '',
+       status TEXT NOT NULL,
+       status_label TEXT NOT NULL DEFAULT '',
+       owner_name TEXT NOT NULL DEFAULT '',
+       team TEXT NOT NULL DEFAULT '',
+       parent_external_id TEXT,
+       sprint TEXT,
+       sprint_ends_at INTEGER,
+       due_at INTEGER,
+       created_at INTEGER NOT NULL,
+       updated_at INTEGER NOT NULL,
+       waiting_on_product INTEGER NOT NULL DEFAULT 0,
+       UNIQUE (source, external_id)
+     )`,
+  ],
 ];
 
 interface PersonRow {
@@ -120,9 +146,13 @@ export class CaptureStore {
   /** The systems the app is connected to. */
   readonly connections: ConnectionStore;
 
+  /** Tickets and epics synced from issue trackers. */
+  readonly work: WorkStore;
+
   private constructor(private readonly db: Db) {
     this.items = new ItemStore(db);
-    this.connections = new ConnectionStore(db, this.items);
+    this.work = new WorkStore(db);
+    this.connections = new ConnectionStore(db, this.items, this.work);
   }
 
   static async open(db: Db): Promise<CaptureStore> {

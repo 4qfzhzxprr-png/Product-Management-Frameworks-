@@ -1,6 +1,7 @@
 import type { Db } from "./db";
 import type { ItemStore } from "./itemStore";
 import type { Activity } from "./items";
+import type { WorkRecord, WorkStore } from "./work";
 
 /**
  * How the app connects to other systems.
@@ -50,6 +51,8 @@ export interface SyncContext {
 
 export interface SyncResult {
   activities: Activity[];
+  /** Tickets and epics, for connectors that read an issue tracker. */
+  work?: WorkRecord[];
   /** Where to resume next time: a timestamp, a page token, anything. Omit to keep the old one. */
   cursor?: string | null;
 }
@@ -135,6 +138,7 @@ export class ConnectionStore {
   constructor(
     private readonly db: Db,
     private readonly items: ItemStore,
+    private readonly work: WorkStore,
   ) {}
 
   async list(): Promise<Connection[]> {
@@ -177,6 +181,7 @@ export class ConnectionStore {
   /** Disconnects, and removes everything the connection brought in. */
   async remove(id: number): Promise<void> {
     await this.items.deleteSource(sourceOf(id));
+    await this.work.deleteSource(sourceOf(id));
     await this.db.run("DELETE FROM connections WHERE id = ?", [id]);
   }
 }
@@ -215,6 +220,7 @@ export async function syncAll(deps: {
   registry: ConnectorRegistry;
   connections: ConnectionStore;
   items: ItemStore;
+  work: WorkStore;
   secrets: SecretStore;
   http: HttpClient;
   now?: () => number;
@@ -243,6 +249,9 @@ export async function syncAll(deps: {
         });
         for (const activity of result.activities) {
           await deps.items.upsert({ ...activity, source: sourceOf(connection.id), sourceName: connection.name });
+        }
+        for (const record of result.work ?? []) {
+          await deps.work.upsert({ ...record, source: sourceOf(connection.id), sourceName: connection.name });
         }
         await deps.connections.recordSync(connection.id, now(), { cursor: result.cursor });
         return { connection, received: result.activities.length, error: null };

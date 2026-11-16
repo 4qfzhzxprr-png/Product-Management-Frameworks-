@@ -1,27 +1,30 @@
 import { Alert, Button, Modal } from "antd";
-import { BarChart3, Inbox, LayoutDashboard, ListChecks, NotebookPen, Plus, Sunrise, Users } from "lucide-react";
+import { BarChart3, Inbox, LayoutDashboard, ListChecks, NotebookPen, Plus, Sunrise, Truck, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { Bucket, SourceItem } from "../core/items";
 import type { Capture, CaptureKind, Person, Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
+import type { WorkItem } from "../core/work";
 import { isTauri, notifyDataChanged, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
 import { AnalyticsPage } from "./AnalyticsPage";
 import { BriefPage } from "./BriefPage";
 import { CaptureForm } from "./CaptureForm";
 import { CapturesPage, type Selection } from "./CapturesPage";
+import { DeliveryPage } from "./DeliveryPage";
 import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
 import { message, useStore } from "./useStore";
 
-type View = "overview" | "brief" | "queue" | "team" | "analytics" | "captures";
+type View = "overview" | "brief" | "queue" | "team" | "delivery" | "analytics" | "captures";
 
 const NAV = [
   { view: "overview", label: "Overview", icon: LayoutDashboard },
   { view: "brief", label: "Brief", icon: Sunrise },
   { view: "queue", label: "Queue", icon: ListChecks },
   { view: "team", label: "Team", icon: Users },
+  { view: "delivery", label: "Delivery", icon: Truck },
   { view: "analytics", label: "Analytics", icon: BarChart3 },
   { view: "captures", label: "Captures", icon: NotebookPen },
 ] as const;
@@ -44,6 +47,7 @@ function Shell({ store }: { store: CaptureStore }) {
   const [captures, setCaptures] = useState<Capture[]>([]);
   const [waiting, setWaiting] = useState(0);
   const [items, setItems] = useState<SourceItem[]>([]);
+  const [work, setWork] = useState<WorkItem[]>([]);
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -58,15 +62,17 @@ function Shell({ store }: { store: CaptureStore }) {
 
   const refresh = useCallback(async () => {
     try {
-      const [loadedPeople, loadedProjects, loadedCaptures, count, allItems] = await Promise.all([
+      const [loadedPeople, loadedProjects, loadedCaptures, count, allItems, loadedWork] = await Promise.all([
         store.people(),
         store.projects(),
         store.captures({ limit: 10_000 }),
         store.waitingOnMeCount(),
         store.items.list(),
+        store.work.list(),
       ]);
       const openItems = allItems;
       setItems(openItems);
+      setWork(loadedWork);
       setConnected(await store.items.hasAny());
       setPeople(loadedPeople);
       setProjects(loadedProjects);
@@ -218,6 +224,7 @@ function Shell({ store }: { store: CaptureStore }) {
         )}
         {view === "team" && oneOnOne === null && (
           <TeamPage
+            work={work}
             onOpen={setOneOnOne}
             people={people}
             captures={captures}
@@ -232,6 +239,7 @@ function Shell({ store }: { store: CaptureStore }) {
             }
           />
         )}
+        {view === "delivery" && <DeliveryPage work={work} now={now} />}
         {view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
         {view === "captures" && (
           <CapturesPage

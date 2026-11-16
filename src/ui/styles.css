@@ -833,6 +833,81 @@ button.item-title:hover {
   flex: none;
 }
 
+/* Delivery */
+
+.pulse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.pulse {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pulse-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.pulse-figure .stat-value {
+  font-weight: 700;
+  color: var(--numeral-flat);
+  background: var(--numeral);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.pulse .ant-progress {
+  margin: 0;
+}
+
+.epics {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.epics li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.epics .item-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+}
+
+/* Health is always written out; the tint only reinforces it. */
+.health.ant-tag {
+  margin: 0;
+  border-radius: 999px;
+  font-weight: 600;
+  background: var(--inset);
+  color: var(--text);
+}
+
+.health.at_risk.ant-tag,
+.health.off_track.ant-tag {
+  background: var(--gold);
+  color: var(--gold-text);
+}
+
+.health.off_track.ant-tag {
+  outline: 2px solid var(--gold-text);
+  outline-offset: -2px;
+}
+
 /* Team */
 
 .add-pm {

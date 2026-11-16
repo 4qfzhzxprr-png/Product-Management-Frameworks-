@@ -20,9 +20,12 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
   in the Mac app they are empty until a connector exists. Any system can be connected by
   writing one small adapter; see `src/core/connectors.ts`. The sorting is rule-based, with no AI.
 - **Team.** One card per PM: what they need from you, what you are waiting on, their wins and your
-  last 1:1 note. Epics will appear here once an issue tracker is connected.
+  last 1:1 note. Each card also lists the PM's epics with a health call once an issue tracker is connected.
 - **1:1 workspace.** Open it from a PM's card: a running agenda whose untouched topics carry over,
   what each of you owes the other, and your 1:1 notes over time.
+- **Delivery.** Sprint progress per team, what is at risk of missing, everything blocked or waiting on
+  a product answer, and in-progress tickets nobody has touched for a week. Empty until an issue
+  tracker is connected.
 - **Analytics.** Captures per day or week over 7 days, 30 days or 13 weeks, with totals for the period.
 - **Captures.** Browse and search captures by person, project, open items and wins. Mark
   commitments and asks done.

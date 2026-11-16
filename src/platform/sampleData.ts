@@ -2,6 +2,7 @@ import { dayStart } from "../core/insights";
 import type { IncomingItem } from "../core/items";
 import type { CaptureKind } from "../core/models";
 import type { CaptureStore } from "../core/store";
+import type { WorkRecord } from "../core/work";
 
 /**
  * Invented captures for the browser preview only, so the dashboard has something to show.
@@ -123,5 +124,48 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
   ];
   for (const [index, item] of sampleItems.entries()) {
     await store.items.upsert({ ...item, source: `sample-${item.sourceName}`, externalId: `sample-${index}` });
+  }
+
+  const DAY = 86_400_000;
+  const work = (
+    externalId: string,
+    title: string,
+    status: WorkRecord["status"],
+    statusLabel: string,
+    team: string,
+    extra: Partial<WorkRecord> = {},
+  ): WorkRecord => ({
+    externalId, title, status, statusLabel, team,
+    kind: "Story", level: "item", url: "https://www.atlassian.com/software/jira", ownerName: "",
+    parentExternalId: null, sprint: "Sprint 24", sprintEndsAt: now + 4 * DAY, dueAt: null,
+    createdAt: now - 20 * DAY, updatedAt: now - DAY, waitingOnProduct: false,
+    ...extra,
+  });
+  const epic = (externalId: string, title: string, ownerName: string, extra: Partial<WorkRecord> = {}) =>
+    work(externalId, title, "in_progress", "In progress", "", { kind: "Epic", level: "epic", sprint: null, sprintEndsAt: null, ownerName, ...extra });
+  const sampleWork: WorkRecord[] = [
+    epic("PORT-1", "Patient portal beta", "Priya", { dueAt: now + 20 * DAY }),
+    epic("REF-1", "Refill flow pilot", "Marco", { dueAt: now + 9 * DAY }),
+    epic("REF-2", "Eligibility check", "Marco", { dueAt: now - 2 * DAY }),
+    work("PORT-12", "Consent screen", "done", "Done", "Onshore", { parentExternalId: "PORT-1" }),
+    work("PORT-14", "Appointment list", "done", "Done", "Onshore", { parentExternalId: "PORT-1" }),
+    work("PORT-15", "Secure messaging inbox", "in_progress", "In review", "Onshore", { parentExternalId: "PORT-1" }),
+    work("PORT-18", "Accessibility pass", "todo", "Ready for dev", "Onshore", { parentExternalId: "PORT-1" }),
+    work("REF-21", "Reminder scheduling service", "done", "Done", "Offshore", { parentExternalId: "REF-1" }),
+    work("REF-22", "SMS reminder template", "blocked", "Blocked", "Offshore", {
+      parentExternalId: "REF-1", waitingOnProduct: true, updatedAt: now - 4 * DAY,
+    }),
+    work("REF-24", "Pharmacist pause control", "in_progress", "In progress", "Offshore", {
+      parentExternalId: "REF-1", updatedAt: now - 9 * DAY,
+    }),
+    work("REF-25", "Reminder audit log", "todo", "To do", "Offshore", { parentExternalId: "REF-1" }),
+    work("REF-31", "Eligibility API client", "in_progress", "In progress", "Offshore", { parentExternalId: "REF-2" }),
+    work("REF-33", "Payer response mapping", "blocked", "Blocked", "Offshore", {
+      parentExternalId: "REF-2", updatedAt: now - 6 * DAY,
+    }),
+    work("OPS-7", "Data export for analytics", "done", "Done", "Offshore"),
+  ];
+  for (const record of sampleWork) {
+    await store.work.upsert({ ...record, source: "sample-tracker", sourceName: "Tracker" });
   }
 }

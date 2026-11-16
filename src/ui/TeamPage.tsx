@@ -3,6 +3,8 @@ import { Plus, Trophy } from "lucide-react";
 import { useState } from "react";
 import type { Capture, CaptureKind, Person } from "../core/models";
 import { teamBoard } from "../core/team";
+import { epicHealth, epicsFor, HEALTH_LABELS, type WorkItem } from "../core/work";
+import { openExternal } from "../platform";
 import { GlassCard } from "./components";
 
 function age(time: number, now: number): string {
@@ -53,6 +55,7 @@ function ItemList({
 export function TeamPage({
   people,
   captures,
+  work,
   now,
   onDone,
   onCapture,
@@ -61,6 +64,8 @@ export function TeamPage({
 }: {
   people: Person[];
   captures: Capture[];
+  /** Synced tickets and epics; empty until an issue tracker is connected. */
+  work: WorkItem[];
   now: number;
   onDone: (capture: Capture) => void;
   /** Opens quick capture already set to this person and kind. */
@@ -70,6 +75,7 @@ export function TeamPage({
   onOpen: (personId: number) => void;
 }) {
   const board = teamBoard(people, captures, now);
+  const epics = epicHealth(work, now);
   const [newPM, setNewPM] = useState("");
 
   return (
@@ -162,7 +168,27 @@ export function TeamPage({
 
               <div className="pm-section">
                 <h3>Epics</h3>
-                <p className="muted small">No issue tracker is connected yet, so epics and their health are not shown.</p>
+                {work.length === 0 ? (
+                  <p className="muted small">No issue tracker is connected yet, so epics and their health are not shown.</p>
+                ) : epicsFor(card.person, epics).length === 0 ? (
+                  <p className="muted small">No epics are owned by {card.person.name} in the tracker.</p>
+                ) : (
+                  <ul className="epics">
+                    {epicsFor(card.person, epics).map(({ epic, health, done, total }) => (
+                      <li key={epic.id}>
+                        <button className="item-title" onClick={() => void openExternal(epic.url)}>
+                          {epic.title}
+                        </button>
+                        <span className="muted small">
+                          {done}/{total}
+                        </span>
+                        <Tag className={`health ${health}`} variant="filled">
+                          {HEALTH_LABELS[health]}
+                        </Tag>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <div className="pm-actions">
