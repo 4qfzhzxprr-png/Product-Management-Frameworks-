@@ -67,6 +67,8 @@ function Shell({ store }: { store: CaptureStore }) {
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
   const [revision, setRevision] = useState(0);
+  // False until the first load finishes, so pages never flash empty counts.
+  const [loaded, setLoaded] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
   // Set while the in-window capture dialog is open; holds what the form starts on.
@@ -96,6 +98,7 @@ function Shell({ store }: { store: CaptureStore }) {
       setWaiting(count);
       setNow(Date.now());
       setRevision((value) => value + 1);
+      setLoaded(true);
       // The menu bar counts open captures waiting on David plus synced items needing his decision.
       await setWaitingCount(count + openItems.filter((item) => item.bucket === "decision").length);
     } catch (cause) {
@@ -197,7 +200,7 @@ function Shell({ store }: { store: CaptureStore }) {
         {error && (
           <Alert className="banner" type="error" showIcon title={error} closable onClose={() => setError(null)} />
         )}
-        {view === "overview" && (
+        {loaded && view === "overview" && (
           <OverviewPage
             captures={captures}
             now={now}
@@ -213,7 +216,7 @@ function Shell({ store }: { store: CaptureStore }) {
             }
           />
         )}
-        {view === "brief" && (
+        {loaded && view === "brief" && (
           <BriefPage
             items={items}
             now={now}
@@ -223,10 +226,10 @@ function Shell({ store }: { store: CaptureStore }) {
             onOpenQueue={() => setView("queue")}
           />
         )}
-        {view === "queue" && (
+        {loaded && view === "queue" && (
           <QueuePage items={items} now={now} connected={connected} onMove={moveItem} onDismiss={dismissItem} />
         )}
-        {view === "team" && oneOnOne !== null && (
+        {loaded && view === "team" && oneOnOne !== null && (
           <OneOnOnePage
             personId={oneOnOne}
             people={people}
@@ -238,7 +241,7 @@ function Shell({ store }: { store: CaptureStore }) {
             onDelete={(capture) => void change(() => store.deleteCapture(capture.id))}
           />
         )}
-        {view === "team" && oneOnOne === null && (
+        {loaded && view === "team" && oneOnOne === null && (
           <TeamPage
             work={work}
             onOpen={setOneOnOne}
@@ -255,7 +258,7 @@ function Shell({ store }: { store: CaptureStore }) {
             }
           />
         )}
-        {view === "commitments" && (
+        {loaded && view === "commitments" && (
           <CommitmentsPage
             captures={captures}
             now={now}
@@ -264,10 +267,10 @@ function Shell({ store }: { store: CaptureStore }) {
             onEdit={(capture) => setInlineCapture({ editing: capture })}
           />
         )}
-        {view === "delivery" && <DeliveryPage work={work} now={now} />}
-        {view === "handoff" && <HandoffPage store={store} work={work} captures={captures} now={now} />}
-        {view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
-        {view === "captures" && (
+        {loaded && view === "delivery" && <DeliveryPage work={work} now={now} />}
+        {loaded && view === "handoff" && <HandoffPage store={store} work={work} captures={captures} now={now} />}
+        {loaded && view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
+        {loaded && view === "captures" && (
           <CapturesPage
             store={store}
             people={people}
