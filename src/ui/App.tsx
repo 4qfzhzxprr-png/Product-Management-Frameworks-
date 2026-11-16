@@ -2,6 +2,7 @@ import { Alert, Button, Modal } from "antd";
 import {
   BarChart3,
   Handshake,
+  Send,
   Inbox,
   LayoutDashboard,
   ListChecks,
@@ -23,13 +24,14 @@ import { CaptureForm } from "./CaptureForm";
 import { CapturesPage, type Selection } from "./CapturesPage";
 import { CommitmentsPage } from "./CommitmentsPage";
 import { DeliveryPage } from "./DeliveryPage";
+import { HandoffPage } from "./HandoffPage";
 import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
 import { message, useStore } from "./useStore";
 
-type View = "overview" | "brief" | "queue" | "team" | "commitments" | "delivery" | "analytics" | "captures";
+type View = "overview" | "brief" | "queue" | "team" | "commitments" | "delivery" | "handoff" | "analytics" | "captures";
 
 const NAV = [
   { view: "overview", label: "Overview", icon: LayoutDashboard },
@@ -38,6 +40,7 @@ const NAV = [
   { view: "team", label: "Team", icon: Users },
   { view: "commitments", label: "Commitments", icon: Handshake },
   { view: "delivery", label: "Delivery", icon: Truck },
+  { view: "handoff", label: "Handoff", icon: Send },
   { view: "analytics", label: "Analytics", icon: BarChart3 },
   { view: "captures", label: "Captures", icon: NotebookPen },
 ] as const;
@@ -262,6 +265,7 @@ function Shell({ store }: { store: CaptureStore }) {
           />
         )}
         {view === "delivery" && <DeliveryPage work={work} now={now} />}
+        {view === "handoff" && <HandoffPage store={store} work={work} captures={captures} now={now} />}
         {view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
         {view === "captures" && (
           <CapturesPage

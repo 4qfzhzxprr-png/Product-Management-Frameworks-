@@ -60,11 +60,15 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 
 - Phase 1 done except connectors: quick capture, the menu bar count, the team board
   (capture-based parts), and the brief and queue pages with storage and rule-based sorting.
-- Phase 2 (David chose it over Phase 3). Done: the 1:1 workspace; delivery pulse, the blocker
-  and stale-ticket sweep, and epic health on PM cards (on the neutral `WorkRecord` in
-  `src/core/work.ts`); the commitment tracker (captures can carry a due date); the review
-  tracker (a rule-based "Awaiting my review" list in the brief). Remaining: the handoff
-  window, which needs a neutral calendar record, the offshore time zone and working hours.
+- Phase 2 is built, except what needs connectors or AI (David chose it over Phase 3):
+  the 1:1 workspace; delivery pulse, the blocker and stale-ticket sweep, and epic health on
+  PM cards (on the neutral `WorkRecord` in `src/core/work.ts`); the commitment tracker
+  (captures can carry a due date); the review tracker (a rule-based "Awaiting my review" list
+  in the brief); the handoff window (overlap from working hours and time zones, a list of
+  what to send, and a rule-built draft note that David copies and sends himself).
+- The handoff window works from working hours, not calendars. A neutral calendar record
+  would let it account for meetings; add one when a calendar connector is written.
+- Phase 3 (the CPO features) is next. It needs David's weekly update format.
 - The commitment tracker only knows promises David captures. Finding promises inside email
   or meeting notes needs the AI provider, so it waits for that decision.
 - Epics are matched to a PM by the owner's display name. If names differ between the tracker

@@ -862,6 +862,65 @@ button.item-title:hover {
   padding: 3px 6px;
 }
 
+/* Handoff */
+
+.handoff-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.facts dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.facts dd {
+  font-weight: 600;
+}
+
+.handoff-settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.handoff-settings label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.handoff-settings .wide {
+  grid-column: 1 / -1;
+}
+
+.handoff-settings input[type="time"] {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--inset);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 5px 8px;
+}
+
+.note-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* Delivery */
 
 .pulse-grid {
@@ -1495,7 +1554,8 @@ button.pm-name:hover {
   .overview-top,
   .brief-grid,
   .queue-grid,
-  .oneonone-grid {
+  .oneonone-grid,
+  .handoff-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }

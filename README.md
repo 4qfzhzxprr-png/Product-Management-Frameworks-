@@ -28,6 +28,9 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
 - **Delivery.** Sprint progress per team, what is at risk of missing, everything blocked or waiting on
   a product answer, and in-progress tickets nobody has touched for a week. Empty until an issue
   tracker is connected.
+- **Handoff.** When your working day overlaps the offshore team's, what to send them before you
+  sign off, and a draft end-of-day note to edit, copy and send yourself. Set the offshore time
+  zone and hours on the page.
 - **Analytics.** Captures per day or week over 7 days, 30 days or 13 weeks, with totals for the period.
 - **Captures.** Browse and search captures by person, project, open items and wins. Mark
   commitments and asks done.

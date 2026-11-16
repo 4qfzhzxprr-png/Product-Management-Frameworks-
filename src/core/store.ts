@@ -1,5 +1,6 @@
 import type { Db, SqlParam } from "./db";
 import { ConnectionStore } from "./connectors";
+import { SettingsStore } from "./handoff";
 import { ItemStore } from "./itemStore";
 import { WorkStore } from "./work";
 import {
@@ -134,6 +135,8 @@ const MIGRATIONS: Step[][] = [
   ],
   // A date a commitment or ask was promised for.
   [addColumn("captures", "due_at", "INTEGER")],
+  // App settings, one JSON value per key.
+  [`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`],
 ];
 
 interface PersonRow {
@@ -163,10 +166,12 @@ export class CaptureStore {
 
   /** Tickets and epics synced from issue trackers. */
   readonly work: WorkStore;
+  readonly settings: SettingsStore;
 
   private constructor(private readonly db: Db) {
     this.items = new ItemStore(db);
     this.work = new WorkStore(db);
+    this.settings = new SettingsStore(db);
     this.connections = new ConnectionStore(db, this.items, this.work);
   }
 
