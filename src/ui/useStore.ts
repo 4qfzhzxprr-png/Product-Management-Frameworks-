@@ -6,7 +6,8 @@ let storePromise: Promise<CaptureStore> | undefined;
 
 async function openStore(): Promise<CaptureStore> {
   const store = await CaptureStore.open(await openDb());
-  if (!isTauri) {
+  // The browser preview shows sample data. Adding ?empty to the address starts it blank, like a new install.
+  if (!isTauri && !new URLSearchParams(window.location.search).has("empty")) {
     const { seedSampleData } = await import("../platform/sampleData");
     await seedSampleData(store);
   }

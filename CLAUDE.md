@@ -84,7 +84,15 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 
 ## Working here
 
-- `npm test` runs the storage tests; `npm run build` type-checks and bundles.
+- `npm test` runs the unit tests; `npm run build` type-checks and bundles; `npm run e2e` runs
+  the Playwright suite in `e2e/` against the browser preview (`/?empty` starts it blank).
+  In cloud sessions the browser is already installed; do not run `playwright install`.
+- The wrapper has no automated test. To check it on Linux: build with
+  `npx tauri build --debug --no-bundle`, run `src-tauri/target/debug/daily-work` under
+  `dbus-run-session -- xvfb-run`, drive it with `xdotool` (Control-Alt-Space opens capture),
+  and read `~/.config/app.dailywork.desktop/dailywork.db` with `sqlite3`.
+- Both windows open the database at launch. Every migration step must be safe to run twice
+  and safe to run from two windows at once; `CaptureStore.open` retries for that reason.
 - `npm run dev` serves the UI in a browser with an in-memory database, so it can be driven
   with Playwright. `src/platform` is the only place that knows whether Tauri is present.
 - `cd src-tauri && cargo check` compiles the wrapper on Linux once the WebKitGTK dev packages

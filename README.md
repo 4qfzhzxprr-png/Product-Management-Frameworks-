@@ -57,8 +57,10 @@ Data lives in `~/Library/Application Support/app.dailywork.desktop/dailywork.db`
 ## Other commands
 
 ```sh
-npm test        # storage tests
+npm test        # unit tests for storage and the calculations behind each page
+npm run e2e     # end-to-end tests: drives every page in a browser (first run: npx playwright install chromium)
 npm run dev     # the UI alone in a browser at localhost:1420, with invented sample data that is not saved
+                # (add ?empty to the address to start blank, like a new install)
 ```
 
 ## Layout

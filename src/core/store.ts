@@ -17,12 +17,20 @@ import {
 
 type Step = string | ((db: Db) => Promise<void>);
 
-/** Adds a column unless it is already there, so the step can safely run twice. */
+/**
+ * Adds a column unless it is already there, so the step can safely run twice. The main
+ * window and the capture window both open the database at launch, so on a new install two
+ * copies of this can run at once; the one that loses the race finds the column added.
+ */
 function addColumn(table: string, column: string, type: string): Step {
+  const exists = async (db: Db) =>
+    (await db.all<{ name: string }>(`PRAGMA table_info(${table})`)).some((existing) => existing.name === column);
   return async (db) => {
-    const columns = await db.all<{ name: string }>(`PRAGMA table_info(${table})`);
-    if (!columns.some((existing) => existing.name === column)) {
+    if (await exists(db)) return;
+    try {
       await db.run(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+    } catch (cause) {
+      if (!(await exists(db))) throw cause;
     }
   };
 }
@@ -175,18 +183,24 @@ export class CaptureStore {
     this.connections = new ConnectionStore(db, this.items, this.work);
   }
 
-  static async open(db: Db): Promise<CaptureStore> {
-    const rows = await db.all<{ user_version: number }>("PRAGMA user_version");
-    const version = rows[0]?.user_version ?? 0;
-    // Statements are idempotent, so a migration interrupted part-way can simply run again.
-    for (let next = version; next < MIGRATIONS.length; next++) {
-      for (const step of MIGRATIONS[next]) {
-        if (typeof step === "string") await db.run(step);
-        else await step(db);
+  /**
+   * Opens the database, bringing its tables up to date first.
+   *
+   * The main window and the capture window both do this at launch. On a new install they can
+   * run the same steps at the same moment and trip over each other, so a failed attempt is
+   * retried: every step is safe to run twice, and by the retry the other window has finished.
+   */
+  static async open(db: Db, retryDelayMs = 150): Promise<CaptureStore> {
+    const attempts = 5;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await migrate(db);
+        return new CaptureStore(db);
+      } catch (cause) {
+        if (attempt === attempts) throw cause;
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs * attempt));
       }
-      await db.run(`PRAGMA user_version = ${next + 1}`);
     }
-    return new CaptureStore(db);
   }
 
   // People
@@ -309,6 +323,18 @@ export class CaptureStore {
 
   async deleteCapture(id: number): Promise<void> {
     await this.db.run("DELETE FROM captures WHERE id = ?", [id]);
+  }
+}
+
+async function migrate(db: Db): Promise<void> {
+  const rows = await db.all<{ user_version: number }>("PRAGMA user_version");
+  const version = rows[0]?.user_version ?? 0;
+  for (let next = version; next < MIGRATIONS.length; next++) {
+    for (const step of MIGRATIONS[next]) {
+      if (typeof step === "string") await db.run(step);
+      else await step(db);
+    }
+    await db.run(`PRAGMA user_version = ${next + 1}`);
   }
 }
 

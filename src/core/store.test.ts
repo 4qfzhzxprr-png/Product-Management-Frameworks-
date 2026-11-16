@@ -113,6 +113,38 @@ describe("CaptureStore", () => {
     expect(await store.people()).toEqual([]);
   });
 
+  it("survives two windows setting up a new database at the same moment", async () => {
+    const db = await openMemoryDb();
+    const [first, second] = await Promise.all([CaptureStore.open(db), CaptureStore.open(db)]);
+    await first.addCapture({ body: "from the main window", kind: "commitment", dueAt: 5 });
+    await second.addCapture({ body: "from the capture window" });
+    expect(await second.captures()).toHaveLength(2);
+    expect(await first.settings.get("anything")).toBeNull();
+    expect(await first.work.list()).toEqual([]);
+    expect(await first.items.list()).toEqual([]);
+  });
+
+  it("retries setup when another window gets in the way, and gives up if it keeps failing", async () => {
+    const real = await openMemoryDb();
+    let failures = 2;
+    const flaky = {
+      all: real.all,
+      run: (async (sql, params) => {
+        if (sql.startsWith("CREATE INDEX") && failures > 0) {
+          failures--;
+          throw new Error("no such table: main.items");
+        }
+        return real.run(sql, params);
+      }) as typeof real.run,
+    };
+    const store = await CaptureStore.open(flaky, 1);
+    await store.addCapture({ body: "works after retrying" });
+    expect(await store.captures()).toHaveLength(1);
+
+    const broken = { all: real.all, run: async () => Promise.reject(new Error("disk full")) } as typeof real;
+    await expect(CaptureStore.open({ ...broken, all: async () => [{ user_version: 0 }] as never }, 1)).rejects.toThrow("disk full");
+  });
+
   it("opens an existing database without losing data", async () => {
     const { db, store } = await makeStore();
     await store.addCapture({ body: "persisted", kind: "commitment" });
