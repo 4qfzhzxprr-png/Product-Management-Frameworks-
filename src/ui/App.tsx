@@ -9,6 +9,7 @@ import { AnalyticsPage } from "./AnalyticsPage";
 import { BriefPage } from "./BriefPage";
 import { CaptureForm } from "./CaptureForm";
 import { CapturesPage, type Selection } from "./CapturesPage";
+import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
@@ -36,6 +37,8 @@ export function App() {
 function Shell({ store }: { store: CaptureStore }) {
   const [view, setView] = useState<View>("overview");
   const [selection, setSelection] = useState<Selection>({ type: "all" });
+  // The PM whose 1:1 workspace is open inside the Team view, if any.
+  const [oneOnOne, setOneOnOne] = useState<number | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [captures, setCaptures] = useState<Capture[]>([]);
@@ -129,7 +132,10 @@ function Shell({ store }: { store: CaptureStore }) {
               key={target}
               className={view === target ? "nav-item selected" : "nav-item"}
               aria-current={view === target ? "page" : undefined}
-              onClick={() => setView(target)}
+              onClick={() => {
+                setView(target);
+                setOneOnOne(null);
+              }}
             >
               <Icon size={18} aria-hidden="true" />
               <span>{label}</span>
@@ -198,8 +204,21 @@ function Shell({ store }: { store: CaptureStore }) {
         {view === "queue" && (
           <QueuePage items={items} now={now} connected={connected} onMove={moveItem} onDismiss={dismissItem} />
         )}
-        {view === "team" && (
+        {view === "team" && oneOnOne !== null && (
+          <OneOnOnePage
+            personId={oneOnOne}
+            people={people}
+            captures={captures}
+            now={now}
+            onBack={() => setOneOnOne(null)}
+            onAdd={(kind, body) => void change(() => store.addCapture({ kind, body, personId: oneOnOne }))}
+            onDone={(capture, done) => void change(() => store.setCaptureDone(capture.id, done))}
+            onDelete={(capture) => void change(() => store.deleteCapture(capture.id))}
+          />
+        )}
+        {view === "team" && oneOnOne === null && (
           <TeamPage
+            onOpen={setOneOnOne}
             people={people}
             captures={captures}
             now={now}

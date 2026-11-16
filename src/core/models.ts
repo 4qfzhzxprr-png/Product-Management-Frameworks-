@@ -10,6 +10,8 @@ export const CAPTURE_KINDS = [
   "ask_of_them",
   /** A note from a 1:1. */
   "one_on_one",
+  /** Something to raise at the next 1:1. Open until it has been discussed. */
+  "agenda",
 ] as const;
 
 export type CaptureKind = (typeof CAPTURE_KINDS)[number];
@@ -21,11 +23,12 @@ export const KIND_LABELS: Record<CaptureKind, string> = {
   ask_of_me: "Ask of me",
   ask_of_them: "Ask of them",
   one_on_one: "1:1 note",
+  agenda: "1:1 topic",
 };
 
 /** Can be open or done. */
 export function isActionable(kind: CaptureKind): boolean {
-  return kind === "commitment" || kind === "ask_of_me" || kind === "ask_of_them";
+  return kind === "commitment" || kind === "ask_of_me" || kind === "ask_of_them" || kind === "agenda";
 }
 
 /** Counts toward the menu bar number while open. */

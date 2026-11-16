@@ -60,6 +60,9 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 
 - Phase 1 done except connectors: quick capture, the menu bar count, the team board
   (capture-based parts), and the brief and queue pages with storage and rule-based sorting.
+- Phase 2 started (David chose it over Phase 3): the 1:1 workspace is done. Remaining:
+  delivery pulse, blocker radar and stale ticket sweep, commitment tracker, review tracker,
+  handoff window. Each needs a neutral record type first (work items, calendar events).
 - Nothing writes activity except the browser preview's sample data, so in the Mac app the
   brief and queue say nothing is connected.
 - The sorting rules in `classify()` were written without seeing real mail. Expect to tune them

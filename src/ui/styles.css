@@ -939,6 +939,100 @@ button.item-title:hover {
   border-top: 1px solid var(--line);
 }
 
+button.pm-name {
+  padding: 0;
+  font-weight: 700;
+  text-align: left;
+}
+
+button.pm-name:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* 1:1 workspace */
+
+.back.ant-btn {
+  align-self: flex-start;
+  padding: 0;
+  height: auto;
+  font-weight: 600;
+}
+
+.oneonone-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.workspace-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.workspace-card > p.muted {
+  margin-top: -8px;
+}
+
+.add-line {
+  display: flex;
+  gap: 8px;
+}
+
+.note-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.workspace-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workspace-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.workspace-list li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-list p {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.workspace-list .ant-tag {
+  margin: 0 0 0 6px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--gold-text);
+  font-weight: 600;
+}
+
+.notes li {
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.notes li:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
 /* Analytics */
 
 .chart-card {
@@ -1296,7 +1390,8 @@ button.item-title:hover {
 
   .overview-top,
   .brief-grid,
-  .queue-grid {
+  .queue-grid,
+  .oneonone-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }

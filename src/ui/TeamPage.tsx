@@ -57,6 +57,7 @@ export function TeamPage({
   onDone,
   onCapture,
   onAddPM,
+  onOpen,
 }: {
   people: Person[];
   captures: Capture[];
@@ -65,6 +66,8 @@ export function TeamPage({
   /** Opens quick capture already set to this person and kind. */
   onCapture: (personId: number, kind: CaptureKind) => void;
   onAddPM: (name: string) => void;
+  /** Opens the 1:1 workspace for this PM. */
+  onOpen: (personId: number) => void;
 }) {
   const board = teamBoard(people, captures, now);
   const [newPM, setNewPM] = useState("");
@@ -114,7 +117,11 @@ export function TeamPage({
                   {card.person.name.slice(0, 1).toUpperCase()}
                 </span>
                 <div>
-                  <h2>{card.person.name}</h2>
+                  <h2>
+                    <button className="pm-name" onClick={() => onOpen(card.person.id)} title="Open the 1:1 workspace">
+                      {card.person.name}
+                    </button>
+                  </h2>
                   <p className="muted small">
                     {card.lastCaptureAt === null ? "Nothing captured yet" : `Last captured ${age(card.lastCaptureAt, now)}`}
                   </p>
@@ -159,6 +166,9 @@ export function TeamPage({
               </div>
 
               <div className="pm-actions">
+                <Button size="small" type="primary" onClick={() => onOpen(card.person.id)}>
+                  1:1 workspace{card.agenda.length > 0 ? ` · ${card.agenda.length}` : ""}
+                </Button>
                 <Button
                   size="small"
                   icon={<Plus size={14} aria-hidden="true" />}

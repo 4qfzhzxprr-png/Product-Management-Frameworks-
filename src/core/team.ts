@@ -8,6 +8,10 @@ export interface PmCard {
   needsFromMe: Capture[];
   /** Open asks David made of them. Oldest first. */
   waitingOnThem: Capture[];
+  /** Topics to raise at the next 1:1, oldest first. */
+  agenda: Capture[];
+  /** Every 1:1 note, newest first. */
+  oneOnOnes: Capture[];
   /** The most recent 1:1 note. */
   lastOneOnOne: Capture | null;
   /** Wins tagged with them in the last 30 days. */
@@ -33,6 +37,8 @@ export function teamBoard(people: Person[], captures: Capture[], now: number): P
           .filter((capture) => capture.kind === "ask_of_me" || capture.kind === "commitment")
           .sort(oldestFirst),
         waitingOnThem: open.filter((capture) => capture.kind === "ask_of_them").sort(oldestFirst),
+        agenda: open.filter((capture) => capture.kind === "agenda").sort(oldestFirst),
+        oneOnOnes: [...oneOnOnes].sort((a, b) => b.createdAt - a.createdAt),
         lastOneOnOne: oneOnOnes.reduce<Capture | null>(
           (latest, capture) => (latest === null || capture.createdAt > latest.createdAt ? capture : latest),
           null,
@@ -47,4 +53,15 @@ export function teamBoard(people: Person[], captures: Capture[], now: number): P
     .sort(
       (a, b) => b.needsFromMe.length - a.needsFromMe.length || a.person.name.localeCompare(b.person.name),
     );
+}
+
+/**
+ * A topic is carried over when it was already on the agenda at an earlier 1:1 and is still
+ * open. Notes saved today do not count, so topics raised at today's 1:1 are not flagged the
+ * moment its note is saved.
+ */
+export function isCarriedOver(topic: Capture, card: PmCard, now: number): boolean {
+  const today = dayStart(now);
+  const earlier = card.oneOnOnes.find((note) => note.createdAt < today);
+  return earlier !== undefined && topic.createdAt < earlier.createdAt;
 }

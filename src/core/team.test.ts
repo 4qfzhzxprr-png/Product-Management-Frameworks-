@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Capture, CaptureKind, Person } from "./models";
-import { teamBoard } from "./team";
+import { isCarriedOver, teamBoard } from "./team";
 
 const NOW = new Date(2026, 10, 18, 15).getTime();
 const daysAgo = (days: number) => new Date(2026, 10, 18 - days, 10).getTime();
@@ -34,6 +34,9 @@ describe("teamBoard", () => {
     capture("one_on_one", priya.id, 1),
     capture("note", priya.id, 4, { isWin: true }),
     capture("note", priya.id, 50, { isWin: true }),
+    capture("agenda", priya.id, 6),
+    capture("agenda", priya.id, 0),
+    capture("agenda", priya.id, 12, { doneAt: daysAgo(8) }),
     capture("ask_of_them", marco.id, 6),
     capture("ask_of_me", lena.id, 1),
     capture("commitment", null, 1),
@@ -54,7 +57,17 @@ describe("teamBoard", () => {
     const card = board[0];
     expect(card.lastOneOnOne?.body).toBe("one_on_one 1");
     expect(card.recentWins).toBe(1);
-    expect(card.lastCaptureAt).toBe(daysAgo(1));
+  });
+
+  it("keeps an agenda of open topics and marks the ones carried over from the last 1:1", () => {
+    const card = board[0];
+    expect(card.agenda.map((item) => item.body)).toEqual(["agenda 6", "agenda 0"]);
+    expect(card.agenda.map((item) => isCarriedOver(item, card, NOW))).toEqual([true, false]);
+    // A note saved today does not flag topics raised today or since the previous 1:1.
+    const withTodaysNote = teamBoard([priya], [...captures, capture("one_on_one", priya.id, 0, { createdAt: NOW })], NOW)[0];
+    expect(withTodaysNote.agenda.map((item) => isCarriedOver(item, withTodaysNote, NOW))).toEqual([true, false]);
+    expect(card.oneOnOnes.map((item) => item.body)).toEqual(["one_on_one 1", "one_on_one 8"]);
+    expect(card.lastCaptureAt).toBe(daysAgo(0));
   });
 
   it("handles a PM with almost nothing captured", () => {
