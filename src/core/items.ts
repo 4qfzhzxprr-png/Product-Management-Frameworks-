@@ -1,26 +1,8 @@
 /**
- * Activity pulled in from company systems (email, Confluence, Jira), in one shape the
- * morning brief and the decision queue can both read. Connectors write these; nothing
- * here knows how any one system works.
+ * Activity pulled in from other systems, in one shape the morning brief and the decision
+ * queue can both read. Nothing here knows which systems exist: a source is whatever a
+ * connection says it is (see connectors.ts), so a new kind of system needs no change here.
  */
-export type ItemSource = "gmail" | "confluence" | "jira";
-
-export const SOURCE_LABELS: Record<ItemSource, string> = {
-  gmail: "Email",
-  confluence: "Confluence",
-  jira: "Jira",
-};
-
-export type ItemType = "email" | "page_edit" | "comment" | "mention" | "ticket";
-
-export const TYPE_LABELS: Record<ItemType, string> = {
-  email: "Email",
-  page_edit: "Page edited",
-  comment: "Comment",
-  mention: "Mention",
-  ticket: "Ticket",
-};
-
 export const BUCKETS = ["decision", "waiting", "fyi"] as const;
 export type Bucket = (typeof BUCKETS)[number];
 
@@ -30,12 +12,12 @@ export const BUCKET_LABELS: Record<Bucket, string> = {
   fyi: "FYI",
 };
 
-/** What a connector hands over for one thread, page or ticket. */
-export interface IncomingItem {
-  source: ItemSource;
-  /** The system's own id for the thread, page or ticket. One row is kept per id. */
+/** What a connector reports for one thread, page, ticket or anything else with a link. */
+export interface Activity {
+  /** The system's own id for the thing. One row is kept per source and id. */
   externalId: string;
-  type: ItemType;
+  /** A short label for what happened, in the system's own words: "Email", "Comment", "Review requested". */
+  kind: string;
   title: string;
   /** The latest message or change, in plain text. */
   snippet: string;
@@ -49,6 +31,14 @@ export interface IncomingItem {
   addressedToMe: boolean;
   /** The latest message or change is David's own. */
   fromMe: boolean;
+}
+
+/** An activity plus which connection it came from. */
+export interface IncomingItem extends Activity {
+  /** Identifies the connection. Any string; unique per connection. */
+  source: string;
+  /** What to call that connection on screen: "Work email", "Jira". */
+  sourceName: string;
 }
 
 export interface SourceItem extends IncomingItem {
@@ -81,7 +71,7 @@ const ASKS = [
  * - Everything else is for information.
  * David can move anything the rules get wrong.
  */
-export function classify(item: Pick<IncomingItem, "title" | "snippet" | "addressedToMe" | "fromMe">): Bucket {
+export function classify(item: Pick<Activity, "title" | "snippet" | "addressedToMe" | "fromMe">): Bucket {
   const text = `${item.title}\n${item.snippet}`;
   const asks = ASKS.some((pattern) => pattern.test(text));
   if (item.fromMe) return asks ? "waiting" : "fyi";

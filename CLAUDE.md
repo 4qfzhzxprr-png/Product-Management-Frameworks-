@@ -9,8 +9,13 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
   Rust in `src-tauri` to wrapper duties only (menu bar, shortcut, windows).
 - **AI provider:** a company-approved provider, not yet named. Make no AI calls until it is
   named; keep sorting rule-based and put any model use behind one interface.
-- **Google access:** not yet requested from the Workspace admin. Build that connector last.
-- **Atlassian:** Cloud or self-hosted is unknown. Confirm before building the connector.
+- **Connectors come last (David, 2026-11-16).** Build every feature against the app's own
+  source-neutral records first; write the real connectors at the end.
+- **Connect to anything (David, 2026-11-16).** Nothing outside a connector may name or assume
+  a particular system. Gmail, Calendar, Jira and Confluence are the first systems expected,
+  not the only ones. See "Connecting to other systems" below.
+- **Google access:** not yet requested from the Workspace admin.
+- **Atlassian:** Cloud or self-hosted is unknown. Confirm before writing that connector.
 
 ## Design
 
@@ -33,18 +38,34 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 - Dashboard numbers come only from stored captures. Sample data exists solely for the browser
   preview (`src/platform/sampleData.ts`) and is labelled as such in the sidebar.
 
-## Where Phase 1 stands (2026-11-16)
+## Connecting to other systems
 
-- Done: quick capture, the menu bar count, the team board (capture-based parts), and the
-  brief and queue pages with their storage and rule-based sorting.
-- Not done: every connector. Nothing writes to the `items` table except the browser preview's
-  sample data. A connector's whole job is to call `store.items.upsert()` with `IncomingItem`s
-  (see `src/core/items.ts`); the brief, the queue and the menu bar count then work unchanged.
+- `src/core/connectors.ts` is the whole contract. A `Connector` is an adapter for one kind of
+  system: it declares the fields a user fills in and has one read-only `sync()` that returns
+  plain `Activity` records. A `Connection` is one configured use of a connector; there can be
+  several per connector. `syncAll()` runs every enabled connection independently and records
+  each one's last sync time and error, so one failure never blocks the rest.
+- Pages read only the neutral records (`SourceItem` in `src/core/items.ts`). A source is a
+  free-text connection name and a kind is a free-text label, so a new system needs a new
+  connector and nothing else. When a feature needs a new kind of record (tickets, epics,
+  sprints, calendar events), add another neutral record type beside `Activity`; do not reach
+  into a specific system from a page.
+- Secret fields go through `SecretStore` (Keychain in the Mac app; not built yet), never the
+  database. Web requests go through the injected `HttpClient`.
+- Not built yet: any real connector, the Keychain-backed `SecretStore`, the `HttpClient` for
+  the Mac app (webview `fetch` will hit CORS; use a Tauri HTTP plugin), the screen for adding
+  a connection, and the sync timer.
+
+## Where things stand (2026-11-16)
+
+- Phase 1 done except connectors: quick capture, the menu bar count, the team board
+  (capture-based parts), and the brief and queue pages with storage and rule-based sorting.
+- Nothing writes activity except the browser preview's sample data, so in the Mac app the
+  brief and queue say nothing is connected.
 - The sorting rules in `classify()` were written without seeing real mail. Expect to tune them
   once a connector delivers real items.
-- Blocked on David: whether Atlassian is Cloud and allows API tokens, Google OAuth approval,
-  the approved AI vendor, and what "distribution through Apple" means (App Store or notarized
-  download).
+- Still open with David: the approved AI vendor, and what "distribution through Apple" means
+  (App Store or notarized download).
 
 ## Working here
 

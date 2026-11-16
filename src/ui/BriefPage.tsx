@@ -9,8 +9,8 @@ export function NotConnected() {
     <GlassCard className="team-empty">
       <h2>Nothing synced yet</h2>
       <p className="muted">
-        This page fills from Gmail, Confluence and Jira. None of them is connected yet, so there is nothing to show.
-        Quick captures, the team board and analytics work without them.
+        This page fills from the systems you connect, such as email, a wiki or an issue tracker. Nothing is
+        connected yet, so there is nothing to show. Quick captures, the team board and analytics work without them.
       </p>
     </GlassCard>
   );

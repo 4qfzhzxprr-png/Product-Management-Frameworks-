@@ -60,11 +60,11 @@ function Shell({ store }: { store: CaptureStore }) {
         store.projects(),
         store.captures({ limit: 10_000 }),
         store.waitingOnMeCount(),
-        store.items.list({ includeDismissed: true }),
+        store.items.list(),
       ]);
-      const openItems = allItems.filter((item) => item.dismissedAt === null);
+      const openItems = allItems;
       setItems(openItems);
-      setConnected(allItems.length > 0);
+      setConnected(await store.items.hasAny());
       setPeople(loadedPeople);
       setProjects(loadedProjects);
       setCaptures(loadedCaptures);

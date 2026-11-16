@@ -1,4 +1,5 @@
 import type { Db, SqlParam } from "./db";
+import { ConnectionStore } from "./connectors";
 import { ItemStore } from "./itemStore";
 import {
   CAPTURE_KINDS,
@@ -58,6 +59,41 @@ const MIGRATIONS: string[][] = [
      )`,
     `CREATE INDEX IF NOT EXISTS items_occurred ON items(occurred_at DESC)`,
   ],
+  [
+    // Sources became open-ended: any connection, not a fixed list of systems. The first items
+    // table is replaced outright; nothing could have written to it, as no connector existed.
+    `DROP TABLE IF EXISTS items`,
+    `CREATE TABLE IF NOT EXISTS items (
+       id INTEGER PRIMARY KEY,
+       source TEXT NOT NULL,
+       source_name TEXT NOT NULL DEFAULT '',
+       external_id TEXT NOT NULL,
+       kind TEXT NOT NULL DEFAULT '',
+       title TEXT NOT NULL,
+       snippet TEXT NOT NULL DEFAULT '',
+       author TEXT NOT NULL DEFAULT '',
+       url TEXT NOT NULL DEFAULT '',
+       occurred_at INTEGER NOT NULL,
+       addressed_to_me INTEGER NOT NULL DEFAULT 0,
+       from_me INTEGER NOT NULL DEFAULT 0,
+       bucket TEXT NOT NULL,
+       bucket_override TEXT,
+       dismissed_at INTEGER,
+       UNIQUE (source, external_id)
+     )`,
+    `CREATE INDEX IF NOT EXISTS items_occurred ON items(occurred_at DESC)`,
+    // One row per connected system. Secrets are not stored here; they go in the Keychain.
+    `CREATE TABLE IF NOT EXISTS connections (
+       id INTEGER PRIMARY KEY,
+       connector_id TEXT NOT NULL,
+       name TEXT NOT NULL,
+       config TEXT NOT NULL DEFAULT '{}',
+       enabled INTEGER NOT NULL DEFAULT 1,
+       cursor TEXT,
+       last_sync_at INTEGER,
+       last_error TEXT
+     )`,
+  ],
 ];
 
 interface PersonRow {
@@ -79,11 +115,14 @@ interface CaptureRow {
 
 /** Local storage for people, projects and quick captures. */
 export class CaptureStore {
-  /** Activity synced from company systems. */
+  /** Activity synced from other systems. */
   readonly items: ItemStore;
+  /** The systems the app is connected to. */
+  readonly connections: ConnectionStore;
 
   private constructor(private readonly db: Db) {
     this.items = new ItemStore(db);
+    this.connections = new ConnectionStore(db, this.items);
   }
 
   static async open(db: Db): Promise<CaptureStore> {

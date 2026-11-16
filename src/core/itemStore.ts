@@ -1,11 +1,12 @@
 import type { Db } from "./db";
-import { BUCKETS, classify, type Bucket, type IncomingItem, type ItemSource, type ItemType, type SourceItem } from "./items";
+import { BUCKETS, classify, type Bucket, type IncomingItem, type SourceItem } from "./items";
 
 interface ItemRow {
   id: number;
   source: string;
+  source_name: string;
   external_id: string;
-  type: string;
+  kind: string;
   title: string;
   snippet: string;
   author: string;
@@ -18,7 +19,7 @@ interface ItemRow {
   dismissed_at: number | null;
 }
 
-/** Local storage for activity synced from company systems. The table is created by CaptureStore.open. */
+/** Local storage for activity synced from other systems. The table is created by CaptureStore.open. */
 export class ItemStore {
   constructor(private readonly db: Db) {}
 
@@ -29,11 +30,12 @@ export class ItemStore {
   async upsert(item: IncomingItem): Promise<void> {
     await this.db.run(
       `INSERT INTO items
-         (source, external_id, type, title, snippet, author, url, occurred_at, addressed_to_me, from_me, bucket)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         (source, source_name, external_id, kind, title, snippet, author, url, occurred_at, addressed_to_me, from_me, bucket)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(source, external_id) DO UPDATE SET
          dismissed_at = CASE WHEN excluded.occurred_at > items.occurred_at THEN NULL ELSE items.dismissed_at END,
-         type = excluded.type,
+         source_name = excluded.source_name,
+         kind = excluded.kind,
          title = excluded.title,
          snippet = excluded.snippet,
          author = excluded.author,
@@ -44,8 +46,9 @@ export class ItemStore {
          bucket = excluded.bucket`,
       [
         item.source,
+        item.sourceName,
         item.externalId,
-        item.type,
+        item.kind,
         item.title,
         item.snippet,
         item.author,
@@ -88,6 +91,16 @@ export class ItemStore {
   async restore(id: number): Promise<void> {
     await this.db.run("UPDATE items SET dismissed_at = NULL WHERE id = ?", [id]);
   }
+
+  /** Removes everything a connection brought in, for when it is disconnected. */
+  async deleteSource(source: string): Promise<void> {
+    await this.db.run("DELETE FROM items WHERE source = ?", [source]);
+  }
+
+  /** True once anything has ever been synced, dismissed or not. */
+  async hasAny(): Promise<boolean> {
+    return (await this.db.all("SELECT 1 FROM items LIMIT 1")).length > 0;
+  }
 }
 
 function toBucket(value: string | null): Bucket | null {
@@ -98,9 +111,10 @@ function toItem(row: ItemRow): SourceItem {
   const override = toBucket(row.bucket_override);
   return {
     id: row.id,
-    source: row.source as ItemSource,
+    source: row.source,
+    sourceName: row.source_name,
     externalId: row.external_id,
-    type: row.type as ItemType,
+    kind: row.kind,
     title: row.title,
     snippet: row.snippet,
     author: row.author,

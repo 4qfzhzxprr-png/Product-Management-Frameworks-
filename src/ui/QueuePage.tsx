@@ -27,7 +27,7 @@ export function QueuePage({
     <div className="page">
       <header className="page-head">
         <h1>Decision queue</h1>
-        <p>Email and Confluence activity, sorted by simple rules. Move anything that landed in the wrong list.</p>
+        <p>Activity from every connected system, sorted by simple rules. Move anything that landed in the wrong list.</p>
       </header>
 
       {!connected ? (

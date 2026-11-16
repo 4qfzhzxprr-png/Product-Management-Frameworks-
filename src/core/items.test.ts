@@ -4,9 +4,10 @@ import { buildBrief, classify, overnightStart, type IncomingItem, type SourceIte
 import { CaptureStore } from "./store";
 
 const base: IncomingItem = {
-  source: "gmail",
+  source: "connection-1",
+  sourceName: "Work email",
   externalId: "t1",
-  type: "email",
+  kind: "Email",
   title: "Refill reminders",
   snippet: "Sharing the latest numbers.",
   author: "Priya",
@@ -133,7 +134,8 @@ describe("ItemStore", () => {
   it("keeps sources apart and lists newest first", async () => {
     const items = await makeStore();
     await items.upsert({ ...base, occurredAt: 10 });
-    await items.upsert({ ...base, source: "confluence", type: "comment", occurredAt: 20 });
-    expect((await items.list()).map((entry) => entry.source)).toEqual(["confluence", "gmail"]);
+    await items.upsert({ ...base, source: "connection-2", sourceName: "Wiki", kind: "Comment", occurredAt: 20 });
+    expect((await items.list()).map((entry) => entry.sourceName)).toEqual(["Wiki", "Work email"]);
+    expect(await items.hasAny()).toBe(true);
   });
 });

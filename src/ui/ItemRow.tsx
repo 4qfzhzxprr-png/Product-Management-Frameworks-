@@ -1,6 +1,6 @@
 import { Button, Dropdown, Tag } from "antd";
 import { ArrowUpRight, Check, MoveRight } from "lucide-react";
-import { BUCKET_LABELS, BUCKETS, SOURCE_LABELS, TYPE_LABELS, type Bucket, type SourceItem } from "../core/items";
+import { BUCKET_LABELS, BUCKETS, type Bucket, type SourceItem } from "../core/items";
 import { openExternal } from "../platform";
 
 function ago(time: number, now: number): string {
@@ -28,9 +28,9 @@ export function ItemRow({
     <li className="item">
       <div className="item-text">
         <p className="item-meta">
-          <Tag variant="filled">{SOURCE_LABELS[item.source]}</Tag>
+          <Tag variant="filled">{item.sourceName}</Tag>
           <span>
-            {[item.source === "gmail" ? null : TYPE_LABELS[item.type], item.fromMe ? "You" : item.author, ago(item.occurredAt, now)]
+            {[item.kind, item.fromMe ? "You" : item.author, ago(item.occurredAt, now)]
               .filter(Boolean)
               .join(" · ")}
           </span>

@@ -154,8 +154,8 @@ export function TeamPage({
               </div>
 
               <div className="pm-section">
-                <h3>Jira epics</h3>
-                <p className="muted small">Jira is not connected yet, so epics and their health are not shown.</p>
+                <h3>Epics</h3>
+                <p className="muted small">No issue tracker is connected yet, so epics and their health are not shown.</p>
               </div>
 
               <div className="pm-actions">
