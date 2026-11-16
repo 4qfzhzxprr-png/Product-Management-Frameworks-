@@ -1,19 +1,21 @@
 import { Alert, Button, Modal } from "antd";
-import { BarChart3, Inbox, LayoutDashboard, NotebookPen, Plus } from "lucide-react";
+import { BarChart3, Inbox, LayoutDashboard, NotebookPen, Plus, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import type { Capture, Person, Project } from "../core/models";
+import type { Capture, CaptureKind, Person, Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import { isTauri, notifyDataChanged, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
 import { AnalyticsPage } from "./AnalyticsPage";
 import { CaptureForm } from "./CaptureForm";
 import { CapturesPage, type Selection } from "./CapturesPage";
 import { OverviewPage } from "./OverviewPage";
+import { TeamPage } from "./TeamPage";
 import { message, useStore } from "./useStore";
 
-type View = "overview" | "analytics" | "captures";
+type View = "overview" | "team" | "analytics" | "captures";
 
 const NAV = [
   { view: "overview", label: "Overview", icon: LayoutDashboard },
+  { view: "team", label: "Team", icon: Users },
   { view: "analytics", label: "Analytics", icon: BarChart3 },
   { view: "captures", label: "Captures", icon: NotebookPen },
 ] as const;
@@ -36,7 +38,8 @@ function Shell({ store }: { store: CaptureStore }) {
   const [revision, setRevision] = useState(0);
   const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
-  const [inlineCapture, setInlineCapture] = useState(false);
+  // Set while the in-window capture dialog is open; holds what the form starts on.
+  const [inlineCapture, setInlineCapture] = useState<{ kind?: CaptureKind; personId?: number } | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -80,7 +83,7 @@ function Shell({ store }: { store: CaptureStore }) {
   );
 
   async function openCapture() {
-    if (!(await showCaptureWindow())) setInlineCapture(true);
+    if (!(await showCaptureWindow())) setInlineCapture({});
   }
 
   function openCaptures(target: Selection) {
@@ -157,6 +160,21 @@ function Shell({ store }: { store: CaptureStore }) {
             }
           />
         )}
+        {view === "team" && (
+          <TeamPage
+            people={people}
+            captures={captures}
+            now={now}
+            onDone={(capture) => void change(() => store.setCaptureDone(capture.id, true))}
+            onCapture={(personId, kind) => setInlineCapture({ personId, kind })}
+            onAddPM={(name) =>
+              void change(async () => {
+                const person = await store.addPerson(name, true);
+                if (!person.isPM) await store.setPersonIsPM(person.id, true);
+              })
+            }
+          />
+        )}
         {view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
         {view === "captures" && (
           <CapturesPage
@@ -173,19 +191,20 @@ function Shell({ store }: { store: CaptureStore }) {
       </main>
 
       <Modal
-        open={inlineCapture}
+        open={inlineCapture !== null}
         title="Quick capture"
         footer={null}
         destroyOnHidden
-        onCancel={() => setInlineCapture(false)}
+        onCancel={() => setInlineCapture(null)}
       >
         <CaptureForm
           store={store}
+          initial={inlineCapture ?? undefined}
           onSaved={() => {
-            setInlineCapture(false);
+            setInlineCapture(null);
             void refresh();
           }}
-          onCancel={() => setInlineCapture(false)}
+          onCancel={() => setInlineCapture(null)}
         />
       </Modal>
     </div>

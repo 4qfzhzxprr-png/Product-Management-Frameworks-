@@ -14,6 +14,8 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
   commitment, ask or 1:1 note, optionally attach a person and a project, tag it as a win, and
   press Return.
 - **Overview.** What is waiting on you, how much you cleared this week, and four headline counts.
+- **Team.** One card per PM: what they need from you, what you are waiting on, their wins and your
+  last 1:1 note. Jira epics will appear here once Jira is connected.
 - **Analytics.** Captures per day or week over 7 days, 30 days or 13 weeks, with totals for the period.
 - **Captures.** Browse and search captures by person, project, open items and wins. Mark
   commitments and asks done.

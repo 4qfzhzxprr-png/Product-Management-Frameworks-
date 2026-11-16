@@ -10,13 +10,15 @@ interface Props {
   /** Called after a save. */
   onSaved: () => void;
   onCancel: () => void;
+  /** What the form starts on, for a capture opened from a person's card. */
+  initial?: { kind?: CaptureKind; personId?: number };
 }
 
 /** The quick capture form: one line of text, then who and what it is about. */
-export function CaptureForm({ store, onSaved, onCancel }: Props) {
+export function CaptureForm({ store, onSaved, onCancel, initial }: Props) {
   const [body, setBody] = useState("");
-  const [kind, setKind] = useState<CaptureKind>("note");
-  const [personId, setPersonId] = useState("");
+  const [kind, setKind] = useState<CaptureKind>(initial?.kind ?? "note");
+  const [personId, setPersonId] = useState(initial?.personId ? String(initial.personId) : "");
   const [projectId, setProjectId] = useState("");
   const [isWin, setIsWin] = useState(false);
   const [people, setPeople] = useState<Person[]>([]);

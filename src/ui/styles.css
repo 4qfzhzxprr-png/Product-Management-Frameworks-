@@ -729,6 +729,112 @@ select {
   stroke-linejoin: round;
 }
 
+/* Team */
+
+.add-pm {
+  display: flex;
+  gap: 8px;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.team-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 560px;
+}
+
+.pm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pm-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pm-head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.wins-tag.ant-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--gold-text);
+  font-weight: 700;
+}
+
+.pm-section h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--eyebrow);
+}
+
+.pm-section .count {
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 9px;
+  background: var(--inset);
+  color: var(--text);
+  letter-spacing: 0;
+}
+
+.pm-section ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pm-section li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.pm-section p {
+  overflow-wrap: anywhere;
+}
+
+.pm-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
 /* Analytics */
 
 .chart-card {
@@ -1185,6 +1291,15 @@ select {
 }
 
 @media (max-width: 420px) {
+  /* Four destinations and the capture button need the whole bar. */
+  .brand {
+    display: none;
+  }
+
+  .nav-item {
+    padding: 6px 7px;
+  }
+
   .capture-fields {
     flex-direction: column;
   }
