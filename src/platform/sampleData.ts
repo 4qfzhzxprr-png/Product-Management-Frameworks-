@@ -1,4 +1,5 @@
 import { dayStart } from "../core/insights";
+import type { IncomingItem } from "../core/items";
 import type { CaptureKind } from "../core/models";
 import type { CaptureStore } from "../core/store";
 
@@ -67,5 +68,57 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
     if (doneDaysAgo !== undefined) {
       await store.setCaptureDone(capture.id, true, Math.min(at(doneDaysAgo, 17), now));
     }
+  }
+
+  const hoursAgo = (hours: number) => now - hours * 3_600_000;
+  const sampleItems: Omit<IncomingItem, "externalId">[] = [
+    {
+      source: "gmail", type: "email", author: "Priya", addressedToMe: true, fromMe: false, occurredAt: hoursAgo(9),
+      title: "Refill reminders: pilot scope", url: "https://mail.google.com/",
+      snippet: "Can you decide whether SMS reminders are in the pilot? Engineering needs your call before sprint planning.",
+    },
+    {
+      source: "confluence", type: "mention", author: "Marco", addressedToMe: true, fromMe: false, occurredAt: hoursAgo(31),
+      title: "Patient portal PRD v3", url: "https://www.atlassian.com/software/confluence",
+      snippet: "@David please approve the revised success metrics so we can share this with design.",
+    },
+    {
+      source: "gmail", type: "email", author: "Offshore QA lead", addressedToMe: true, fromMe: false, occurredAt: hoursAgo(5),
+      title: "Release 4.2 regression results", url: "https://mail.google.com/",
+      snippet: "Two medium defects remain. We need your go/no-go for Thursday's release.",
+    },
+    {
+      source: "gmail", type: "email", author: "Lena", addressedToMe: false, fromMe: false, occurredAt: hoursAgo(6),
+      title: "Offshore stand-up notes", url: "https://mail.google.com/",
+      snippet: "Data export work is on track. Eligibility API integration starts tomorrow.",
+    },
+    {
+      source: "confluence", type: "page_edit", author: "Priya", addressedToMe: false, fromMe: false, occurredAt: hoursAgo(7),
+      title: "Refill flow research synthesis", url: "https://www.atlassian.com/software/confluence",
+      snippet: "Added findings from the last four pharmacist interviews.",
+    },
+    {
+      source: "confluence", type: "comment", author: "Design lead", addressedToMe: false, fromMe: false, occurredAt: hoursAgo(11),
+      title: "Consent screen copy", url: "https://www.atlassian.com/software/confluence",
+      snippet: "Updated the mockups to match the approved wording.",
+    },
+    {
+      source: "gmail", type: "email", author: "You", addressedToMe: false, fromMe: true, occurredAt: hoursAgo(100),
+      title: "Analytics access for the PM team", url: "https://mail.google.com/",
+      snippet: "Could you confirm when the PM team will get dashboard access?",
+    },
+    {
+      source: "gmail", type: "email", author: "You", addressedToMe: false, fromMe: true, occurredAt: hoursAgo(26),
+      title: "Eligibility check API estimate", url: "https://mail.google.com/",
+      snippet: "Can you send the estimate before Friday's planning?",
+    },
+    {
+      source: "gmail", type: "email", author: "CPO office", addressedToMe: true, fromMe: false, occurredAt: hoursAgo(50),
+      title: "Board deck timeline", url: "https://mail.google.com/",
+      snippet: "The board deck is due on the 24th. No action needed yet.",
+    },
+  ];
+  for (const [index, item] of sampleItems.entries()) {
+    await store.items.upsert({ ...item, externalId: `sample-${index}` });
   }
 }

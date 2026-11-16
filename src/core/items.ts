@@ -1,0 +1,127 @@
+/**
+ * Activity pulled in from company systems (email, Confluence, Jira), in one shape the
+ * morning brief and the decision queue can both read. Connectors write these; nothing
+ * here knows how any one system works.
+ */
+export type ItemSource = "gmail" | "confluence" | "jira";
+
+export const SOURCE_LABELS: Record<ItemSource, string> = {
+  gmail: "Email",
+  confluence: "Confluence",
+  jira: "Jira",
+};
+
+export type ItemType = "email" | "page_edit" | "comment" | "mention" | "ticket";
+
+export const TYPE_LABELS: Record<ItemType, string> = {
+  email: "Email",
+  page_edit: "Page edited",
+  comment: "Comment",
+  mention: "Mention",
+  ticket: "Ticket",
+};
+
+export const BUCKETS = ["decision", "waiting", "fyi"] as const;
+export type Bucket = (typeof BUCKETS)[number];
+
+export const BUCKET_LABELS: Record<Bucket, string> = {
+  decision: "Needs my decision",
+  waiting: "Waiting on someone else",
+  fyi: "FYI",
+};
+
+/** What a connector hands over for one thread, page or ticket. */
+export interface IncomingItem {
+  source: ItemSource;
+  /** The system's own id for the thread, page or ticket. One row is kept per id. */
+  externalId: string;
+  type: ItemType;
+  title: string;
+  /** The latest message or change, in plain text. */
+  snippet: string;
+  /** Who wrote the latest message or made the change. */
+  author: string;
+  /** Opens the item in its own system. */
+  url: string;
+  /** When the latest message or change happened, in milliseconds since the epoch. */
+  occurredAt: number;
+  /** Sent to David directly, or mentioning him. */
+  addressedToMe: boolean;
+  /** The latest message or change is David's own. */
+  fromMe: boolean;
+}
+
+export interface SourceItem extends IncomingItem {
+  id: number;
+  /** Where the rules put it, or where David moved it. */
+  bucket: Bucket;
+  /** True when David chose the bucket himself. */
+  moved: boolean;
+  dismissedAt: number | null;
+}
+
+// Phrases that usually mean the writer wants an answer or a go-ahead.
+const ASKS = [
+  /\?/,
+  /\bcan you\b/i,
+  /\bcould you\b/i,
+  /\bwould you\b/i,
+  /\bplease (confirm|approve|review|advise|decide|sign)/i,
+  /\bneed(s)? (your|a) (decision|approval|sign[- ]?off|input|call|answer|go[- ]ahead)/i,
+  /\byour (call|decision|approval|sign[- ]?off|thoughts|input)\b/i,
+  /\b(approve|approval|sign[- ]?off|go\/no[- ]go|blocked on you|waiting on you)\b/i,
+  /\blet me know\b/i,
+  /\bthoughts\b/i,
+];
+
+/**
+ * Sorts an item by simple rules, with no AI:
+ * - David spoke last and asked something: he is waiting on someone else.
+ * - It is addressed to David and asks something: it needs his decision.
+ * - Everything else is for information.
+ * David can move anything the rules get wrong.
+ */
+export function classify(item: Pick<IncomingItem, "title" | "snippet" | "addressedToMe" | "fromMe">): Bucket {
+  const text = `${item.title}\n${item.snippet}`;
+  const asks = ASKS.some((pattern) => pattern.test(text));
+  if (item.fromMe) return asks ? "waiting" : "fyi";
+  if (item.addressedToMe && asks) return "decision";
+  return "fyi";
+}
+
+/**
+ * When "overnight" began: 6pm on the last working day before today,
+ * so Monday morning covers the weekend.
+ */
+export function overnightStart(now: number): number {
+  const today = new Date(now);
+  const daysBack = today.getDay() === 1 ? 3 : today.getDay() === 0 ? 2 : 1;
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysBack, 18).getTime();
+}
+
+export interface Brief {
+  since: number;
+  /** Open decisions, oldest first: the longest wait is at the top. */
+  decisions: SourceItem[];
+  /** What changed since `since`, newest first, without the decisions above. */
+  overnight: SourceItem[];
+  /** Things David is waiting on that have gone three days without a reply. */
+  stale: SourceItem[];
+}
+
+/** The morning brief: what needs David, what happened while he was away, what has stalled. */
+export function buildBrief(items: SourceItem[], now: number): Brief {
+  const since = overnightStart(now);
+  const open = items.filter((item) => item.dismissedAt === null);
+  const staleBefore = now - 3 * 86_400_000;
+  return {
+    since,
+    decisions: open.filter((item) => item.bucket === "decision").sort((a, b) => a.occurredAt - b.occurredAt),
+    overnight: open
+      .filter((item) => item.bucket !== "decision" && !item.fromMe && item.occurredAt >= since)
+      .sort((a, b) => b.occurredAt - a.occurredAt),
+    stale: open
+      .filter((item) => item.bucket === "waiting" && item.occurredAt < staleBefore)
+      .sort((a, b) => a.occurredAt - b.occurredAt),
+  };
+}

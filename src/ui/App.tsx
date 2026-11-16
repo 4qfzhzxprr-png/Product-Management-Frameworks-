@@ -1,20 +1,25 @@
 import { Alert, Button, Modal } from "antd";
-import { BarChart3, Inbox, LayoutDashboard, NotebookPen, Plus, Users } from "lucide-react";
+import { BarChart3, Inbox, LayoutDashboard, ListChecks, NotebookPen, Plus, Sunrise, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import type { Bucket, SourceItem } from "../core/items";
 import type { Capture, CaptureKind, Person, Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import { isTauri, notifyDataChanged, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
 import { AnalyticsPage } from "./AnalyticsPage";
+import { BriefPage } from "./BriefPage";
 import { CaptureForm } from "./CaptureForm";
 import { CapturesPage, type Selection } from "./CapturesPage";
 import { OverviewPage } from "./OverviewPage";
+import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
 import { message, useStore } from "./useStore";
 
-type View = "overview" | "team" | "analytics" | "captures";
+type View = "overview" | "brief" | "queue" | "team" | "analytics" | "captures";
 
 const NAV = [
   { view: "overview", label: "Overview", icon: LayoutDashboard },
+  { view: "brief", label: "Brief", icon: Sunrise },
+  { view: "queue", label: "Queue", icon: ListChecks },
   { view: "team", label: "Team", icon: Users },
   { view: "analytics", label: "Analytics", icon: BarChart3 },
   { view: "captures", label: "Captures", icon: NotebookPen },
@@ -35,6 +40,9 @@ function Shell({ store }: { store: CaptureStore }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [captures, setCaptures] = useState<Capture[]>([]);
   const [waiting, setWaiting] = useState(0);
+  const [items, setItems] = useState<SourceItem[]>([]);
+  // True once anything has ever been synced, including items since dismissed.
+  const [connected, setConnected] = useState(false);
   const [revision, setRevision] = useState(0);
   const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
@@ -43,19 +51,24 @@ function Shell({ store }: { store: CaptureStore }) {
 
   const refresh = useCallback(async () => {
     try {
-      const [loadedPeople, loadedProjects, loadedCaptures, count] = await Promise.all([
+      const [loadedPeople, loadedProjects, loadedCaptures, count, allItems] = await Promise.all([
         store.people(),
         store.projects(),
         store.captures({ limit: 10_000 }),
         store.waitingOnMeCount(),
+        store.items.list({ includeDismissed: true }),
       ]);
+      const openItems = allItems.filter((item) => item.dismissedAt === null);
+      setItems(openItems);
+      setConnected(allItems.length > 0);
       setPeople(loadedPeople);
       setProjects(loadedProjects);
       setCaptures(loadedCaptures);
       setWaiting(count);
       setNow(Date.now());
       setRevision((value) => value + 1);
-      await setWaitingCount(count);
+      // The menu bar counts open captures waiting on David plus synced items needing his decision.
+      await setWaitingCount(count + openItems.filter((item) => item.bucket === "decision").length);
     } catch (cause) {
       setError(message(cause));
     }
@@ -92,6 +105,9 @@ function Shell({ store }: { store: CaptureStore }) {
   }
 
   const personName = (id: number | null) => people.find((person) => person.id === id)?.name;
+  const decisions = items.filter((item) => item.bucket === "decision").length;
+  const moveItem = (item: SourceItem, bucket: Bucket) => void change(() => store.items.move(item.id, bucket));
+  const dismissItem = (item: SourceItem) => void change(() => store.items.dismiss(item.id));
 
   return (
     <div className="shell">
@@ -113,6 +129,11 @@ function Shell({ store }: { store: CaptureStore }) {
             >
               <Icon size={18} aria-hidden="true" />
               <span>{label}</span>
+              {target === "queue" && decisions > 0 && (
+                <span className="nav-badge" aria-label={`${decisions} need your decision`}>
+                  {decisions}
+                </span>
+              )}
               {target === "captures" && waiting > 0 && (
                 <span className="nav-badge" aria-label={`${waiting} waiting on you`}>
                   {waiting}
@@ -159,6 +180,19 @@ function Shell({ store }: { store: CaptureStore }) {
               })
             }
           />
+        )}
+        {view === "brief" && (
+          <BriefPage
+            items={items}
+            now={now}
+            connected={connected}
+            onMove={moveItem}
+            onDismiss={dismissItem}
+            onOpenQueue={() => setView("queue")}
+          />
+        )}
+        {view === "queue" && (
+          <QueuePage items={items} now={now} connected={connected} onMove={moveItem} onDismiss={dismissItem} />
         )}
         {view === "team" && (
           <TeamPage

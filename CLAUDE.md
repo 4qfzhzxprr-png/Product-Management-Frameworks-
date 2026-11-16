@@ -33,6 +33,19 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 - Dashboard numbers come only from stored captures. Sample data exists solely for the browser
   preview (`src/platform/sampleData.ts`) and is labelled as such in the sidebar.
 
+## Where Phase 1 stands (2026-11-16)
+
+- Done: quick capture, the menu bar count, the team board (capture-based parts), and the
+  brief and queue pages with their storage and rule-based sorting.
+- Not done: every connector. Nothing writes to the `items` table except the browser preview's
+  sample data. A connector's whole job is to call `store.items.upsert()` with `IncomingItem`s
+  (see `src/core/items.ts`); the brief, the queue and the menu bar count then work unchanged.
+- The sorting rules in `classify()` were written without seeing real mail. Expect to tune them
+  once a connector delivers real items.
+- Blocked on David: whether Atlassian is Cloud and allows API tokens, Google OAuth approval,
+  the approved AI vendor, and what "distribution through Apple" means (App Store or notarized
+  download).
+
 ## Working here
 
 - `npm test` runs the storage tests; `npm run build` type-checks and bundles.

@@ -1,4 +1,5 @@
 import type { Db, SqlParam } from "./db";
+import { ItemStore } from "./itemStore";
 import {
   CAPTURE_KINDS,
   isActionable,
@@ -36,6 +37,27 @@ const MIGRATIONS: string[][] = [
     `CREATE INDEX IF NOT EXISTS captures_person ON captures(person_id)`,
     `CREATE INDEX IF NOT EXISTS captures_project ON captures(project_id)`,
   ],
+  [
+    // Activity synced from company systems; see items.ts.
+    `CREATE TABLE IF NOT EXISTS items (
+       id INTEGER PRIMARY KEY,
+       source TEXT NOT NULL,
+       external_id TEXT NOT NULL,
+       type TEXT NOT NULL,
+       title TEXT NOT NULL,
+       snippet TEXT NOT NULL DEFAULT '',
+       author TEXT NOT NULL DEFAULT '',
+       url TEXT NOT NULL DEFAULT '',
+       occurred_at INTEGER NOT NULL,
+       addressed_to_me INTEGER NOT NULL DEFAULT 0,
+       from_me INTEGER NOT NULL DEFAULT 0,
+       bucket TEXT NOT NULL,
+       bucket_override TEXT,
+       dismissed_at INTEGER,
+       UNIQUE (source, external_id)
+     )`,
+    `CREATE INDEX IF NOT EXISTS items_occurred ON items(occurred_at DESC)`,
+  ],
 ];
 
 interface PersonRow {
@@ -57,7 +79,12 @@ interface CaptureRow {
 
 /** Local storage for people, projects and quick captures. */
 export class CaptureStore {
-  private constructor(private readonly db: Db) {}
+  /** Activity synced from company systems. */
+  readonly items: ItemStore;
+
+  private constructor(private readonly db: Db) {
+    this.items = new ItemStore(db);
+  }
 
   static async open(db: Db): Promise<CaptureStore> {
     const rows = await db.all<{ user_version: number }>("PRAGMA user_version");
