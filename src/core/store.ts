@@ -171,6 +171,16 @@ export class CaptureStore {
     return { id: lastInsertId, ...capture };
   }
 
+  /** Changes a capture's text, kind, person, project or win tag. When it was captured and done stays as is. */
+  async updateCapture(id: number, input: NewCapture): Promise<void> {
+    const body = input.body.trim();
+    if (!body) throw new Error("A capture needs some text.");
+    await this.db.run(
+      "UPDATE captures SET kind = ?, body = ?, person_id = ?, project_id = ?, is_win = ? WHERE id = ?",
+      [input.kind ?? "note", body, input.personId ?? null, input.projectId ?? null, input.isWin ? 1 : 0, id],
+    );
+  }
+
   /** Newest first. */
   async captures(filter: CaptureFilter = {}): Promise<Capture[]> {
     const { clause, params } = whereClause(filter);

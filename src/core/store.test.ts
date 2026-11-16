@@ -73,6 +73,19 @@ describe("CaptureStore", () => {
     expect(await store.waitingOnMeCount()).toBe(2);
   });
 
+  it("edits a capture without changing when it was captured or done", async () => {
+    const { store } = await makeStore();
+    const sam = await store.addPerson("Sam");
+    const original = await store.addCapture({ body: "draft", kind: "commitment", at: 100 });
+    await store.setCaptureDone(original.id, true, 200);
+
+    await store.updateCapture(original.id, { body: " final ", kind: "ask_of_me", personId: sam.id, isWin: true });
+    expect(await store.captures()).toMatchObject([
+      { body: "final", kind: "ask_of_me", personId: sam.id, projectId: null, isWin: true, createdAt: 100, doneAt: 200 },
+    ]);
+    await expect(store.updateCapture(original.id, { body: " " })).rejects.toThrow();
+  });
+
   it("searches case-insensitively and treats wildcards literally", async () => {
     const { store } = await makeStore();
     await store.addCapture({ body: "margin up 5% this quarter" });

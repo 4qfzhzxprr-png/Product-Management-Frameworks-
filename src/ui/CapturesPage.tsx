@@ -1,5 +1,5 @@
 import { Badge, Button, Checkbox, Empty, Input, Tag } from "antd";
-import { Search, Star, X } from "lucide-react";
+import { Pencil, Search, Star, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isActionable, KIND_LABELS, type Capture, type CaptureFilter, type Person, type Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
@@ -40,6 +40,7 @@ export function CapturesPage({
   revision,
   selection,
   onSelect,
+  onEdit,
   change,
 }: {
   store: CaptureStore;
@@ -50,6 +51,7 @@ export function CapturesPage({
   revision: number;
   selection: Selection;
   onSelect: (selection: Selection) => void;
+  onEdit: (capture: Capture) => void;
   change: (work: () => Promise<unknown>) => Promise<void>;
 }) {
   const [captures, setCaptures] = useState<Capture[]>([]);
@@ -220,6 +222,14 @@ export function CapturesPage({
                       <p className="capture-body">{capture.body}</p>
                       <p className="capture-detail">{detail.join(" · ")}</p>
                     </div>
+                    <Button
+                      type="text"
+                      shape="circle"
+                      icon={<Pencil size={15} aria-hidden="true" />}
+                      title="Edit"
+                      aria-label="Edit capture"
+                      onClick={() => onEdit(capture)}
+                    />
                     <Button
                       type="text"
                       shape="circle"

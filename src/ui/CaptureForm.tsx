@@ -1,7 +1,7 @@
 import { Button, Checkbox, Input } from "antd";
 import type { TextAreaRef } from "antd/es/input/TextArea";
 import { useEffect, useRef, useState } from "react";
-import { CAPTURE_KINDS, KIND_LABELS, type CaptureKind, type Person, type Project } from "../core/models";
+import { CAPTURE_KINDS, KIND_LABELS, type Capture, type CaptureKind, type Person, type Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import { message } from "./useStore";
 
@@ -12,15 +12,17 @@ interface Props {
   onCancel: () => void;
   /** What the form starts on, for a capture opened from a person's card. */
   initial?: { kind?: CaptureKind; personId?: number };
+  /** An existing capture to change, instead of adding a new one. */
+  editing?: Capture;
 }
 
 /** The quick capture form: one line of text, then who and what it is about. */
-export function CaptureForm({ store, onSaved, onCancel, initial }: Props) {
-  const [body, setBody] = useState("");
-  const [kind, setKind] = useState<CaptureKind>(initial?.kind ?? "note");
-  const [personId, setPersonId] = useState(initial?.personId ? String(initial.personId) : "");
-  const [projectId, setProjectId] = useState("");
-  const [isWin, setIsWin] = useState(false);
+export function CaptureForm({ store, onSaved, onCancel, initial, editing }: Props) {
+  const [body, setBody] = useState(editing?.body ?? "");
+  const [kind, setKind] = useState<CaptureKind>(editing?.kind ?? initial?.kind ?? "note");
+  const [personId, setPersonId] = useState(String(editing?.personId ?? initial?.personId ?? ""));
+  const [projectId, setProjectId] = useState(String(editing?.projectId ?? ""));
+  const [isWin, setIsWin] = useState(editing?.isWin ?? false);
   const [people, setPeople] = useState<Person[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -42,13 +44,15 @@ export function CaptureForm({ store, onSaved, onCancel, initial }: Props) {
   async function save() {
     if (!canSave) return;
     try {
-      await store.addCapture({
+      const values = {
         body,
         kind,
         personId: personId ? Number(personId) : null,
         projectId: projectId ? Number(projectId) : null,
         isWin,
-      });
+      };
+      if (editing) await store.updateCapture(editing.id, values);
+      else await store.addCapture(values);
       onSaved();
     } catch (cause) {
       setError(message(cause));

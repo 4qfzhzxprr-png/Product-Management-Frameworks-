@@ -47,7 +47,11 @@ function Shell({ store }: { store: CaptureStore }) {
   const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
   // Set while the in-window capture dialog is open; holds what the form starts on.
-  const [inlineCapture, setInlineCapture] = useState<{ kind?: CaptureKind; personId?: number } | null>(null);
+  const [inlineCapture, setInlineCapture] = useState<{
+    kind?: CaptureKind;
+    personId?: number;
+    editing?: Capture;
+  } | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -219,6 +223,7 @@ function Shell({ store }: { store: CaptureStore }) {
             revision={revision}
             selection={selection}
             onSelect={setSelection}
+            onEdit={(capture) => setInlineCapture({ editing: capture })}
             change={change}
           />
         )}
@@ -226,7 +231,7 @@ function Shell({ store }: { store: CaptureStore }) {
 
       <Modal
         open={inlineCapture !== null}
-        title="Quick capture"
+        title={inlineCapture?.editing ? "Edit capture" : "Quick capture"}
         footer={null}
         destroyOnHidden
         onCancel={() => setInlineCapture(null)}
@@ -234,6 +239,7 @@ function Shell({ store }: { store: CaptureStore }) {
         <CaptureForm
           store={store}
           initial={inlineCapture ?? undefined}
+          editing={inlineCapture?.editing}
           onSaved={() => {
             setInlineCapture(null);
             void refresh();
