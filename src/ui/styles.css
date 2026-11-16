@@ -1,48 +1,57 @@
 /*
- * Warm rose glass theme. Tokens first; every surface below reads from them, and
- * theme.tsx mirrors the same colors for the Ant Design controls.
+ * RazorMetrics glass theme. Colors are sampled from a screenshot of razormetrics.com
+ * (navy, periwinkle, lavender, purple, a magenta-to-amber gradient and gold).
+ * Tokens first; every surface below reads from them, and theme.tsx mirrors the same
+ * colors for the Ant Design controls.
  *
  * Everything is translucent over one blurred backdrop: the sidebar, the main panel,
- * the cards inside it and the coral hero. Tints are strong enough, and text dark
+ * the cards inside it and the blue hero. Tints are strong enough, and text dark
  * enough, that small text keeps about 4.5:1 contrast wherever the backdrop shows through.
  */
 :root {
   color-scheme: light dark;
-  --page: #e6d3c5;
-  --blob-rose: rgba(205, 112, 98, 0.6);
-  --blob-tan: rgba(160, 112, 86, 0.55);
-  --blob-brown: rgba(112, 76, 64, 0.5);
-  --blob-cream: rgba(255, 247, 238, 0.85);
-  --sidebar-from: rgba(150, 92, 83, 0.74);
-  --sidebar-to: rgba(112, 66, 60, 0.8);
+  --page: #f5f7fd;
+  --blob-a: rgba(150, 172, 250, 0.75);
+  --blob-b: rgba(184, 200, 250, 0.8);
+  --blob-c: rgba(206, 186, 240, 0.6);
+  --blob-light: rgba(255, 255, 255, 0.9);
+  --sidebar-from: rgba(3, 0, 105, 0.8);
+  --sidebar-to: rgba(0, 3, 51, 0.88);
   --sidebar-text: #ffffff;
   --sidebar-muted: rgba(255, 255, 255, 0.86);
   --sidebar-hover: rgba(255, 255, 255, 0.14);
-  --pill: rgba(255, 255, 255, 0.92);
-  --pill-text: #433634;
-  --panel: rgba(255, 250, 246, 0.36);
-  --panel-border: rgba(255, 255, 255, 0.55);
-  --glass: rgba(255, 255, 255, 0.46);
-  --glass-border: rgba(255, 255, 255, 0.7);
-  --inset: rgba(255, 255, 255, 0.55);
-  --solid: #fbf6f2;
-  --text: #433634;
-  --muted: #63504c;
-  --line: rgba(67, 54, 52, 0.14);
-  --hover: rgba(67, 54, 52, 0.07);
-  --accent: #c8433f;
+  --pill: rgba(255, 255, 255, 0.94);
+  --pill-text: #030069;
+  --panel: rgba(255, 255, 255, 0.34);
+  --panel-border: rgba(255, 255, 255, 0.7);
+  --glass: rgba(255, 255, 255, 0.52);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --inset: rgba(255, 255, 255, 0.6);
+  --solid: #f5f7fd;
+  --text: #030069;
+  --muted: #4a4a56;
+  --line: rgba(3, 0, 105, 0.14);
+  --hover: rgba(3, 0, 105, 0.07);
+  --accent: #030069;
   --accent-text: #ffffff;
-  --coral-from: rgba(168, 50, 48, 0.82);
-  --coral-to: rgba(198, 72, 66, 0.7);
-  --coral-glow: rgba(255, 176, 150, 0.4);
-  --coral-border: rgba(255, 255, 255, 0.34);
-  --bar: #d95250;
-  --bar-active: #a63838;
-  --ink: #2e2422;
-  --ink-text: #ffffff;
-  --star: #b5730a;
-  --danger: #a3261f;
-  --shadow: 0 14px 40px rgba(83, 46, 39, 0.14);
+  --eyebrow: #952394;
+  --hero-from: rgba(3, 0, 105, 0.86);
+  --hero-to: rgba(64, 85, 194, 0.8);
+  --hero-glow: rgba(100, 134, 247, 0.65);
+  --hero-border: rgba(255, 255, 255, 0.34);
+  --hero-shadow: rgba(3, 0, 105, 0.26);
+  --numeral: linear-gradient(100deg, #9f3187, #c8754f);
+  --numeral-flat: #9f3187;
+  --bar: #6486f7;
+  --bar-active: #030069;
+  --cta: #6486f7;
+  --cta-text: #000333;
+  --gold: #f5c24a;
+  --gold-text: #000333;
+  --star: #a8740a;
+  --danger: #b3261e;
+  --shadow: 0 14px 40px rgba(3, 0, 105, 0.12);
+  --lift-shadow: 0 20px 44px rgba(3, 0, 105, 0.2);
   --radius: 22px;
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
@@ -50,38 +59,41 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --page: #1f1615;
-    --blob-rose: rgba(196, 70, 66, 0.4);
-    --blob-tan: rgba(128, 84, 62, 0.4);
-    --blob-brown: rgba(70, 44, 38, 0.6);
-    --blob-cream: rgba(255, 255, 255, 0.06);
-    --sidebar-from: rgba(78, 48, 44, 0.72);
-    --sidebar-to: rgba(46, 28, 26, 0.8);
-    --pill: rgba(255, 255, 255, 0.9);
-    --pill-text: #2e2422;
+    --page: #05062a;
+    --blob-a: rgba(64, 85, 194, 0.5);
+    --blob-b: rgba(46, 60, 168, 0.5);
+    --blob-c: rgba(149, 35, 148, 0.28);
+    --blob-light: rgba(255, 255, 255, 0.05);
+    --sidebar-from: rgba(20, 22, 110, 0.7);
+    --sidebar-to: rgba(0, 3, 51, 0.82);
+    --pill: rgba(255, 255, 255, 0.92);
+    --pill-text: #030069;
     --panel: rgba(255, 255, 255, 0.05);
     --panel-border: rgba(255, 255, 255, 0.1);
     --glass: rgba(255, 255, 255, 0.07);
-    --glass-border: rgba(255, 255, 255, 0.13);
-    --inset: rgba(255, 255, 255, 0.07);
-    --solid: #2b2020;
-    --text: #f5ebe6;
-    --muted: #cbb5ae;
-    --line: rgba(255, 255, 255, 0.14);
+    --glass-border: rgba(255, 255, 255, 0.14);
+    --inset: rgba(255, 255, 255, 0.08);
+    --solid: #10123f;
+    --text: #eef0ff;
+    --muted: #bcc2e8;
+    --line: rgba(255, 255, 255, 0.16);
     --hover: rgba(255, 255, 255, 0.08);
-    --accent: #f08a80;
-    --accent-text: #2a1110;
-    --coral-from: rgba(150, 46, 46, 0.82);
-    --coral-to: rgba(178, 62, 58, 0.76);
-    --coral-glow: rgba(255, 150, 130, 0.22);
-    --coral-border: rgba(255, 255, 255, 0.2);
-    --bar: #ef7d72;
-    --bar-active: #ffb3a8;
-    --ink: #f5ebe6;
-    --ink-text: #2e2422;
-    --star: #f0b93a;
+    --accent: #9fb2ff;
+    --accent-text: #000333;
+    --eyebrow: #e08ade;
+    --hero-from: rgba(24, 30, 140, 0.82);
+    --hero-to: rgba(64, 85, 194, 0.72);
+    --hero-glow: rgba(100, 134, 247, 0.4);
+    --hero-border: rgba(255, 255, 255, 0.2);
+    --hero-shadow: rgba(0, 0, 0, 0.4);
+    --numeral: linear-gradient(100deg, #e08ade, #f0b56a);
+    --numeral-flat: #e08ade;
+    --bar: #6486f7;
+    --bar-active: #c5d2fb;
+    --star: #f5c24a;
     --danger: #ff9a90;
-    --shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+    --shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+    --lift-shadow: 0 20px 44px rgba(0, 0, 0, 0.55);
   }
 }
 
@@ -96,15 +108,15 @@ body,
   margin: 0;
 }
 
-/* The backdrop the glass sits on: soft blurred shapes, darkest under the sidebar. */
+/* The backdrop the glass sits on: soft blurred shapes, as on the RazorMetrics homepage. */
 body {
   color: var(--text);
   background:
-    radial-gradient(30rem 26rem at 0% 100%, var(--blob-brown), transparent 70%),
-    radial-gradient(34rem 24rem at 100% 0%, var(--blob-rose), transparent 68%),
-    radial-gradient(36rem 26rem at 96% 100%, var(--blob-tan), transparent 68%),
-    radial-gradient(30rem 22rem at 6% 0%, var(--blob-tan), transparent 70%),
-    radial-gradient(40rem 30rem at 52% 34%, var(--blob-cream), transparent 72%),
+    radial-gradient(34rem 26rem at 100% 0%, var(--blob-a), transparent 68%),
+    radial-gradient(30rem 26rem at 0% 100%, var(--blob-b), transparent 70%),
+    radial-gradient(36rem 26rem at 96% 100%, var(--blob-c), transparent 68%),
+    radial-gradient(30rem 22rem at 8% 0%, var(--blob-b), transparent 70%),
+    radial-gradient(40rem 30rem at 52% 36%, var(--blob-light), transparent 72%),
     var(--page);
   background-attachment: fixed;
 }
@@ -207,7 +219,7 @@ select {
 
 .lift:hover {
   transform: translateY(-3px);
-  box-shadow: 0 20px 44px rgba(83, 46, 39, 0.2);
+  box-shadow: var(--lift-shadow);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -235,7 +247,7 @@ select {
   gap: 24px;
   padding: 20px 12px 16px;
   border-radius: 28px;
-  border: 1px solid var(--coral-border);
+  border: 1px solid var(--hero-border);
   background: linear-gradient(180deg, var(--sidebar-from), var(--sidebar-to));
   color: var(--sidebar-text);
   box-shadow: var(--shadow);
@@ -257,7 +269,7 @@ select {
   height: 34px;
   border-radius: 11px;
   background: var(--pill);
-  color: var(--accent);
+  color: var(--bar);
 }
 
 .sidebar nav {
@@ -287,7 +299,7 @@ select {
   background: var(--pill);
   color: var(--pill-text);
   font-weight: 600;
-  box-shadow: 0 6px 16px rgba(60, 30, 26, 0.18);
+  box-shadow: 0 6px 16px rgba(0, 3, 51, 0.25);
 }
 
 .nav-item span:first-of-type {
@@ -299,8 +311,8 @@ select {
   font-weight: 700;
   padding: 0 7px;
   border-radius: 9px;
-  background: var(--accent);
-  color: var(--accent-text);
+  background: var(--gold);
+  color: var(--gold-text);
 }
 
 .sidebar :focus-visible {
@@ -320,14 +332,14 @@ select {
 }
 
 .capture-button.ant-btn {
-  background: var(--ink);
-  color: var(--ink-text);
+  background: var(--cta);
+  color: var(--cta-text);
   font-weight: 600;
 }
 
 .capture-button.ant-btn:hover {
-  background: var(--ink) !important;
-  color: var(--ink-text) !important;
+  background: var(--cta) !important;
+  color: var(--cta-text) !important;
   opacity: 0.9;
 }
 
@@ -390,12 +402,12 @@ select {
   gap: 24px;
   padding: 26px 28px;
   border-radius: var(--radius);
-  border: 1px solid var(--coral-border);
+  border: 1px solid var(--hero-border);
   color: #ffffff;
   background:
-    radial-gradient(18rem 14rem at 100% 0%, var(--coral-glow), transparent 70%),
-    linear-gradient(120deg, var(--coral-from), var(--coral-to));
-  box-shadow: 0 18px 44px rgba(150, 48, 46, 0.26);
+    radial-gradient(18rem 14rem at 100% 0%, var(--hero-glow), transparent 70%),
+    linear-gradient(120deg, var(--hero-from), var(--hero-to));
+  box-shadow: 0 18px 44px var(--hero-shadow);
 }
 
 .hero-text {
@@ -474,7 +486,7 @@ select {
 .pill.solid.ant-btn:hover {
   background: #ffffff !important;
   border-color: #ffffff !important;
-  color: #8f2c2c !important;
+  color: #030069 !important;
 }
 
 .pill.outline.ant-btn,
@@ -529,8 +541,12 @@ select {
 .cal-day {
   font-size: 40px;
   line-height: 1;
-  font-weight: 300;
-  color: var(--accent);
+  font-weight: 700;
+  color: var(--numeral-flat);
+  background: var(--numeral);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   font-variant-numeric: tabular-nums;
 }
 
@@ -586,7 +602,7 @@ select {
   padding: 9px 12px;
   border-radius: 14px;
   background: var(--inset);
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--bar);
 }
 
 .waiting ul li p {
@@ -656,6 +672,16 @@ select {
   font-variant-numeric: tabular-nums;
 }
 
+.stat:not(.accent) .stat-value {
+  align-self: flex-start;
+  font-weight: 700;
+  color: var(--numeral-flat);
+  background: var(--numeral);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .stat-label {
   font-size: 13px;
   font-weight: 700;
@@ -667,8 +693,8 @@ select {
 }
 
 .stat.accent {
-  border-color: var(--coral-border);
-  background: linear-gradient(135deg, var(--coral-from), var(--coral-to));
+  border-color: var(--hero-border);
+  background: linear-gradient(135deg, var(--hero-from), var(--hero-to));
   color: #ffffff;
 }
 
@@ -875,8 +901,8 @@ select {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
+  letter-spacing: 0.08em;
+  color: var(--eyebrow);
 }
 
 .filters h2:first-child {
@@ -914,7 +940,7 @@ select {
   background: var(--pill);
   color: var(--pill-text);
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(60, 30, 26, 0.12);
+  box-shadow: 0 4px 12px rgba(3, 0, 105, 0.12);
 }
 
 .filter-label {
@@ -1081,7 +1107,7 @@ select {
     padding: 8px 12px;
     border-radius: 0 0 var(--radius) var(--radius);
     /* Content scrolls underneath, so the bar is close to opaque here. */
-    background: linear-gradient(180deg, rgba(150, 92, 83, 0.95), rgba(124, 74, 67, 0.95));
+    background: linear-gradient(180deg, rgba(3, 0, 105, 0.96), rgba(0, 3, 51, 0.96));
   }
 
   .brand {

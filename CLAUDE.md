@@ -14,9 +14,14 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
 
 ## Design
 
-- Warm rose glass look, matched to a "Glassy Dashboard" reference clip and screenshot David
-  shared (2026-11-15). He asked for glass throughout, not solid color: the sidebar, the main
-  panel, the cards and the coral hero are all translucent over one blurred backdrop.
+- Glass layout matched to a "Glassy Dashboard" reference clip and screenshot David shared
+  (2026-11-15). He asked for glass throughout, not solid color: the sidebar, the main panel,
+  the cards and the hero are all translucent over one blurred backdrop.
+- Colors are RazorMetrics' (2026-11-16), sampled from a screenshot of razormetrics.com because
+  the site blocks automated fetches: navy `#030069`, banner navy `#000333`, periwinkle
+  `#6486f7`, lavender `#f5f7fd`, purple `#952394`, gold `#f5c24a`, body gray `#4a4a56`, and a
+  magenta-to-amber gradient (`#9f3187` to about `#e2a556`) on large numerals. The earlier rose
+  and coral palette is gone.
 - Tokens are at the top of `src/ui/styles.css`, mirrored for Ant Design in `src/ui/theme.tsx`.
   Use `GlassCard` and `StatCard` from `src/ui/components.tsx` rather than restyling per page.
 - David asked for Ant Design (`antd`) as the component library. Use it for controls: buttons,
@@ -24,7 +29,7 @@ Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build 
   navigation, the glass surfaces and the bar chart are the app's own. The capture form keeps
   native `<select>`s because Ant Design's dropdowns do not fit in the small capture window.
 - `lucide-react` icons and CSS-only motion. No Tailwind, Framer Motion or chart library.
-- Text and accent colors are darker than the clip's pastels so small text stays readable.
+- The numeral gradient ends darker than the site's amber so large numbers stay readable on white.
 - Dashboard numbers come only from stored captures. Sample data exists solely for the browser
   preview (`src/platform/sampleData.ts`) and is labelled as such in the sidebar.
 
