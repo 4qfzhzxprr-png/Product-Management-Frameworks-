@@ -1,6 +1,8 @@
 # Daily Work app
 
-Read `docs/HANDOVER.md` first: it is the product plan, and Phase 1 is the build target.
+Read `docs/PLAN.md` first: it is the current plan, with every phase, its scope and what is
+built. `docs/HANDOVER.md` is the original brief it grew from. Keep `docs/PLAN.md` up to date
+when a feature is built, a decision is made or scope changes.
 
 ## Decisions made (2026-11-15)
 

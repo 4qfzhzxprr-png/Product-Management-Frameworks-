@@ -1,7 +1,8 @@
 # Daily Work
 
 A personal menu bar app for a product leader: a manager's command center that shows what is
-waiting on you, with everything stored locally on the Mac. The full plan is in
+waiting on you, with everything stored locally on the Mac. The full plan, with every phase, its scope
+and what is built, is in [docs/PLAN.md](docs/PLAN.md); the original brief is
 [docs/HANDOVER.md](docs/HANDOVER.md).
 
 It is a web app (React and TypeScript) inside a thin [Tauri](https://tauri.app) wrapper, which
