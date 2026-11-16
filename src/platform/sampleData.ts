@@ -15,6 +15,8 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
   const priya = await store.addPerson("Priya", true);
   const marco = await store.addPerson("Marco", true);
   const lena = await store.addPerson("Lena");
+  // The person David reports to, in the sample.
+  const jordan = await store.addPerson("Jordan");
   const portal = await store.addProject("Patient portal");
   const refills = await store.addProject("Refill flow");
 
@@ -29,6 +31,13 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
     dueInDays?: number,
   ];
   const samples: Sample[] = [
+    ["Q1 headcount approval for the offshore team", "ask_of_them", 4, jordan.id, null],
+    ["Send the refill pilot readout", "commitment", 3, jordan.id, refills.id, false, undefined, 2],
+    ["Share the pricing experiment results", "ask_of_me", 2, jordan.id, null],
+    ["How we report pilot results to the board", "agenda", 3, jordan.id, null],
+    ["Agreed the portal beta stays invite-only until January", "one_on_one", 8, jordan.id, portal.id],
+    ["Pilot SMS reminders with 20 pharmacies before a wider launch", "decision", 2, null, refills.id],
+    ["Offshore team owns the eligibility work end to end", "decision", 4, null, refills.id],
     ["Decide the scope of refill reminders for the pilot", "ask_of_me", 4, priya.id, refills.id],
     ["Send Marco feedback on the portal PRD", "commitment", 2, marco.id, portal.id, false, undefined, 1],
     ["Review the offshore handoff template", "ask_of_me", 1, lena.id, null],
@@ -145,7 +154,7 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
     externalId, title, status, statusLabel, team,
     kind: "Story", level: "item", url: "https://www.atlassian.com/software/jira", ownerName: "",
     parentExternalId: null, sprint: "Sprint 24", sprintEndsAt: now + 4 * DAY, dueAt: null,
-    createdAt: now - 20 * DAY, updatedAt: now - DAY, waitingOnProduct: false,
+    createdAt: now - 20 * DAY, updatedAt: now - DAY, waitingOnProduct: false, resolvedAt: null,
     ...extra,
   });
   const epic = (externalId: string, title: string, ownerName: string, extra: Partial<WorkRecord> = {}) =>
@@ -154,11 +163,11 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
     epic("PORT-1", "Patient portal beta", "Priya", { dueAt: now + 20 * DAY }),
     epic("REF-1", "Refill flow pilot", "Marco", { dueAt: now + 9 * DAY }),
     epic("REF-2", "Eligibility check", "Marco", { dueAt: now - 2 * DAY }),
-    work("PORT-12", "Consent screen", "done", "Done", "Onshore", { parentExternalId: "PORT-1" }),
-    work("PORT-14", "Appointment list", "done", "Done", "Onshore", { parentExternalId: "PORT-1" }),
+    work("PORT-12", "Consent screen", "done", "Done", "Onshore", { resolvedAt: now - 2 * DAY, parentExternalId: "PORT-1" }),
+    work("PORT-14", "Appointment list", "done", "Done", "Onshore", { resolvedAt: now - 9 * DAY, parentExternalId: "PORT-1" }),
     work("PORT-15", "Secure messaging inbox", "in_progress", "In review", "Onshore", { parentExternalId: "PORT-1" }),
     work("PORT-18", "Accessibility pass", "todo", "Ready for dev", "Onshore", { parentExternalId: "PORT-1" }),
-    work("REF-21", "Reminder scheduling service", "done", "Done", "Offshore", { parentExternalId: "REF-1" }),
+    work("REF-21", "Reminder scheduling service", "done", "Done", "Offshore", { resolvedAt: now - 1 * DAY, parentExternalId: "REF-1" }),
     work("REF-22", "SMS reminder template", "blocked", "Blocked", "Offshore", {
       parentExternalId: "REF-1", waitingOnProduct: true, updatedAt: now - 4 * DAY,
     }),
@@ -170,9 +179,35 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
     work("REF-33", "Payer response mapping", "blocked", "Blocked", "Offshore", {
       parentExternalId: "REF-2", updatedAt: now - 6 * DAY,
     }),
-    work("OPS-7", "Data export for analytics", "done", "Done", "Offshore"),
+    work("OPS-7", "Data export for analytics", "done", "Done", "Offshore", { resolvedAt: now - 4 * DAY }),
   ];
   for (const record of sampleWork) {
     await store.work.upsert({ ...record, source: "sample-tracker", sourceName: "Tracker" });
   }
+
+  // The CPO's priorities and the roadmap given to leadership, linked to the sample epics.
+  const epicRef = (externalId: string) => ({ source: "sample-tracker", externalId });
+  const { leadership } = store;
+  const growth = await leadership.addPriority("Grow pharmacy adoption");
+  await leadership.updatePriority(growth.id, { title: growth.title, notes: "Twice as many active pharmacies by June." });
+  const selfService = await leadership.addPriority("Patient self-service");
+  await leadership.addPriority("Platform reliability");
+  await leadership.linkEpic("priority", growth.id, epicRef("REF-1"), 4, now - 30 * DAY);
+  await leadership.linkEpic("priority", selfService.id, epicRef("PORT-1"), 4, now - 30 * DAY);
+
+  const pilot = await leadership.addRoadmapItem({
+    title: "Refill reminders pilot live", committedAt: dayStart(now, -9) + 86_399_000, toLeadership: true, at: now - 25 * DAY,
+  });
+  const eligibility = await leadership.addRoadmapItem({
+    title: "Eligibility checks for the top payers", committedAt: dayStart(now, 2) + 86_399_000, toLeadership: true, at: now - 30 * DAY,
+  });
+  const beta = await leadership.addRoadmapItem({
+    title: "Patient portal beta", committedAt: dayStart(now, -20) + 86_399_000, toLeadership: true, at: now - 20 * DAY,
+  });
+  // Linked when the pilot had two tickets; it has four now.
+  await leadership.linkEpic("roadmap", pilot, epicRef("REF-1"), 2, now - 25 * DAY);
+  await leadership.linkEpic("roadmap", eligibility, epicRef("REF-2"), 2, now - 30 * DAY);
+  await leadership.linkEpic("roadmap", beta, epicRef("PORT-1"), 4, now - 10 * DAY);
+
+  await store.settings.set("leadership", { managerId: jordan.id });
 }

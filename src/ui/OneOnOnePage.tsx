@@ -2,7 +2,7 @@ import { Button, Checkbox, Input, Tag } from "antd";
 import { ArrowLeft, X } from "lucide-react";
 import { useState } from "react";
 import type { Capture, CaptureKind, Person } from "../core/models";
-import { isCarriedOver, teamBoard } from "../core/team";
+import { isCarriedOver, personCard } from "../core/team";
 import { GlassCard } from "./components";
 
 function day(time: number): string {
@@ -15,7 +15,7 @@ function age(time: number, now: number): string {
 }
 
 /** A one-line field that adds a capture of one kind when submitted. */
-function AddLine({ placeholder, onAdd }: { placeholder: string; onAdd: (body: string) => void }) {
+export function AddLine({ placeholder, onAdd }: { placeholder: string; onAdd: (body: string) => void }) {
   const [value, setValue] = useState("");
   return (
     <form
@@ -35,7 +35,7 @@ function AddLine({ placeholder, onAdd }: { placeholder: string; onAdd: (body: st
   );
 }
 
-function Checklist({
+export function Checklist({
   items,
   empty,
   detail,
@@ -82,6 +82,7 @@ export function OneOnOnePage({
   people,
   captures,
   now,
+  backLabel = "Team",
   onBack,
   onAdd,
   onDone,
@@ -91,21 +92,24 @@ export function OneOnOnePage({
   people: Person[];
   captures: Capture[];
   now: number;
+  /** Where the back button returns to. */
+  backLabel?: string;
   onBack: () => void;
   onAdd: (kind: CaptureKind, body: string) => void;
   onDone: (capture: Capture, done: boolean) => void;
   onDelete: (capture: Capture) => void;
 }) {
   const [note, setNote] = useState("");
-  const card = teamBoard(people, captures, now).find((candidate) => candidate.person.id === personId);
+  const person = people.find((candidate) => candidate.id === personId);
+  const card = person ? personCard(person, captures, now) : null;
 
   if (!card) {
     return (
       <div className="page">
         <Button type="link" className="back" icon={<ArrowLeft size={15} aria-hidden="true" />} onClick={onBack}>
-          Team
+          {backLabel}
         </Button>
-        <p className="muted">This person is no longer marked as one of your PMs.</p>
+        <p className="muted">This person has been removed.</p>
       </div>
     );
   }
@@ -116,7 +120,7 @@ export function OneOnOnePage({
   return (
     <div className="page">
       <Button type="link" className="back" icon={<ArrowLeft size={15} aria-hidden="true" />} onClick={onBack}>
-        Team
+        {backLabel}
       </Button>
       <header className="page-head">
         <h1>1:1 with {card.person.name}</h1>

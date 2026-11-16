@@ -43,7 +43,7 @@ describe("handoffItems and the draft note", () => {
   const work = (extra: Partial<WorkItem>): WorkItem => ({
     id: 1, source: "c", sourceName: "Tracker", externalId: "T-1", kind: "Story", level: "item", title: "Thing",
     url: "", status: "blocked", statusLabel: "", ownerName: "", team: "Offshore", parentExternalId: null,
-    sprint: null, sprintEndsAt: null, dueAt: null, createdAt: 0, updatedAt: NOW, waitingOnProduct: true, ...extra,
+    sprint: null, sprintEndsAt: null, dueAt: null, createdAt: 0, updatedAt: NOW, resolvedAt: null, waitingOnProduct: true, ...extra,
   });
   const capture = (extra: Partial<Capture>): Capture => ({
     id: 1, createdAt: NOW - 1000, kind: "commitment", body: "x", personId: null, projectId: null,

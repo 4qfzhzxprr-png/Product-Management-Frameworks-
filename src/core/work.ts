@@ -36,6 +36,8 @@ export interface WorkRecord {
   createdAt: number;
   /** When it last changed in the tracker. */
   updatedAt: number;
+  /** When it was finished, if it is done. Feeds the shipped log. */
+  resolvedAt: number | null;
   /** Stuck until product answers a question. */
   waitingOnProduct: boolean;
 }
@@ -66,6 +68,7 @@ interface WorkRow {
   created_at: number;
   updated_at: number;
   waiting_on_product: number;
+  resolved_at: number | null;
 }
 
 /** Local storage for synced tickets and epics. The table is created by CaptureStore.open. */
@@ -76,8 +79,8 @@ export class WorkStore {
     await this.db.run(
       `INSERT INTO work_items
          (source, source_name, external_id, kind, level, title, url, status, status_label, owner_name, team,
-          parent_external_id, sprint, sprint_ends_at, due_at, created_at, updated_at, waiting_on_product)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          parent_external_id, sprint, sprint_ends_at, due_at, created_at, updated_at, waiting_on_product, resolved_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(source, external_id) DO UPDATE SET
          source_name = excluded.source_name, kind = excluded.kind, level = excluded.level,
          title = excluded.title, url = excluded.url, status = excluded.status,
@@ -85,11 +88,12 @@ export class WorkStore {
          parent_external_id = excluded.parent_external_id, sprint = excluded.sprint,
          sprint_ends_at = excluded.sprint_ends_at, due_at = excluded.due_at,
          created_at = excluded.created_at, updated_at = excluded.updated_at,
-         waiting_on_product = excluded.waiting_on_product`,
+         waiting_on_product = excluded.waiting_on_product, resolved_at = excluded.resolved_at`,
       [
         record.source, record.sourceName, record.externalId, record.kind, record.level, record.title, record.url,
         record.status, record.statusLabel, record.ownerName, record.team, record.parentExternalId, record.sprint,
         record.sprintEndsAt, record.dueAt, record.createdAt, record.updatedAt, record.waitingOnProduct ? 1 : 0,
+        record.resolvedAt,
       ],
     );
   }
@@ -116,6 +120,7 @@ export class WorkStore {
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       waitingOnProduct: row.waiting_on_product === 1,
+      resolvedAt: row.resolved_at,
     }));
   }
 

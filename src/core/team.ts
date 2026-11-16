@@ -20,14 +20,12 @@ export interface PmCard {
   lastCaptureAt: number | null;
 }
 
-/** One card per PM, those with the most waiting on David first. */
-export function teamBoard(people: Person[], captures: Capture[], now: number): PmCard[] {
+/** Everything captured about one person, PM or not: what each side owes, the agenda, 1:1 notes. */
+export function personCard(person: Person, captures: Capture[], now: number): PmCard {
   const monthStart = dayStart(now, 29);
   const oldestFirst = (a: Capture, b: Capture) => a.createdAt - b.createdAt;
-
-  return people
-    .filter((person) => person.isPM)
-    .map((person) => {
+  {
+    {
       const theirs = captures.filter((capture) => capture.personId === person.id);
       const open = theirs.filter((capture) => capture.doneAt === null);
       const oneOnOnes = theirs.filter((capture) => capture.kind === "one_on_one");
@@ -49,7 +47,15 @@ export function teamBoard(people: Person[], captures: Capture[], now: number): P
           null,
         ),
       };
-    })
+    }
+  }
+}
+
+/** One card per PM, those with the most waiting on David first. */
+export function teamBoard(people: Person[], captures: Capture[], now: number): PmCard[] {
+  return people
+    .filter((person) => person.isPM)
+    .map((person) => personCard(person, captures, now))
     .sort(
       (a, b) => b.needsFromMe.length - a.needsFromMe.length || a.person.name.localeCompare(b.person.name),
     );

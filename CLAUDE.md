@@ -70,7 +70,12 @@ when a feature is built, a decision is made or scope changes.
   what to send, and a rule-built draft note that David copies and sends himself).
 - The handoff window works from working hours, not calendars. A neutral calendar record
   would let it account for meetings; add one when a calendar connector is written.
-- Phase 3 (the CPO features) is next. It needs David's weekly update format.
+- Phase 3 is built (Leadership page; logic in `src/core/leadership.ts`): shipped log, weekly
+  update drafter with a user-set format, CPO 1:1 prep, priority map, roadmap vs. reality with
+  plain-language slip reasons, and no-surprises alerts. Epics are linked by tracker key in
+  `epic_links`. The update's default format is a guess until David shares the CPO's format.
+- Phase 4 (C-suite influence) is next; its non-AI parts are the narrative bank and the
+  stakeholder map.
 - The commitment tracker only knows promises David captures. Finding promises inside email
   or meeting notes needs the AI provider, so it waits for that decision.
 - Epics are matched to a PM by the owner's display name. If names differ between the tracker

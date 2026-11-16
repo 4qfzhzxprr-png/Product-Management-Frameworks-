@@ -4,6 +4,7 @@ import {
   Handshake,
   Send,
   Inbox,
+  Landmark,
   LayoutDashboard,
   ListChecks,
   NotebookPen,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import type { Bucket, SourceItem } from "../core/items";
+import { noSurprises, roadmapStatus, type Priority, type RoadmapItem } from "../core/leadership";
 import type { Capture, CaptureKind, Person, Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import type { WorkItem } from "../core/work";
@@ -25,19 +27,27 @@ import { CapturesPage, type Selection } from "./CapturesPage";
 import { CommitmentsPage } from "./CommitmentsPage";
 import { DeliveryPage } from "./DeliveryPage";
 import { HandoffPage } from "./HandoffPage";
+import { LeadershipPage, useLeadershipSettings } from "./LeadershipPage";
 import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
 import { message, useStore } from "./useStore";
 
-type View = "overview" | "brief" | "queue" | "team" | "commitments" | "delivery" | "handoff" | "analytics" | "captures";
+type View =
+  | "overview"
+  | "brief"
+  | "queue"
+  | "team"
+  | "leadership"
+  | "commitments" | "delivery" | "handoff" | "analytics" | "captures";
 
 const NAV = [
   { view: "overview", label: "Overview", icon: LayoutDashboard },
   { view: "brief", label: "Brief", icon: Sunrise },
   { view: "queue", label: "Queue", icon: ListChecks },
   { view: "team", label: "Team", icon: Users },
+  { view: "leadership", label: "Leadership", icon: Landmark },
   { view: "commitments", label: "Commitments", icon: Handshake },
   { view: "delivery", label: "Delivery", icon: Truck },
   { view: "handoff", label: "Handoff", icon: Send },
@@ -56,14 +66,16 @@ export function App() {
 function Shell({ store }: { store: CaptureStore }) {
   const [view, setView] = useState<View>("overview");
   const [selection, setSelection] = useState<Selection>({ type: "all" });
-  // The PM whose 1:1 workspace is open inside the Team view, if any.
-  const [oneOnOne, setOneOnOne] = useState<number | null>(null);
+  // The person whose 1:1 workspace is open, and the view it was opened from.
+  const [oneOnOne, setOneOnOne] = useState<{ personId: number; from: View } | null>(null);
   const [people, setPeople] = useState<Person[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [captures, setCaptures] = useState<Capture[]>([]);
   const [waiting, setWaiting] = useState(0);
   const [items, setItems] = useState<SourceItem[]>([]);
   const [work, setWork] = useState<WorkItem[]>([]);
+  const [priorities, setPriorities] = useState<Priority[]>([]);
+  const [roadmapItems, setRoadmapItems] = useState<RoadmapItem[]>([]);
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -80,17 +92,22 @@ function Shell({ store }: { store: CaptureStore }) {
 
   const refresh = useCallback(async () => {
     try {
-      const [loadedPeople, loadedProjects, loadedCaptures, count, allItems, loadedWork] = await Promise.all([
+      const [loadedPeople, loadedProjects, loadedCaptures, count, allItems, loadedWork, loadedPriorities, loadedRoadmap] =
+        await Promise.all([
         store.people(),
         store.projects(),
         store.captures({ limit: 10_000 }),
         store.waitingOnMeCount(),
         store.items.list(),
         store.work.list(),
+        store.leadership.priorities(),
+        store.leadership.roadmap(),
       ]);
       const openItems = allItems;
       setItems(openItems);
       setWork(loadedWork);
+      setPriorities(loadedPriorities);
+      setRoadmapItems(loadedRoadmap);
       setConnected(await store.items.hasAny());
       setPeople(loadedPeople);
       setProjects(loadedProjects);
@@ -137,6 +154,9 @@ function Shell({ store }: { store: CaptureStore }) {
   }
 
   const personName = (id: number | null) => people.find((person) => person.id === id)?.name;
+  const leadershipSettings = useLeadershipSettings(store, revision);
+  const roadmap = roadmapStatus(roadmapItems, work, now);
+  const alerts = noSurprises(roadmap);
   const decisions = items.filter((item) => item.bucket === "decision").length;
   const moveItem = (item: SourceItem, bucket: Bucket) => void change(() => store.items.move(item.id, bucket));
   const dismissItem = (item: SourceItem) => void change(() => store.items.dismiss(item.id));
@@ -164,6 +184,11 @@ function Shell({ store }: { store: CaptureStore }) {
             >
               <Icon size={18} aria-hidden="true" />
               <span>{label}</span>
+              {target === "leadership" && alerts.length > 0 && (
+                <span className="nav-badge" aria-label={`${alerts.length} leadership commitments slipping`}>
+                  {alerts.length}
+                </span>
+              )}
               {target === "queue" && decisions > 0 && (
                 <span className="nav-badge" aria-label={`${decisions} need your decision`}>
                   {decisions}
@@ -200,8 +225,23 @@ function Shell({ store }: { store: CaptureStore }) {
         {error && (
           <Alert className="banner" type="error" showIcon title={error} closable onClose={() => setError(null)} />
         )}
-        {loaded && view === "overview" && (
+        {loaded && oneOnOne !== null && view === oneOnOne.from && (
+          <OneOnOnePage
+            personId={oneOnOne.personId}
+            people={people}
+            captures={captures}
+            now={now}
+            backLabel={NAV.find((entry) => entry.view === oneOnOne.from)?.label}
+            onBack={() => setOneOnOne(null)}
+            onAdd={(kind, body) => void change(() => store.addCapture({ kind, body, personId: oneOnOne.personId }))}
+            onDone={(capture, done) => void change(() => store.setCaptureDone(capture.id, done))}
+            onDelete={(capture) => void change(() => store.deleteCapture(capture.id))}
+          />
+        )}
+        {loaded && oneOnOne === null && view === "overview" && (
           <OverviewPage
+            alerts={alerts}
+            onOpenLeadership={() => setView("leadership")}
             captures={captures}
             now={now}
             personName={personName}
@@ -216,7 +256,7 @@ function Shell({ store }: { store: CaptureStore }) {
             }
           />
         )}
-        {loaded && view === "brief" && (
+        {loaded && oneOnOne === null && view === "brief" && (
           <BriefPage
             items={items}
             now={now}
@@ -226,25 +266,13 @@ function Shell({ store }: { store: CaptureStore }) {
             onOpenQueue={() => setView("queue")}
           />
         )}
-        {loaded && view === "queue" && (
+        {loaded && oneOnOne === null && view === "queue" && (
           <QueuePage items={items} now={now} connected={connected} onMove={moveItem} onDismiss={dismissItem} />
         )}
-        {loaded && view === "team" && oneOnOne !== null && (
-          <OneOnOnePage
-            personId={oneOnOne}
-            people={people}
-            captures={captures}
-            now={now}
-            onBack={() => setOneOnOne(null)}
-            onAdd={(kind, body) => void change(() => store.addCapture({ kind, body, personId: oneOnOne }))}
-            onDone={(capture, done) => void change(() => store.setCaptureDone(capture.id, done))}
-            onDelete={(capture) => void change(() => store.deleteCapture(capture.id))}
-          />
-        )}
-        {loaded && view === "team" && oneOnOne === null && (
+        {loaded && oneOnOne === null && view === "team" && (
           <TeamPage
             work={work}
-            onOpen={setOneOnOne}
+            onOpen={(personId) => setOneOnOne({ personId, from: "team" })}
             people={people}
             captures={captures}
             now={now}
@@ -258,7 +286,21 @@ function Shell({ store }: { store: CaptureStore }) {
             }
           />
         )}
-        {loaded && view === "commitments" && (
+        {loaded && oneOnOne === null && view === "leadership" && leadershipSettings && (
+          <LeadershipPage
+            store={store}
+            people={people}
+            captures={captures}
+            work={work}
+            priorities={priorities}
+            roadmap={roadmap}
+            settings={leadershipSettings}
+            now={now}
+            change={change}
+            onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "leadership" })}
+          />
+        )}
+        {loaded && oneOnOne === null && view === "commitments" && (
           <CommitmentsPage
             captures={captures}
             now={now}
@@ -267,10 +309,10 @@ function Shell({ store }: { store: CaptureStore }) {
             onEdit={(capture) => setInlineCapture({ editing: capture })}
           />
         )}
-        {loaded && view === "delivery" && <DeliveryPage work={work} now={now} />}
-        {loaded && view === "handoff" && <HandoffPage store={store} work={work} captures={captures} now={now} />}
-        {loaded && view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
-        {loaded && view === "captures" && (
+        {loaded && oneOnOne === null && view === "delivery" && <DeliveryPage work={work} now={now} />}
+        {loaded && oneOnOne === null && view === "handoff" && <HandoffPage store={store} work={work} captures={captures} now={now} />}
+        {loaded && oneOnOne === null && view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
+        {loaded && oneOnOne === null && view === "captures" && (
           <CapturesPage
             store={store}
             people={people}

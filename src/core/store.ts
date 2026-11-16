@@ -2,6 +2,7 @@ import type { Db, SqlParam } from "./db";
 import { ConnectionStore } from "./connectors";
 import { SettingsStore } from "./handoff";
 import { ItemStore } from "./itemStore";
+import { LeadershipStore } from "./leadership";
 import { WorkStore } from "./work";
 import {
   CAPTURE_KINDS,
@@ -145,6 +146,34 @@ const MIGRATIONS: Step[][] = [
   [addColumn("captures", "due_at", "INTEGER")],
   // App settings, one JSON value per key.
   [`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`],
+  // Phase 3: when tickets were finished, the CPO's priorities, and the roadmap given to leadership.
+  [
+    addColumn("work_items", "resolved_at", "INTEGER"),
+    `CREATE TABLE IF NOT EXISTS priorities (
+       id INTEGER PRIMARY KEY,
+       title TEXT NOT NULL,
+       notes TEXT NOT NULL DEFAULT '',
+       position INTEGER NOT NULL DEFAULT 0
+     )`,
+    `CREATE TABLE IF NOT EXISTS roadmap_items (
+       id INTEGER PRIMARY KEY,
+       title TEXT NOT NULL,
+       notes TEXT NOT NULL DEFAULT '',
+       committed_at INTEGER,
+       to_leadership INTEGER NOT NULL DEFAULT 1,
+       created_at INTEGER NOT NULL
+     )`,
+    // Epics are linked by the tracker's own key, so links survive a re-sync.
+    `CREATE TABLE IF NOT EXISTS epic_links (
+       kind TEXT NOT NULL,
+       owner_id INTEGER NOT NULL,
+       source TEXT NOT NULL,
+       external_id TEXT NOT NULL,
+       baseline_total INTEGER NOT NULL DEFAULT 0,
+       linked_at INTEGER NOT NULL,
+       PRIMARY KEY (kind, owner_id, source, external_id)
+     )`,
+  ],
 ];
 
 interface PersonRow {
@@ -175,11 +204,14 @@ export class CaptureStore {
   /** Tickets and epics synced from issue trackers. */
   readonly work: WorkStore;
   readonly settings: SettingsStore;
+  /** The CPO's priorities and the roadmap given to leadership. */
+  readonly leadership: LeadershipStore;
 
   private constructor(private readonly db: Db) {
     this.items = new ItemStore(db);
     this.work = new WorkStore(db);
     this.settings = new SettingsStore(db);
+    this.leadership = new LeadershipStore(db);
     this.connections = new ConnectionStore(db, this.items, this.work);
   }
 

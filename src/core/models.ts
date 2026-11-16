@@ -12,6 +12,8 @@ export const CAPTURE_KINDS = [
   "one_on_one",
   /** Something to raise at the next 1:1. Open until it has been discussed. */
   "agenda",
+  /** A decision David made or was part of, for the weekly update. */
+  "decision",
 ] as const;
 
 export type CaptureKind = (typeof CAPTURE_KINDS)[number];
@@ -24,6 +26,7 @@ export const KIND_LABELS: Record<CaptureKind, string> = {
   ask_of_them: "Ask of them",
   one_on_one: "1:1 note",
   agenda: "1:1 topic",
+  decision: "Decision",
 };
 
 /** Can be open or done. */

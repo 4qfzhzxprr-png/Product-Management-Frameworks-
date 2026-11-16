@@ -24,6 +24,9 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
   last 1:1 note. Each card also lists the PM's epics with a health call once an issue tracker is connected.
 - **1:1 workspace.** Open it from a PM's card: a running agenda whose untouched topics carry over,
   what each of you owes the other, and your 1:1 notes over time.
+- **Leadership.** For the CPO: a weekly update drafted from what is stored, in a format you set;
+  prep for your 1:1; the CPO's priorities with the work mapped to each; the roadmap with the
+  dates given to leadership, flagged with reasons when they slip; and a weekly shipped log.
 - **Commitments.** Every open promise in both directions. Give one a date when you capture or edit
   it, and it is flagged once it slips.
 - **Delivery.** Sprint progress per team, what is at risk of missing, everything blocked or waiting on

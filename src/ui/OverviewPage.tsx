@@ -1,6 +1,7 @@
 import { Button, Checkbox } from "antd";
 import { ArrowUpRight, Hourglass, Inbox, PenLine, Plus, Trophy } from "lucide-react";
 import { overviewStats } from "../core/insights";
+import type { RoadmapStatus } from "../core/leadership";
 import { KIND_LABELS, type Capture } from "../core/models";
 import { CircularProgress, GlassCard, Sparkline, StatCard } from "./components";
 import type { Selection } from "./CapturesPage";
@@ -23,6 +24,8 @@ export function OverviewPage({
   onOpenAnalytics,
   onCapture,
   onDone,
+  alerts,
+  onOpenLeadership,
 }: {
   captures: Capture[];
   now: number;
@@ -30,6 +33,9 @@ export function OverviewPage({
   onOpenCaptures: (selection: Selection) => void;
   onOpenAnalytics: () => void;
   onCapture: () => void;
+  /** Leadership commitments that are slipping. */
+  alerts: RoadmapStatus[];
+  onOpenLeadership: () => void;
   onDone: (capture: Capture) => void;
 }) {
   const stats = overviewStats(captures, now);
@@ -55,6 +61,19 @@ export function OverviewPage({
             : `${stats.waitingOnMe} ${stats.waitingOnMe === 1 ? "item is" : "items are"} waiting on you`}
         </p>
       </header>
+
+      {alerts.length > 0 && (
+        <section className="slip-banner" aria-label="Leadership commitments slipping">
+          <p>
+            <strong>
+              {alerts.length} {alerts.length === 1 ? "commitment to leadership is" : "commitments to leadership are"}{" "}
+              slipping.
+            </strong>{" "}
+            {alerts.map((status) => status.item.title).join(", ")}. Tell the CPO before they hear it elsewhere.
+          </p>
+          <Button onClick={onOpenLeadership}>Review</Button>
+        </section>
+      )}
 
       <div className="overview-top">
         <section className="hero" style={{ "--i": 0 } as React.CSSProperties} aria-labelledby="hero-title">

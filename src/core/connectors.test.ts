@@ -165,6 +165,7 @@ describe("syncAll", () => {
             externalId: "T-1", kind: "Story", level: "item", title: "Build it", url: "https://t.test/T-1",
             status: "blocked", statusLabel: "On hold", ownerName: "Sam", team: "Offshore", parentExternalId: null,
             sprint: "Sprint 9", sprintEndsAt: 9000, dueAt: null, createdAt: 1, updatedAt: 2, waitingOnProduct: true,
+            resolvedAt: null,
           },
         ],
       }),

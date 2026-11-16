@@ -27,6 +27,7 @@ function item(extra: Partial<WorkItem>): WorkItem {
     createdAt: NOW - 20 * DAY,
     updatedAt: NOW - DAY,
     waitingOnProduct: false,
+    resolvedAt: null,
     ...extra,
   };
 }

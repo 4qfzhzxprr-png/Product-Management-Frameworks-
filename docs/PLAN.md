@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-16.
+Last updated 2026-11-16 (Phase 3 built).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -29,8 +29,8 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | --- | --- |
 | Phase 1: the daily loop | Built. Shows real data for captures; the synced-data pages wait for connectors. |
 | Phase 2: team and delivery | Built, apart from the parts that need connectors or AI. |
-| Phase 3: the CPO | Not started. Next. |
-| Phase 4: C-suite influence | Not started. One piece seeded (the win tag). |
+| Phase 3: the CPO | Built, apart from the parts that need connectors or AI. |
+| Phase 4: C-suite influence | Not started. Next. One piece seeded (the win tag). |
 | Connecting to other systems | Framework built and tested. No real connector yet. |
 | AI features | Not started. Waiting on an approved provider. |
 | Apple distribution | Unsigned test builds only. |
@@ -99,18 +99,27 @@ fix is name aliases on people, not tracker-specific code.
 
 ## Phase 3: the CPO
 
-The goal is clear communication with the CPO and no surprises. Not started. These depend on
-ticket data being trustworthy, so they will be built on the same neutral ticket records as
-Phase 2.
+The goal is clear communication with the CPO and no surprises. Built on the same neutral
+ticket records as Phase 2, on a new Leadership page with five tabs.
 
-| Feature | Scope | Needs |
+| Feature | Scope | State |
 | --- | --- | --- |
-| Shipped log | Everything released each week, pulled from the tracker. | A release date or "done" date on ticket records. |
-| Weekly update drafter | Drafts the week's shipped work, risks and decisions in the CPO's preferred format, for David to edit and send. | The CPO's format (a past update is enough). A rule-built first version needs no AI; better prose does. |
-| Boss 1:1 prep | Open asks, decisions needed, and what David promised last time. | Nothing new: it reuses the 1:1 workspace with the CPO as the person. |
-| Priority map | The CPO's stated priorities with the team's work mapped against each. | A place to record priorities and link epics to them. |
-| Roadmap vs. reality, with slip detector | Roadmap items mapped to epics, showing progress against the date given to leadership, flagging growing scope or stalled tickets. | A roadmap record with committed dates; scope history on epics. |
-| No-surprises alert | Flags a slipping epic tied to a leadership commitment, so the CPO hears it from David first. | The roadmap record above. |
+| Shipped log | Tickets finished each week, grouped under their epics, with epics finished that week. Four weeks back. | Built. Tickets now carry the date they were finished. Empty until a tracker is connected. |
+| Weekly update drafter | Drafts the week's shipped work, wins, risks, decisions, upcoming roadmap dates and asks of the CPO, for David to edit, copy and send. The format is his to set: rename, reorder or switch off sections, and change the first line. Saved for next week. | Built, rule-based. Defaults are a guess until the CPO's real format is known. Better prose needs AI. |
+| Boss 1:1 prep | Choose the person David reports to; see the agenda, what each side owes, slipping commitments to raise, and what changed since the last 1:1 (tickets shipped, wins, decisions). Opens the full 1:1 workspace for that person. | Built |
+| Priority map | The CPO's priorities in their order, each with the epics linked to it and their health, plus open epics that serve no priority. | Built. Linking epics needs a tracker. |
+| Roadmap vs. reality, with slip detector | Roadmap items with the date given to leadership, linked to epics. Each shows progress and a state (on track, at risk, late, done) with the reasons in plain words: past the date, an epic past its own due date, stuck tickets, scope grown since linking, nothing moving for a week, or behind pace for the time used. | Built |
+| No-surprises alert | Leadership commitments that are late or at risk, shown on the Overview, as a count on the Leadership menu item, and at the top of the Leadership page. | Built |
+
+Also added: a "Decision" capture kind, so decisions made during the week feed the update.
+
+Rules worth knowing:
+
+- Epics are linked by the tracker's own key, so links survive a re-sync. If a connection is
+  removed and added again under a different name, links need redoing.
+- "Scope grew" compares today's ticket count with the count when the epic was linked.
+- "Behind pace" compares the share of tickets done with the share of time used between linking
+  and the promised date, and only after a third of the time has passed.
 
 ## Phase 4: C-suite influence
 
@@ -215,10 +224,8 @@ Each push builds an unsigned Mac app for testing. Still to do:
 ## Suggested order from here
 
 1. Run the current build on a Mac and note what looks or behaves wrong.
-2. Phase 3, starting with the pieces that need nothing new: boss 1:1 prep, then the shipped
-   log and a rule-built weekly update once the CPO's format is known.
-3. Phase 3's roadmap features: priority map, roadmap vs. reality, no-surprises alert.
-4. Phase 4's non-AI pieces: narrative bank and stakeholder map.
+2. Set the weekly update format to the CPO's, and enter the real priorities and roadmap.
+3. Phase 4's non-AI pieces: narrative bank and stakeholder map.
 5. Connecting: the secret store, request layer, connections screen and sync timer, then one
    connector at a time, tracker first because the most pages depend on it.
 6. AI features, once a provider is approved.
