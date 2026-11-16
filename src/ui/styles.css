@@ -1015,6 +1015,122 @@ button.item-title:hover {
   flex: none;
 }
 
+/* Influence */
+
+.private-note {
+  text-align: center;
+}
+
+.bank-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bank-form .ant-input {
+  flex: 1 1 280px;
+}
+
+.bank-form .ant-select {
+  min-width: 170px;
+}
+
+.bank-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.bank-filters .ant-select {
+  min-width: 170px;
+}
+
+.bank-filters .ant-segmented {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* The type is written out; the tint only reinforces it. */
+.story.ant-tag {
+  margin: 0;
+  border-radius: 999px;
+  font-weight: 600;
+  background: var(--inset);
+  color: var(--text);
+}
+
+.story.win.ant-tag {
+  background: var(--gold);
+  color: var(--gold-text);
+}
+
+.story.metric.ant-tag {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.quiet.ant-tag {
+  margin: 0;
+  border-radius: 999px;
+  font-weight: 600;
+  background: var(--gold);
+  color: var(--gold-text);
+}
+
+.stakeholder-add {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.profile-form {
+  align-items: stretch;
+}
+
+.prereads-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.prereads-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.reminder {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--inset);
+  border-left: 3px solid var(--eyebrow);
+}
+
+.preview {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--inset);
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.over {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 /* Handoff */
 
 .handoff-grid {
@@ -1709,7 +1825,9 @@ button.pm-name:hover {
   .queue-grid,
   .oneonone-grid,
   .handoff-grid,
-  .update-grid {
+  .update-grid,
+  .prereads-editor,
+  .stakeholder-add {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -1788,7 +1906,8 @@ button.pm-name:hover {
     backdrop-filter: none;
   }
 
-  .captures-layout {
+  .captures-layout,
+  .prereads-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 

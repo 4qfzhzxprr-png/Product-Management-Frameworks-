@@ -74,8 +74,12 @@ when a feature is built, a decision is made or scope changes.
   update drafter with a user-set format, CPO 1:1 prep, priority map, roadmap vs. reality with
   plain-language slip reasons, and no-surprises alerts. Epics are linked by tracker key in
   `epic_links`. The update's default format is a guess until David shares the CPO's format.
-- Phase 4 (C-suite influence) is next; its non-AI parts are the narrative bank and the
-  stakeholder map.
+- Phase 4 is built except the AI features (Influence page; logic in `src/core/influence.ts`):
+  the narrative bank (wins plus "evidence" and "metric" captures), the stakeholder map
+  (`stakeholders` table, one profile per person) and the template pre-read builder
+  (`prereads` table). The exec translator and objection prep wait on the AI provider.
+- All four phases are now built as far as they can go without connectors or AI. What is left
+  is the connecting work, the AI features and Apple distribution; see `docs/PLAN.md`.
 - The commitment tracker only knows promises David captures. Finding promises inside email
   or meeting notes needs the AI provider, so it waits for that decision.
 - Epics are matched to a PM by the owner's display name. If names differ between the tracker

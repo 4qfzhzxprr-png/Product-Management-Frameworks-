@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-16 (Phase 3 built).
+Last updated 2026-11-16 (Phase 4 built).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -30,7 +30,7 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Phase 1: the daily loop | Built. Shows real data for captures; the synced-data pages wait for connectors. |
 | Phase 2: team and delivery | Built, apart from the parts that need connectors or AI. |
 | Phase 3: the CPO | Built, apart from the parts that need connectors or AI. |
-| Phase 4: C-suite influence | Not started. Next. One piece seeded (the win tag). |
+| Phase 4: C-suite influence | Built, apart from the three features that need AI. |
 | Connecting to other systems | Framework built and tested. No real connector yet. |
 | AI features | Not started. Waiting on an approved provider. |
 | Apple distribution | Unsigned test builds only. |
@@ -123,15 +123,16 @@ Rules worth knowing:
 
 ## Phase 4: C-suite influence
 
-The goal is influence with the executive team. Not started.
+The goal is influence with the executive team. Built on a new Influence page with three tabs.
+Everything on it is private: stored on the Mac only and never synced.
 
-| Feature | Scope | Needs |
+| Feature | Scope | State |
 | --- | --- | --- |
-| Narrative bank | Wins, customer evidence and metrics collected as they happen, ready for a deck. | Seeded: captures can already be tagged as wins. Needs evidence and metric fields, and an export. |
-| Stakeholder map | Each executive's goals, concerns and what they last asked about. | Private notes that never sync anywhere. |
-| Exec translator | Rewrites a product update for each audience: revenue for the CEO, cost and margin for the CFO, pipeline for sales. | AI. |
-| Pre-read builder | One-page briefs for exec meetings with the ask stated up front. | AI for drafting; a template works without it. |
-| Objection prep | Likely pushback on a proposal with drafted answers. | AI. |
+| Narrative bank | Wins, customer evidence and metrics collected as they happen: anything captured as a win, or with the new "Customer evidence" and "Metric" kinds, from the shortcut or the page. Filter by type, period and project; select entries and copy them as plain text grouped by project, ready for a deck. | Built |
+| Stakeholder map | Each executive's role, what they are trying to achieve and what worries them, what they last asked David for and whether it is done, when they were last in touch, and a flag after 30 days of no contact. Log an ask from the card, or open notes and an agenda for them. | Built |
+| Pre-read builder | A one-page brief for an exec meeting, ask first: the ask, why now, background, options, recommendation, and evidence chosen from the narrative bank. Shows the person's goals and concerns while writing, flags a missing ask, audience or recommendation, and counts words against one page. Saved, copied and sent by David. | Built, from a template. AI could draft the sections. |
+| Exec translator | Rewrites a product update for each audience: revenue for the CEO, cost and margin for the CFO, pipeline for sales. | Not built. Needs AI. |
+| Objection prep | Likely pushback on a proposal with drafted answers. | Not built. Needs AI. |
 
 ## Later or cut
 
@@ -184,7 +185,7 @@ Not started. Blocked on an approved provider, because any AI summarizing or draf
 email and document content to that provider.
 
 Waiting on it: finding promises inside email and meeting notes, better prose in the weekly
-update, the exec translator, the pre-read builder, objection prep, and the spec quality
+update, the exec translator, objection prep, drafting pre-read sections, and the spec quality
 check. Everything built so far is rule-based and makes no AI calls.
 
 ## Apple distribution
@@ -224,8 +225,8 @@ Each push builds an unsigned Mac app for testing. Still to do:
 ## Suggested order from here
 
 1. Run the current build on a Mac and note what looks or behaves wrong.
-2. Set the weekly update format to the CPO's, and enter the real priorities and roadmap.
-3. Phase 4's non-AI pieces: narrative bank and stakeholder map.
+2. Set the weekly update format to the CPO's, and enter the real priorities, roadmap and
+   stakeholders.
 5. Connecting: the secret store, request layer, connections screen and sync timer, then one
    connector at a time, tracker first because the most pages depend on it.
 6. AI features, once a provider is approved.

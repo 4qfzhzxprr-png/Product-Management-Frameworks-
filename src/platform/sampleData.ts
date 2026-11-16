@@ -17,6 +17,9 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
   const lena = await store.addPerson("Lena");
   // The person David reports to, in the sample.
   const jordan = await store.addPerson("Jordan");
+  // Executives on the stakeholder map, in the sample.
+  const morgan = await store.addPerson("Morgan");
+  const taylor = await store.addPerson("Taylor");
   const portal = await store.addProject("Patient portal");
   const refills = await store.addProject("Refill flow");
 
@@ -32,6 +35,12 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
   ];
   const samples: Sample[] = [
     ["Q1 headcount approval for the offshore team", "ask_of_them", 4, jordan.id, null],
+    ["Cost to onboard each new pharmacy", "ask_of_me", 12, morgan.id, refills.id],
+    ["Margin impact of the refill pilot", "ask_of_me", 40, morgan.id, refills.id, false, 33],
+    ["Pharmacist at a pilot store: reminders save her an hour a day", "evidence", 6, null, refills.id],
+    ["A clinic group asked to join the portal beta early", "evidence", 15, null, portal.id],
+    ["Support tickets down 33% since the portal beta", "metric", 3, null, portal.id],
+    ["Refill pickup rate up from 71% to 84% at pilot pharmacies", "metric", 7, null, refills.id],
     ["Send the refill pilot readout", "commitment", 3, jordan.id, refills.id, false, undefined, 2],
     ["Share the pricing experiment results", "ask_of_me", 2, jordan.id, null],
     ["How we report pilot results to the board", "agenda", 3, jordan.id, null],
@@ -210,4 +219,31 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
   await leadership.linkEpic("roadmap", beta, epicRef("PORT-1"), 4, now - 10 * DAY);
 
   await store.settings.set("leadership", { managerId: jordan.id });
+
+  await store.influence.saveStakeholder(jordan.id, {
+    title: "CPO",
+    goals: "A product org the CEO trusts to hit dates.",
+    concerns: "Surprises in front of the board.",
+  });
+  await store.influence.saveStakeholder(morgan.id, {
+    title: "CFO",
+    goals: "Lower cost to serve each pharmacy; margin above 30% by year end.",
+    concerns: "Pilots that never turn into revenue.",
+  });
+  await store.influence.saveStakeholder(taylor.id, { title: "CEO", goals: "", concerns: "" });
+  const preread = await store.influence.createPreread("Expand the refill pilot to 100 pharmacies", morgan.id, now - 2 * DAY);
+  await store.influence.savePreread(
+    preread,
+    {
+      title: "Expand the refill pilot to 100 pharmacies",
+      personId: morgan.id,
+      ask: "Approve $180k to take refill reminders from 20 to 100 pharmacies next quarter.",
+      whyNow: "The pilot ends in two weeks; pausing means rebuilding pharmacy relationships later.",
+      background: "",
+      options: "1. Expand to 100 now.\n2. Extend the pilot at 20 for another quarter.\n3. Stop and fold learnings into the portal.",
+      recommendation: "Expand now. Pickup rates rose 13 points and onboarding cost is falling.",
+      evidenceIds: [],
+    },
+    now - DAY,
+  );
 }

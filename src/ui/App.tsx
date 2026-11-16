@@ -7,6 +7,7 @@ import {
   Landmark,
   LayoutDashboard,
   ListChecks,
+  Megaphone,
   NotebookPen,
   Plus,
   Sunrise,
@@ -14,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import type { Preread, StakeholderProfile } from "../core/influence";
 import type { Bucket, SourceItem } from "../core/items";
 import { noSurprises, roadmapStatus, type Priority, type RoadmapItem } from "../core/leadership";
 import type { Capture, CaptureKind, Person, Project } from "../core/models";
@@ -27,6 +29,7 @@ import { CapturesPage, type Selection } from "./CapturesPage";
 import { CommitmentsPage } from "./CommitmentsPage";
 import { DeliveryPage } from "./DeliveryPage";
 import { HandoffPage } from "./HandoffPage";
+import { InfluencePage } from "./InfluencePage";
 import { LeadershipPage, useLeadershipSettings } from "./LeadershipPage";
 import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
@@ -40,6 +43,7 @@ type View =
   | "queue"
   | "team"
   | "leadership"
+  | "influence"
   | "commitments" | "delivery" | "handoff" | "analytics" | "captures";
 
 const NAV = [
@@ -48,6 +52,7 @@ const NAV = [
   { view: "queue", label: "Queue", icon: ListChecks },
   { view: "team", label: "Team", icon: Users },
   { view: "leadership", label: "Leadership", icon: Landmark },
+  { view: "influence", label: "Influence", icon: Megaphone },
   { view: "commitments", label: "Commitments", icon: Handshake },
   { view: "delivery", label: "Delivery", icon: Truck },
   { view: "handoff", label: "Handoff", icon: Send },
@@ -76,6 +81,8 @@ function Shell({ store }: { store: CaptureStore }) {
   const [work, setWork] = useState<WorkItem[]>([]);
   const [priorities, setPriorities] = useState<Priority[]>([]);
   const [roadmapItems, setRoadmapItems] = useState<RoadmapItem[]>([]);
+  const [profiles, setProfiles] = useState<StakeholderProfile[]>([]);
+  const [prereads, setPrereads] = useState<Preread[]>([]);
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -92,7 +99,18 @@ function Shell({ store }: { store: CaptureStore }) {
 
   const refresh = useCallback(async () => {
     try {
-      const [loadedPeople, loadedProjects, loadedCaptures, count, allItems, loadedWork, loadedPriorities, loadedRoadmap] =
+      const [
+        loadedPeople,
+        loadedProjects,
+        loadedCaptures,
+        count,
+        allItems,
+        loadedWork,
+        loadedPriorities,
+        loadedRoadmap,
+        loadedProfiles,
+        loadedPrereads,
+      ] =
         await Promise.all([
         store.people(),
         store.projects(),
@@ -102,12 +120,16 @@ function Shell({ store }: { store: CaptureStore }) {
         store.work.list(),
         store.leadership.priorities(),
         store.leadership.roadmap(),
+        store.influence.stakeholders(),
+        store.influence.prereads(),
       ]);
       const openItems = allItems;
       setItems(openItems);
       setWork(loadedWork);
       setPriorities(loadedPriorities);
       setRoadmapItems(loadedRoadmap);
+      setProfiles(loadedProfiles);
+      setPrereads(loadedPrereads);
       setConnected(await store.items.hasAny());
       setPeople(loadedPeople);
       setProjects(loadedProjects);
@@ -298,6 +320,20 @@ function Shell({ store }: { store: CaptureStore }) {
             now={now}
             change={change}
             onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "leadership" })}
+          />
+        )}
+        {loaded && oneOnOne === null && view === "influence" && (
+          <InfluencePage
+            store={store}
+            people={people}
+            projects={projects}
+            captures={captures}
+            profiles={profiles}
+            prereads={prereads}
+            now={now}
+            change={change}
+            onCapture={(personId, kind) => setInlineCapture({ personId, kind })}
+            onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "influence" })}
           />
         )}
         {loaded && oneOnOne === null && view === "commitments" && (

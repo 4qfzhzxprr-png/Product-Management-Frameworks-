@@ -27,6 +27,9 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
 - **Leadership.** For the CPO: a weekly update drafted from what is stored, in a format you set;
   prep for your 1:1; the CPO's priorities with the work mapped to each; the roadmap with the
   dates given to leadership, flagged with reasons when they slip; and a weekly shipped log.
+- **Influence.** A narrative bank of wins, customer evidence and metrics to copy into decks; a
+  stakeholder map of what each executive wants, worries about and last asked for; and one-page
+  pre-reads that lead with the ask. Private to this Mac.
 - **Commitments.** Every open promise in both directions. Give one a date when you capture or edit
   it, and it is flagged once it slips.
 - **Delivery.** Sprint progress per team, what is at risk of missing, everything blocked or waiting on

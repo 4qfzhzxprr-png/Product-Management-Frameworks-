@@ -2,6 +2,7 @@ import type { Db, SqlParam } from "./db";
 import { ConnectionStore } from "./connectors";
 import { SettingsStore } from "./handoff";
 import { ItemStore } from "./itemStore";
+import { InfluenceStore } from "./influence";
 import { LeadershipStore } from "./leadership";
 import { WorkStore } from "./work";
 import {
@@ -174,6 +175,30 @@ const MIGRATIONS: Step[][] = [
        PRIMARY KEY (kind, owner_id, source, external_id)
      )`,
   ],
+  // Phase 4: what David knows about each executive, and pre-reads for meetings with them.
+  // Private notes: they are stored on this Mac only and never synced.
+  [
+    `CREATE TABLE IF NOT EXISTS stakeholders (
+       person_id INTEGER PRIMARY KEY,
+       title TEXT NOT NULL DEFAULT '',
+       goals TEXT NOT NULL DEFAULT '',
+       concerns TEXT NOT NULL DEFAULT '',
+       updated_at INTEGER NOT NULL
+     )`,
+    `CREATE TABLE IF NOT EXISTS prereads (
+       id INTEGER PRIMARY KEY,
+       title TEXT NOT NULL,
+       person_id INTEGER,
+       ask TEXT NOT NULL DEFAULT '',
+       why_now TEXT NOT NULL DEFAULT '',
+       background TEXT NOT NULL DEFAULT '',
+       options TEXT NOT NULL DEFAULT '',
+       recommendation TEXT NOT NULL DEFAULT '',
+       evidence TEXT NOT NULL DEFAULT '[]',
+       created_at INTEGER NOT NULL,
+       updated_at INTEGER NOT NULL
+     )`,
+  ],
 ];
 
 interface PersonRow {
@@ -206,12 +231,15 @@ export class CaptureStore {
   readonly settings: SettingsStore;
   /** The CPO's priorities and the roadmap given to leadership. */
   readonly leadership: LeadershipStore;
+  /** Stakeholder profiles and pre-reads. */
+  readonly influence: InfluenceStore;
 
   private constructor(private readonly db: Db) {
     this.items = new ItemStore(db);
     this.work = new WorkStore(db);
     this.settings = new SettingsStore(db);
     this.leadership = new LeadershipStore(db);
+    this.influence = new InfluenceStore(db);
     this.connections = new ConnectionStore(db, this.items, this.work);
   }
 
@@ -264,6 +292,8 @@ export class CaptureStore {
   async deletePerson(id: number): Promise<void> {
     // Done by hand as well as by the foreign key, which only acts when the connection enforces it.
     await this.db.run("UPDATE captures SET person_id = NULL WHERE person_id = ?", [id]);
+    await this.db.run("DELETE FROM stakeholders WHERE person_id = ?", [id]);
+    await this.db.run("UPDATE prereads SET person_id = NULL WHERE person_id = ?", [id]);
     await this.db.run("DELETE FROM people WHERE id = ?", [id]);
   }
 

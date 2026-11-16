@@ -14,6 +14,10 @@ export const CAPTURE_KINDS = [
   "agenda",
   /** A decision David made or was part of, for the weekly update. */
   "decision",
+  /** Something a customer said or did that supports a story: a quote, a renewal, a referral. */
+  "evidence",
+  /** A number worth quoting, such as "support tickets down 33%". */
+  "metric",
 ] as const;
 
 export type CaptureKind = (typeof CAPTURE_KINDS)[number];
@@ -27,6 +31,8 @@ export const KIND_LABELS: Record<CaptureKind, string> = {
   one_on_one: "1:1 note",
   agenda: "1:1 topic",
   decision: "Decision",
+  evidence: "Customer evidence",
+  metric: "Metric",
 };
 
 /** Can be open or done. */
