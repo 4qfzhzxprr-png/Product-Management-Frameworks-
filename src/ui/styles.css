@@ -1207,6 +1207,87 @@ button.item-title:hover {
   white-space: nowrap;
 }
 
+/* The brief keeps every item to one line of preview, so the page fits on one screen. */
+.brief-grid .item-snippet {
+  -webkit-line-clamp: 1;
+}
+
+/* Meetings */
+
+.meeting-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.meeting-strip h2 {
+  flex: none;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--eyebrow);
+}
+
+.meetings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.meetings li {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--inset);
+  font-size: 13px;
+}
+
+.meetings li.past {
+  opacity: 0.55;
+}
+
+.meetings li.next {
+  outline: 2px solid var(--bar);
+  outline-offset: -2px;
+}
+
+.meeting-time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.meeting-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.next-meeting {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text);
+}
+
+button.text-link {
+  padding: 0;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Handoff */
 
 .handoff-grid {

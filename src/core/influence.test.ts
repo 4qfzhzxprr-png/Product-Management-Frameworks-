@@ -58,9 +58,9 @@ describe("narrative bank", () => {
 
 describe("stakeholderMap", () => {
   const people = [
-    { id: 1, name: "Morgan", isPM: false },
-    { id: 2, name: "Taylor", isPM: false },
-    { id: 3, name: "Gone", isPM: false },
+    { id: 1, name: "Morgan", isPM: false, aliases: [] },
+    { id: 2, name: "Taylor", isPM: false, aliases: [] },
+    { id: 3, name: "Gone", isPM: false, aliases: [] },
   ];
   const profile = (personId: number, title: string) => ({ personId, title, goals: "", concerns: "", updatedAt: 0 });
   const map = stakeholderMap(
@@ -94,7 +94,7 @@ describe("pre-reads", () => {
     evidenceIds: [11, 404],
   };
   const audience = {
-    person: { id: 1, name: "Morgan", isPM: false },
+    person: { id: 1, name: "Morgan", isPM: false, aliases: [] },
     profile: { personId: 1, title: "CFO", goals: "", concerns: "", updatedAt: 0 },
     lastAsk: null, openAsks: [], lastContactAt: null, quiet: true,
   };

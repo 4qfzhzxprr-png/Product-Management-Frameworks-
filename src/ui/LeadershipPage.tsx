@@ -20,12 +20,13 @@ import {
   type RoadmapStatus,
   type UpdateFormat,
 } from "../core/leadership";
+import type { CalendarEventRecord } from "../core/calendar";
 import type { Capture, CaptureKind, Person } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import { personCard } from "../core/team";
 import { epicHealth, HEALTH_LABELS, type EpicHealth, type WorkItem } from "../core/work";
 import { openExternal } from "../platform";
-import { GlassCard } from "./components";
+import { GlassCard, NextMeeting } from "./components";
 import { AddLine, Checklist } from "./OneOnOnePage";
 import { message } from "./useStore";
 
@@ -60,6 +61,8 @@ interface Props {
   /** Runs a change, then reloads everything on screen. */
   change: (work: () => Promise<unknown>) => Promise<void>;
   onOpenOneOnOne: (personId: number) => void;
+  /** Meetings from connected calendars, for the next meeting with the CPO. */
+  upcoming: CalendarEventRecord[];
 }
 
 /** The CPO features: the weekly update, 1:1 prep, the roadmap given to leadership, priorities, and what shipped. */
@@ -243,7 +246,7 @@ function WeeklyUpdate({ store, captures, work, roadmap, settings, now, change }:
 
 // ---------- 1:1 prep ----------
 
-function OneOnOnePrep({ store, people, captures, work, roadmap, settings, now, change, onOpenOneOnOne }: Props) {
+function OneOnOnePrep({ store, people, captures, work, roadmap, settings, now, change, onOpenOneOnOne, upcoming }: Props) {
   const manager = people.find((person) => person.id === settings.managerId) ?? null;
   const [choosing, setChoosing] = useState(false);
 
@@ -303,6 +306,7 @@ function OneOnOnePrep({ store, people, captures, work, roadmap, settings, now, c
           Open the full 1:1 workspace
         </Button>
       </div>
+      <NextMeeting person={manager} upcoming={upcoming} now={now} />
       <div className="oneonone-grid">
         <GlassCard className="workspace-card" index={0} aria-labelledby="prep-agenda">
           <h2 id="prep-agenda">Agenda</h2>

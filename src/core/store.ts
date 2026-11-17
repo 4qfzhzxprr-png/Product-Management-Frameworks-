@@ -216,12 +216,15 @@ const MIGRATIONS: Step[][] = [
      )`,
     `CREATE INDEX IF NOT EXISTS calendar_events_start ON calendar_events(starts_at)`,
   ],
+  // Other names a person goes by in other systems, one per line.
+  [addColumn("people", "aliases", "TEXT NOT NULL DEFAULT ''")],
 ];
 
 interface PersonRow {
   id: number;
   name: string;
   is_pm: number;
+  aliases?: string;
 }
 
 interface CaptureRow {
@@ -287,7 +290,7 @@ export class CaptureStore {
 
   async people(): Promise<Person[]> {
     const rows = await this.db.all<PersonRow>(
-      "SELECT id, name, is_pm FROM people ORDER BY is_pm DESC, name COLLATE NOCASE",
+      "SELECT id, name, is_pm, aliases FROM people ORDER BY is_pm DESC, name COLLATE NOCASE",
     );
     return rows.map(toPerson);
   }
@@ -295,13 +298,24 @@ export class CaptureStore {
   /** Returns the existing person when the name is already taken (case-insensitive). */
   async addPerson(name: string, isPM = false): Promise<Person> {
     const trimmed = cleanName(name);
-    const existing = await this.db.all<PersonRow>("SELECT id, name, is_pm FROM people WHERE name = ?", [trimmed]);
+    const existing = await this.db.all<PersonRow>("SELECT id, name, is_pm, aliases FROM people WHERE name = ?", [
+      trimmed,
+    ]);
     if (existing.length > 0) return toPerson(existing[0]);
     const { lastInsertId } = await this.db.run("INSERT INTO people (name, is_pm) VALUES (?, ?)", [
       trimmed,
       isPM ? 1 : 0,
     ]);
-    return { id: lastInsertId, name: trimmed, isPM };
+    return { id: lastInsertId, name: trimmed, isPM, aliases: [] };
+  }
+
+  /** Replaces the other names a person goes by. Blank and duplicate names are dropped. */
+  async setAliases(id: number, aliases: string[]): Promise<void> {
+    const seen = new Set<string>();
+    const clean = aliases
+      .map((alias) => alias.trim())
+      .filter((alias) => alias !== "" && !seen.has(alias.toLowerCase()) && seen.add(alias.toLowerCase()));
+    await this.db.run("UPDATE people SET aliases = ? WHERE id = ?", [clean.join("\n"), id]);
   }
 
   async setPersonIsPM(id: number, isPM: boolean): Promise<void> {
@@ -454,7 +468,12 @@ function cleanName(name: string): string {
 }
 
 function toPerson(row: PersonRow): Person {
-  return { id: row.id, name: row.name, isPM: row.is_pm === 1 };
+  return {
+    id: row.id,
+    name: row.name,
+    isPM: row.is_pm === 1,
+    aliases: (row.aliases ?? "").split("\n").filter(Boolean),
+  };
 }
 
 function toCapture(row: CaptureRow): Capture[] {

@@ -1,5 +1,8 @@
 import { Progress, Tag } from "antd";
-import type { LucideIcon } from "lucide-react";
+import { CalendarClock, type LucideIcon } from "lucide-react";
+import { nextMeetingWith } from "../core/calendar";
+import type { CalendarEventRecord } from "../core/calendar";
+import type { Person } from "../core/models";
 import { useEffect, useState, type ReactNode } from "react";
 
 /** The shared frosted surface. Every panel in the app is one of these. */
@@ -127,5 +130,23 @@ export function StatCard({
     <div className={className} style={style}>
       {content}
     </div>
+  );
+}
+
+/** "Next meeting: Thu, Nov 19, 10:00 AM · Priya / David 1:1", from meetings that name the person. */
+export function NextMeeting({ person, upcoming, now }: { person: Person; upcoming: CalendarEventRecord[]; now: number }) {
+  const meeting = nextMeetingWith(person, upcoming, now);
+  if (!meeting) return null;
+  const when = new Date(meeting.startsAt).toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return (
+    <p className="next-meeting small">
+      <CalendarClock size={14} aria-hidden="true" /> Next meeting: {when} · {meeting.title}
+    </p>
   );
 }

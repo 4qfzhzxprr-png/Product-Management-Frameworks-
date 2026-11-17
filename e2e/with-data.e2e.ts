@@ -37,9 +37,11 @@ test.describe("with sample data", () => {
     await expect(card(page, "Awaiting my review").locator(".item-title")).toHaveText([/Refill flow PRD/]);
     await expect(card(page, "No reply in three days").locator(".item-title")).toHaveText([/Analytics access/]);
     await expect(card(page, "While you were away").locator(".item").first()).toBeVisible();
+    // Measure the settled layout: the cards start 10px lower while they animate in.
+    await page.waitForFunction(() => document.getAnimations().every((animation) => animation.playState !== "running"));
     expect(await page.evaluate(() => {
       const main = document.querySelector(".main")!;
-      return main.scrollHeight <= main.clientHeight + 1;
+      return main.scrollHeight <= main.clientHeight + 1 || `${main.scrollHeight} > ${main.clientHeight}`;
     })).toBe(true);
 
     const badge = page.locator(".nav-item", { hasText: "Queue" }).locator(".nav-badge");

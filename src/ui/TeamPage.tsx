@@ -1,11 +1,12 @@
 import { Button, Checkbox, Input, Tag } from "antd";
 import { Plus, Trophy } from "lucide-react";
 import { useState } from "react";
+import type { CalendarEventRecord } from "../core/calendar";
 import type { Capture, CaptureKind, Person } from "../core/models";
 import { teamBoard } from "../core/team";
 import { epicHealth, epicsFor, HEALTH_LABELS, type WorkItem } from "../core/work";
 import { openExternal } from "../platform";
-import { GlassCard } from "./components";
+import { GlassCard, NextMeeting } from "./components";
 
 function age(time: number, now: number): string {
   const days = Math.floor((now - time) / 86_400_000);
@@ -61,6 +62,8 @@ export function TeamPage({
   onCapture,
   onAddPM,
   onOpen,
+  upcoming,
+  onSetAliases,
 }: {
   people: Person[];
   captures: Capture[];
@@ -73,10 +76,15 @@ export function TeamPage({
   onAddPM: (name: string) => void;
   /** Opens the 1:1 workspace for this PM. */
   onOpen: (personId: number) => void;
+  /** Meetings from connected calendars, for each PM's next meeting. */
+  upcoming: CalendarEventRecord[];
+  onSetAliases: (personId: number, aliases: string[]) => void;
 }) {
   const board = teamBoard(people, captures, now);
   const epics = epicHealth(work, now);
   const [newPM, setNewPM] = useState("");
+  // The PM whose other names are being edited, and the text so far.
+  const [editingNames, setEditingNames] = useState<{ personId: number; text: string } | null>(null);
 
   return (
     <div className="page">
@@ -138,6 +146,41 @@ export function TeamPage({
                   </Tag>
                 )}
               </header>
+              <NextMeeting person={card.person} upcoming={upcoming} now={now} />
+              {editingNames?.personId === card.person.id ? (
+                <form
+                  className="add-line"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    onSetAliases(card.person.id, editingNames.text.split(","));
+                    setEditingNames(null);
+                  }}
+                >
+                  <Input
+                    autoFocus
+                    aria-label={`Other names for ${card.person.name}`}
+                    placeholder="Names in other systems, separated by commas"
+                    value={editingNames.text}
+                    onChange={(event) => setEditingNames({ personId: card.person.id, text: event.target.value })}
+                  />
+                  <Button htmlType="submit" type="primary" size="small">
+                    Save
+                  </Button>
+                  <Button size="small" onClick={() => setEditingNames(null)}>
+                    Cancel
+                  </Button>
+                </form>
+              ) : (
+                <p className="muted small aliases">
+                  {card.person.aliases.length > 0 ? `Also known as ${card.person.aliases.join(", ")}. ` : ""}
+                  <button
+                    className="text-link"
+                    onClick={() => setEditingNames({ personId: card.person.id, text: card.person.aliases.join(", ") })}
+                  >
+                    {card.person.aliases.length > 0 ? "Edit" : "Add the names they go by in other systems"}
+                  </button>
+                </p>
+              )}
 
               <ItemList
                 title="Needs from me"

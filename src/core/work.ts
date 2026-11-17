@@ -1,5 +1,5 @@
 import type { Db } from "./db";
-import type { Person } from "./models";
+import { isNamed, type Person } from "./models";
 
 /**
  * Tickets, stories and epics from any issue tracker, in one shape the delivery pages can
@@ -263,8 +263,7 @@ export function epicHealth(items: WorkItem[], now: number): EpicHealth[] {
     .sort((a, b) => a.epic.title.localeCompare(b.epic.title));
 }
 
-/** The epics a person owns, matched on their name as the tracker shows it. */
+/** The epics a person owns, matched on their name or any of their other names. */
 export function epicsFor(person: Person, epics: EpicHealth[]): EpicHealth[] {
-  const name = person.name.trim().toLowerCase();
-  return epics.filter((entry) => entry.epic.ownerName.trim().toLowerCase() === name);
+  return epics.filter((entry) => isNamed(person, entry.epic.ownerName));
 }

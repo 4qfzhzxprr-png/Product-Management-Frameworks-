@@ -96,8 +96,8 @@ function Shell({ store }: { store: CaptureStore }) {
   const [profiles, setProfiles] = useState<StakeholderProfile[]>([]);
   const [prereads, setPrereads] = useState<Preread[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
-  // Today's meetings from connected calendars.
-  const [meetings, setMeetings] = useState<CalendarEvent[]>([]);
+  // Meetings from connected calendars, from today to two weeks out.
+  const [upcoming, setUpcoming] = useState<CalendarEvent[]>([]);
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -140,7 +140,7 @@ function Shell({ store }: { store: CaptureStore }) {
         store.influence.stakeholders(),
         store.influence.prereads(),
         store.connections.list(),
-        store.calendar.between(dayStart(Date.now()), dayStart(Date.now(), -1)),
+        store.calendar.between(dayStart(Date.now()), dayStart(Date.now(), -14)),
       ]);
       const openItems = allItems;
       setItems(openItems);
@@ -150,7 +150,7 @@ function Shell({ store }: { store: CaptureStore }) {
       setProfiles(loadedProfiles);
       setPrereads(loadedPrereads);
       setConnections(loadedConnections);
-      setMeetings(loadedMeetings);
+      setUpcoming(loadedMeetings);
       setConnected(await store.items.hasAny());
       setPeople(loadedPeople);
       setProjects(loadedProjects);
@@ -200,6 +200,8 @@ function Shell({ store }: { store: CaptureStore }) {
 
   const personName = (id: number | null) => people.find((person) => person.id === id)?.name;
   const leadershipSettings = useLeadershipSettings(store, revision);
+  const tomorrow = dayStart(now, -1);
+  const meetings = upcoming.filter((meeting) => meeting.startsAt < tomorrow);
   const roadmap = roadmapStatus(roadmapItems, work, now);
   const alerts = noSurprises(roadmap);
   const decisions = items.filter((item) => item.bucket === "decision").length;
@@ -272,6 +274,7 @@ function Shell({ store }: { store: CaptureStore }) {
         )}
         {loaded && oneOnOne !== null && view === oneOnOne.from && (
           <OneOnOnePage
+            upcoming={upcoming}
             personId={oneOnOne.personId}
             people={people}
             captures={captures}
@@ -303,6 +306,7 @@ function Shell({ store }: { store: CaptureStore }) {
         )}
         {loaded && oneOnOne === null && view === "brief" && (
           <BriefPage
+            meetings={meetings}
             items={items}
             now={now}
             connected={connected}
@@ -316,6 +320,8 @@ function Shell({ store }: { store: CaptureStore }) {
         )}
         {loaded && oneOnOne === null && view === "team" && (
           <TeamPage
+            upcoming={upcoming}
+            onSetAliases={(personId, aliases) => void change(() => store.setAliases(personId, aliases))}
             work={work}
             onOpen={(personId) => setOneOnOne({ personId, from: "team" })}
             people={people}
@@ -333,6 +339,7 @@ function Shell({ store }: { store: CaptureStore }) {
         )}
         {loaded && oneOnOne === null && view === "leadership" && leadershipSettings && (
           <LeadershipPage
+            upcoming={upcoming}
             store={store}
             people={people}
             captures={captures}

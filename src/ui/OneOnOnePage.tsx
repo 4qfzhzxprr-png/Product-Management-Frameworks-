@@ -1,9 +1,10 @@
 import { Button, Checkbox, Input, Tag } from "antd";
 import { ArrowLeft, X } from "lucide-react";
 import { useState } from "react";
+import type { CalendarEventRecord } from "../core/calendar";
 import type { Capture, CaptureKind, Person } from "../core/models";
 import { isCarriedOver, personCard } from "../core/team";
-import { GlassCard } from "./components";
+import { GlassCard, NextMeeting } from "./components";
 
 function day(time: number): string {
   return new Date(time).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
@@ -83,6 +84,7 @@ export function OneOnOnePage({
   captures,
   now,
   backLabel = "Team",
+  upcoming = [],
   onBack,
   onAdd,
   onDone,
@@ -94,6 +96,8 @@ export function OneOnOnePage({
   now: number;
   /** Where the back button returns to. */
   backLabel?: string;
+  /** Meetings from connected calendars, for the next meeting with this person. */
+  upcoming?: CalendarEventRecord[];
   onBack: () => void;
   onAdd: (kind: CaptureKind, body: string) => void;
   onDone: (capture: Capture, done: boolean) => void;
@@ -131,6 +135,7 @@ export function OneOnOnePage({
           {carried > 0 ? `, ${carried} carried over` : ""}
         </p>
       </header>
+      <NextMeeting person={card.person} upcoming={upcoming} now={now} />
 
       <div className="oneonone-grid">
         <GlassCard className="workspace-card" index={0} aria-labelledby="agenda-title">

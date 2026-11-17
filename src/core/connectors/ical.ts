@@ -170,10 +170,41 @@ function* occurrences(start: Wall, rule: Record<string, string>): Generator<Wall
       if (candidate.day === start.day) yield candidate;
     }
   }
+  if (freq === "MONTHLY" && rule.BYDAY) {
+    // "2TU" is the second Tuesday, "-1FR" the last Friday, "MO" every Monday of the month.
+    const entries = rule.BYDAY.split(",").flatMap((part) => {
+      const match = /^([+-]?\d+)?([A-Z]{2})$/.exec(part.trim().toUpperCase());
+      const day = match ? DAYS.indexOf(match[2]) : -1;
+      return match && day >= 0 ? [{ nth: match[1] ? Number(match[1]) : 0, day }] : [];
+    });
+    if (entries.length > 0) {
+      const startDate = Date.UTC(start.year, start.month - 1, start.day);
+      // Bounded, so a rule that can never match (such as a sixth Monday) cannot loop forever.
+      for (let step = 0; step < 1200; step++) {
+        const month = shift({ ...start, day: 1 }, 0, step * interval);
+        const length = new Date(Date.UTC(month.year, month.month, 0)).getUTCDate();
+        const days = new Set<number>();
+        for (const entry of entries) {
+          const matching = Array.from({ length }, (_, index) => index + 1).filter(
+            (day) => weekday({ ...month, day }) === entry.day,
+          );
+          if (entry.nth === 0) matching.forEach((day) => days.add(day));
+          else {
+            const pick = entry.nth > 0 ? matching[entry.nth - 1] : matching[matching.length + entry.nth];
+            if (pick !== undefined) days.add(pick);
+          }
+        }
+        for (const day of [...days].sort((a, b) => a - b)) {
+          if (Date.UTC(month.year, month.month - 1, day) >= startDate) yield { ...month, day };
+        }
+      }
+      return;
+    }
+  }
   if (freq === "YEARLY" && !rule.BYDAY) {
     for (let step = 0; ; step++) yield shift(start, 0, 0, step * interval);
   }
-  // Anything else (for example "the second Tuesday of each month") yields only the first one.
+  // Anything else (for example yearly rules by weekday) yields only the first one.
   yield start;
 }
 

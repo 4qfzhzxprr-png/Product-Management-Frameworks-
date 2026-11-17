@@ -1,4 +1,5 @@
 import type { Db } from "./db";
+import { isMentioned, type Person } from "./models";
 
 /**
  * Meetings from any calendar, in one shape the pages can read. A connector reports these;
@@ -96,4 +97,18 @@ export function freeSlots(window: [number, number], events: CalendarEventRecord[
   }
   if (cursor < window[1]) free.push([cursor, window[1]]);
   return free;
+}
+
+/** Titles that usually mean a one-to-one meeting. */
+const ONE_ON_ONE = /\b(1:1|1-1|1x1|1 on 1|one on one|one-on-one|1on1|catch ?up|check ?in)\b/i;
+
+/**
+ * The next meeting whose title names this person, preferring ones that look like a 1:1.
+ * Calendars rarely say who attends in a feed, so the title is the evidence.
+ */
+export function nextMeetingWith(person: Pick<Person, "name" | "aliases">, events: CalendarEventRecord[], now: number): CalendarEventRecord | null {
+  const upcoming = events
+    .filter((event) => !event.allDay && event.endsAt > now && isMentioned(person, event.title))
+    .sort((a, b) => a.startsAt - b.startsAt);
+  return upcoming.find((event) => ONE_ON_ONE.test(event.title)) ?? upcoming[0] ?? null;
 }

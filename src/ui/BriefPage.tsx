@@ -1,7 +1,35 @@
 import { Button } from "antd";
+import type { CalendarEvent } from "../core/calendar";
 import { buildBrief, type Bucket, type SourceItem } from "../core/items";
 import { GlassCard } from "./components";
 import { ItemRow } from "./ItemRow";
+
+function clock(time: number): string {
+  return new Date(time).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+/** Today's meetings as one compact strip, so the brief still fits on one screen. */
+function TodaysMeetings({ meetings, now }: { meetings: CalendarEvent[]; now: number }) {
+  const next = meetings.find((meeting) => !meeting.allDay && meeting.startsAt >= now);
+  return (
+    <section className="meeting-strip" aria-labelledby="today-meetings">
+      <h2 id="today-meetings">Today</h2>
+      <ul className="meetings">
+        {meetings.map((meeting) => (
+          <li
+            key={meeting.id}
+            className={!meeting.allDay && meeting.endsAt <= now ? "past" : meeting === next ? "next" : undefined}
+            title={meeting.location || undefined}
+          >
+            <span className="meeting-time">{meeting.allDay ? "All day" : clock(meeting.startsAt)}</span>{" "}
+            <span className="meeting-title">{meeting.title}</span>
+            {meeting === next && <span className="visually-hidden"> (next)</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 /** Shown wherever a page depends on connectors that are not set up yet. */
 export function NotConnected() {
@@ -20,6 +48,7 @@ export function BriefPage({
   items,
   now,
   connected,
+  meetings,
   onMove,
   onDismiss,
   onOpenQueue,
@@ -28,6 +57,8 @@ export function BriefPage({
   now: number;
   /** False until at least one connector has synced. */
   connected: boolean;
+  /** Today's meetings from connected calendars. */
+  meetings: CalendarEvent[];
   onMove: (item: SourceItem, bucket: Bucket) => void;
   onDismiss: (item: SourceItem) => void;
   onOpenQueue: () => void;
@@ -35,7 +66,8 @@ export function BriefPage({
   const brief = buildBrief(items, now);
   const since = new Date(brief.since).toLocaleString(undefined, { weekday: "long", hour: "numeric" });
   // Keeps the brief to one screen; the queue has the rest.
-  const overnight = brief.overnight.slice(0, 6);
+  // Four, so the brief still fits on one screen with today's meetings above it.
+  const overnight = brief.overnight.slice(0, 4);
 
   const section = (title: string, empty: string, list: SourceItem[], index: number, extra?: React.ReactNode) => (
     <GlassCard className="brief-section" index={index} aria-label={title}>
@@ -61,6 +93,8 @@ export function BriefPage({
         <h1>Morning brief</h1>
         <p>What needs you, and what happened since {since}.</p>
       </header>
+
+      {meetings.length > 0 && <TodaysMeetings meetings={meetings} now={now} />}
 
       {!connected ? (
         <NotConnected />

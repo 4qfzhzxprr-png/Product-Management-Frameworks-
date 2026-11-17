@@ -116,7 +116,7 @@ describe("epicHealth", () => {
   });
 
   it("matches epics to a person by name, ignoring case and spaces", () => {
-    const priya = { id: 1, name: "Priya", isPM: true };
+    const priya = { id: 1, name: "Priya", isPM: true, aliases: [] };
     expect(epicsFor(priya, health).map((entry) => entry.epic.title)).toEqual(["A-done", "B-late"]);
   });
 });

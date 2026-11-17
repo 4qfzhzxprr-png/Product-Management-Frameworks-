@@ -54,7 +54,9 @@ describe("parseCalendar", () => {
         "UID:s\nRECURRENCE-ID:20261130T160000Z\nDTSTART:20261201T170000Z\nDTEND:20261201T173000Z\nSUMMARY:Planning (moved)",
         "UID:x\nDTSTART:20261110T120000Z\nDTEND:20261110T130000Z\nSTATUS:CANCELLED\nSUMMARY:Gone",
         "UID:m\nDTSTART:20261105T090000Z\nRRULE:FREQ=MONTHLY;COUNT=3\nDURATION:PT1H\nSUMMARY:Monthly",
-        "UID:n\nDTSTART:20261103T090000Z\nRRULE:FREQ=MONTHLY;BYDAY=1TU\nDURATION:PT1H\nSUMMARY:Unsupported rule",
+        "UID:n\nDTSTART:20261103T090000Z\nRRULE:FREQ=MONTHLY;BYDAY=1TU\nDURATION:PT1H\nSUMMARY:First Tuesday",
+        "UID:l\nDTSTART:20261027T150000Z\nRRULE:FREQ=MONTHLY;BYDAY=-1FR\nDURATION:PT1H\nSUMMARY:Last Friday",
+        "UID:y\nDTSTART:20261110T090000Z\nRRULE:FREQ=YEARLY;BYDAY=2TU;BYMONTH=11\nDURATION:PT1H\nSUMMARY:Unsupported rule",
       ),
       FROM,
       TO,
@@ -64,8 +66,11 @@ describe("parseCalendar", () => {
     expect(titled("Planning (moved)")).toEqual([utc(12, 1, 17)]);
     expect(titled("Gone")).toEqual([]);
     expect(titled("Monthly")).toEqual([utc(11, 5, 9), utc(12, 5, 9)]);
+    expect(titled("First Tuesday")).toEqual([utc(11, 3, 9), utc(12, 1, 9)]);
+    // Started on a Tuesday, but the rule is the last Friday: 30 October, 27 November, 25 December.
+    expect(titled("Last Friday")).toEqual([utc(11, 27, 15), utc(12, 25, 15)]);
     // A rule this reader cannot expand still shows its first meeting.
-    expect(titled("Unsupported rule")).toEqual([utc(11, 3, 9)]);
+    expect(titled("Unsupported rule")).toEqual([utc(11, 10, 9)]);
   });
 
   it("keeps only meetings that overlap the window, and ignores alarms inside events", () => {

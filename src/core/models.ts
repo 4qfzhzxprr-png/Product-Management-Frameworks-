@@ -50,6 +50,27 @@ export interface Person {
   name: string;
   /** A product manager on David's team; gets a card on the team board. */
   isPM: boolean;
+  /** Other names for the same person in other systems, such as "Priya S." in the tracker. */
+  aliases: string[];
+}
+
+/** Every name a person goes by, lower case. */
+export function namesOf(person: Pick<Person, "name" | "aliases">): string[] {
+  return [person.name, ...person.aliases].map((name) => name.trim().toLowerCase()).filter(Boolean);
+}
+
+/** True when `name` (such as an epic owner) is one of this person's names. */
+export function isNamed(person: Pick<Person, "name" | "aliases">, name: string): boolean {
+  return namesOf(person).includes(name.trim().toLowerCase());
+}
+
+/** True when any of the person's names appears as whole words in `text`, such as a meeting title. */
+export function isMentioned(person: Pick<Person, "name" | "aliases">, text: string): boolean {
+  const haystack = ` ${text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ")} `;
+  return namesOf(person).some((name) => {
+    const needle = name.replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    return needle !== "" && haystack.includes(` ${needle} `);
+  });
 }
 
 export interface Project {

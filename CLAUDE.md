@@ -91,8 +91,10 @@ when a feature is built, a decision is made or scope changes.
   is the connecting work, the AI features and Apple distribution; see `docs/PLAN.md`.
 - The commitment tracker only knows promises David captures. Finding promises inside email
   or meeting notes needs the AI provider, so it waits for that decision.
-- Epics are matched to a PM by the owner's display name. If names differ between the tracker
-  and the app, add aliases to people rather than special-casing a tracker.
+- Epics and meetings are matched to people by name or any of their other names
+  (`Person.aliases`, edited on the Team card; `isNamed` and `isMentioned` in `models.ts`).
+- The morning brief must fit one screen at the smallest normal window (1240 by 860): today's
+  meetings are a one-line strip, previews are one line, and the overnight list shows four.
 - A ticket deleted in the tracker stays in `work_items` until its connection is removed.
   Handle that when the first tracker connector is written.
 - Calendars connect live, and tickets import from a CSV export. Nothing writes activity

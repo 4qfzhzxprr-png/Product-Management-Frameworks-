@@ -13,6 +13,7 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
   const at = (daysAgo: number, hour: number) => dayStart(now, daysAgo) + hour * 3_600_000;
 
   const priya = await store.addPerson("Priya", true);
+  await store.setAliases(priya.id, ["Priya S."]);
   const marco = await store.addPerson("Marco", true);
   const lena = await store.addPerson("Lena");
   // The person David reports to, in the sample.
@@ -169,7 +170,8 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
   const epic = (externalId: string, title: string, ownerName: string, extra: Partial<WorkRecord> = {}) =>
     work(externalId, title, "in_progress", "In progress", "", { kind: "Epic", level: "epic", sprint: null, sprintEndsAt: null, ownerName, ...extra });
   const sampleWork: WorkRecord[] = [
-    epic("PORT-1", "Patient portal beta", "Priya", { dueAt: now + 20 * DAY }),
+    // The tracker spells Priya's name differently; her other names in the app cover it.
+    epic("PORT-1", "Patient portal beta", "Priya S.", { dueAt: now + 20 * DAY }),
     epic("REF-1", "Refill flow pilot", "Marco", { dueAt: now + 9 * DAY }),
     epic("REF-2", "Eligibility check", "Marco", { dueAt: now - 2 * DAY }),
     work("PORT-12", "Consent screen", "done", "Done", "Onshore", { resolvedAt: now - 2 * DAY, parentExternalId: "PORT-1" }),
@@ -246,4 +248,18 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
     },
     now - DAY,
   );
+
+  // A calendar: stand-up and a review today, and 1:1s in the coming days.
+  const ahead = (days: number, hour: number, minute = 0) => dayStart(now, -days) + (hour * 60 + minute) * 60_000;
+  const meeting = (title: string, startsAt: number, minutes: number, location = "") => ({
+    externalId: `${title}-${startsAt}`, title, startsAt, endsAt: startsAt + minutes * 60_000, allDay: false, location, url: "",
+  });
+  await store.calendar.replaceSource("sample-calendar", "Work calendar", [
+    meeting("Offshore stand-up", ahead(0, 8, 30), 30),
+    meeting("Roadmap review", ahead(0, 11), 60, "Room 4"),
+    meeting("Pricing experiment readout", ahead(0, 15), 45),
+    meeting("Priya / David 1:1", ahead(1, 10), 30),
+    meeting("Marco 1:1", ahead(2, 14), 30),
+    meeting("Jordan / David weekly 1:1", ahead(3, 9), 45),
+  ]);
 }

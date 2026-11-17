@@ -21,9 +21,9 @@ function capture(kind: CaptureKind, personId: number | null, createdDaysAgo: num
   };
 }
 
-const priya: Person = { id: 1, name: "Priya", isPM: true };
-const marco: Person = { id: 2, name: "Marco", isPM: true };
-const lena: Person = { id: 3, name: "Lena", isPM: false };
+const priya: Person = { id: 1, name: "Priya", isPM: true, aliases: [] };
+const marco: Person = { id: 2, name: "Marco", isPM: true, aliases: [] };
+const lena: Person = { id: 3, name: "Lena", isPM: false, aliases: [] };
 
 describe("teamBoard", () => {
   const captures = [

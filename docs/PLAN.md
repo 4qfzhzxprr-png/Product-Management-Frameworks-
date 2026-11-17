@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-17 (ticket import from a file built).
+Last updated 2026-11-17 (meetings across the app, other names, monthly patterns).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -175,7 +175,14 @@ Done last, by David's decision, and built so that any system can be added.
   others. Keeps meetings from a week back to 30 days ahead, expands repeating meetings
   (daily, weekly on chosen days, monthly, yearly) across clock changes, and handles
   exceptions, moved occurrences, cancellations and Outlook's time zone names. Monthly rules
-  like "the second Tuesday" show only their first meeting for now.
+  like "the second Tuesday" or "the last Friday" are expanded too; yearly rules by weekday
+  show only their first meeting.
+- Meetings are used across the app: today's meetings as a strip at the top of the morning
+  brief, and each person's next meeting (preferring one that looks like a 1:1) on their Team
+  card, in their 1:1 workspace and in CPO 1:1 prep. Meetings are matched by the person's
+  name, or any of their other names, appearing in the meeting title.
+- **Other names.** People can have other names (such as "Priya S." in Jira), entered on their
+  Team card; epics and meetings match any of them.
 - The handoff window now lists today's meetings and how much shared time is left after them.
 - **Tickets from a file.** Imports tickets and epics from a CSV export of any tracker (Jira,
   Linear, Asana, Azure DevOps, GitHub and others), with no API access or admin approval.
@@ -191,11 +198,8 @@ Done last, by David's decision, and built so that any system can be added.
 1. More connectors. Each is one file in `src/core/connectors/` and one line in the registry.
    Expected next: an issue tracker (the most pages depend on it), mail, and a wiki. Which
    products they target depends on the open questions below.
-2. Name aliases on people, for matching epic owners.
-3. Removing tickets deleted in the tracker, for live tracker connectors (imports already do).
-4. Tuning the decision-queue rules against real mail.
-5. Using meetings elsewhere: 1:1 prep could find the next 1:1, and the brief could list
-   today's meetings.
+2. Removing tickets deleted in the tracker, for live tracker connectors (imports already do).
+3. Tuning the decision-queue rules against real mail.
 
 ## AI features
 
