@@ -41,13 +41,14 @@ test("a tracker export imports, fills the delivery pages, and a newer export rep
   await titleColumn.click();
   await page.keyboard.type("none");
   await expect(page.locator(".ant-select-dropdown:visible .ant-select-item-option")).toHaveText(["(none)"]);
-  await page.keyboard.press("Enter");
+  // Click rather than press Return: under load the highlighted option can lag behind the typing.
+  await page.locator(".ant-select-dropdown:visible .ant-select-item-option", { hasText: "(none)" }).click();
   await expect(page.getByText("Choose a column for: Title.")).toBeVisible();
   await expect(page.getByRole("button", { name: /^Import/ }).last()).toBeDisabled();
   await titleColumn.click();
   await page.keyboard.type("Summary");
   await expect(page.locator(".ant-select-dropdown:visible .ant-select-item-option")).toHaveText(["Summary"]);
-  await page.keyboard.press("Enter");
+  await page.locator(".ant-select-dropdown:visible .ant-select-item-option", { hasText: "Summary" }).click();
   await expect(page.getByText("Choose a column for: Title.")).toHaveCount(0);
 
   await page.getByPlaceholder("https://yourcompany.atlassian.net/browse/{key}").fill("https://acme.atlassian.net/browse/{key}");
