@@ -24,6 +24,11 @@ test.describe("first run, with nothing stored", () => {
     await expect(page.getByText("Nobody owes you anything.")).toBeVisible();
     await go(page, "Delivery");
     await expect(page.getByText("No tickets synced yet")).toBeVisible();
+    await page.getByRole("button", { name: "Import tickets" }).click();
+    await expect(page.locator(".page-head h1")).toHaveText("Connections");
+    await go(page, "Brief");
+    await page.getByRole("button", { name: "Set up connections" }).click();
+    await expect(page.locator(".page-head h1")).toHaveText("Connections");
     await go(page, "Handoff");
     await expect(page.getByText("Choose the offshore team's time zone")).toBeVisible();
     await expect(page.getByText("No issue tracker is connected yet")).toBeVisible();

@@ -43,6 +43,7 @@ import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
 import { quote, ToastProvider, useToast } from "./Toast";
 import { message, useStore } from "./useStore";
+import { NavigateContext } from "./navigation";
 import { registry, useSync } from "./useSync";
 
 type View =
@@ -366,155 +367,168 @@ function Shell({ store }: { store: CaptureStore }) {
           >
             <span className="capture-button-label">Quick capture</span>
           </Button>
-          <p>{isTauri ? "Stored on this Mac" : "Browser preview with sample data. Nothing is saved."}</p>
+          <p>
+            {isTauri
+              ? "Stored on this Mac"
+              : new URLSearchParams(window.location.search).has("empty")
+                ? "Browser preview. Nothing is saved."
+                : "Browser preview with sample data. Nothing is saved."}
+          </p>
         </div>
       </aside>
 
-      <main className="main glass-panel">
-        {error && (
-          <Alert className="banner" type="error" showIcon title={error} closable onClose={() => setError(null)} />
-        )}
-        {loaded && oneOnOne !== null && view === oneOnOne.from && (
-          <OneOnOnePage
-            upcoming={upcoming}
-            personId={oneOnOne.personId}
-            people={people}
-            captures={captures}
-            now={now}
-            backLabel={NAV.find((entry) => entry.view === oneOnOne.from)?.label}
-            onBack={() => setOneOnOne(null)}
-            onAdd={(kind, body) => void change(() => store.addCapture({ kind, body, personId: oneOnOne.personId }))}
-            onDone={setDone}
-            onDelete={removeCapture}
-          />
-        )}
-        {loaded && oneOnOne === null && view === "overview" && (
-          <OverviewPage
-            alerts={alerts}
-            decisions={decisions}
-            onOpenQueue={() => setView("queue")}
-            setup={setupDismissed ? null : setup}
-            onSetupStep={(step) => {
-              if (step === "capture") void openCapture();
-              else setView(step === "calendar" || step === "tickets" ? "connections" : step === "team" ? "team" : "leadership");
-            }}
-            onDismissSetup={() => void change(() => store.settings.set(SETUP_SETTINGS, { dismissed: true } satisfies SetupSettings))}
-            onOpenLeadership={() => setView("leadership")}
-            captures={captures}
-            now={now}
-            personName={personName}
-            onOpenCaptures={openCaptures}
-            onOpenAnalytics={() => setView("analytics")}
-            onCapture={() => void openCapture()}
-            onDone={(capture) => setDone(capture)}
-          />
-        )}
-        {loaded && oneOnOne === null && view === "brief" && (
-          <BriefPage
-            meetings={meetings}
-            items={items}
-            now={now}
-            connected={connected}
-            onMove={moveItem}
-            onDismiss={dismissItem}
-            onOpenQueue={() => setView("queue")}
-          />
-        )}
-        {loaded && oneOnOne === null && view === "queue" && (
-          <QueuePage items={items} now={now} connected={connected} onMove={moveItem} onDismiss={dismissItem} />
-        )}
-        {loaded && oneOnOne === null && view === "team" && (
-          <TeamPage
-            upcoming={upcoming}
-            onSetAliases={(personId, aliases) => void change(() => store.setAliases(personId, aliases))}
-            work={work}
-            onOpen={(personId) => setOneOnOne({ personId, from: "team" })}
-            people={people}
-            captures={captures}
-            now={now}
-            onDone={(capture) => setDone(capture)}
-            onCapture={(personId, kind) => setInlineCapture({ personId, kind })}
-            onAddPM={(name) =>
-              void change(async () => {
-                const person = await store.addPerson(name, true);
-                if (!person.isPM) await store.setPersonIsPM(person.id, true);
-              })
-            }
-          />
-        )}
-        {loaded && oneOnOne === null && view === "leadership" && leadershipSettings && (
-          <LeadershipPage
-            upcoming={upcoming}
-            store={store}
-            people={people}
-            captures={captures}
-            work={work}
-            priorities={priorities}
-            roadmap={roadmap}
-            settings={leadershipSettings}
-            now={now}
-            change={change}
-            onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "leadership" })}
-            onDone={(capture) => setDone(capture)}
-            onDelete={removeCapture}
-          />
-        )}
-        {loaded && oneOnOne === null && view === "influence" && (
-          <InfluencePage
-            store={store}
-            people={people}
-            projects={projects}
-            captures={captures}
-            profiles={profiles}
-            prereads={prereads}
-            now={now}
-            change={change}
-            onCapture={(personId, kind) => setInlineCapture({ personId, kind })}
-            onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "influence" })}
-          />
-        )}
-        {loaded && oneOnOne === null && view === "commitments" && (
-          <CommitmentsPage
-            captures={captures}
-            now={now}
-            personName={personName}
-            onDone={(capture) => setDone(capture)}
-            onEdit={(capture) => setInlineCapture({ editing: capture })}
-          />
-        )}
-        {loaded && oneOnOne === null && view === "delivery" && <DeliveryPage work={work} now={now} />}
-        {loaded && oneOnOne === null && view === "handoff" && (
-          <HandoffPage store={store} work={work} captures={captures} meetings={meetings} now={now} />
-        )}
-        {loaded && oneOnOne === null && view === "connections" && (
-          <ConnectionsPage
-            store={store}
-            connections={connections}
-            now={now}
-            syncing={sync.syncing}
-            lastRun={sync.lastRun}
-            reports={sync.reports}
-            syncNow={sync.syncNow}
-            change={change}
-          />
-        )}
-        {loaded && oneOnOne === null && view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
-        {loaded && oneOnOne === null && view === "captures" && (
-          <CapturesPage
-            store={store}
-            people={people}
-            projects={projects}
-            waiting={waiting}
-            revision={revision}
-            selection={selection}
-            onSelect={setSelection}
-            onEdit={(capture) => setInlineCapture({ editing: capture })}
-            onDone={setDone}
-            onDelete={removeCapture}
-            change={change}
-          />
-        )}
-      </main>
+      <NavigateContext.Provider
+        value={(to) => {
+          setOneOnOne(null);
+          setView(to);
+        }}
+      >
+        <main className="main glass-panel">
+          {error && (
+            <Alert className="banner" type="error" showIcon title={error} closable onClose={() => setError(null)} />
+          )}
+          {loaded && oneOnOne !== null && view === oneOnOne.from && (
+            <OneOnOnePage
+              upcoming={upcoming}
+              personId={oneOnOne.personId}
+              people={people}
+              captures={captures}
+              now={now}
+              backLabel={NAV.find((entry) => entry.view === oneOnOne.from)?.label}
+              onBack={() => setOneOnOne(null)}
+              onAdd={(kind, body) => void change(() => store.addCapture({ kind, body, personId: oneOnOne.personId }))}
+              onDone={setDone}
+              onDelete={removeCapture}
+            />
+          )}
+          {loaded && oneOnOne === null && view === "overview" && (
+            <OverviewPage
+              alerts={alerts}
+              decisions={decisions}
+              onOpenQueue={() => setView("queue")}
+              setup={setupDismissed ? null : setup}
+              onSetupStep={(step) => {
+                if (step === "capture") void openCapture();
+                else setView(step === "calendar" || step === "tickets" ? "connections" : step === "team" ? "team" : "leadership");
+              }}
+              onDismissSetup={() => void change(() => store.settings.set(SETUP_SETTINGS, { dismissed: true } satisfies SetupSettings))}
+              onOpenLeadership={() => setView("leadership")}
+              captures={captures}
+              now={now}
+              personName={personName}
+              onOpenCaptures={openCaptures}
+              onOpenAnalytics={() => setView("analytics")}
+              onCapture={() => void openCapture()}
+              onDone={(capture) => setDone(capture)}
+            />
+          )}
+          {loaded && oneOnOne === null && view === "brief" && (
+            <BriefPage
+              meetings={meetings}
+              items={items}
+              now={now}
+              connected={connected}
+              onMove={moveItem}
+              onDismiss={dismissItem}
+              onOpenQueue={() => setView("queue")}
+            />
+          )}
+          {loaded && oneOnOne === null && view === "queue" && (
+            <QueuePage items={items} now={now} connected={connected} onMove={moveItem} onDismiss={dismissItem} />
+          )}
+          {loaded && oneOnOne === null && view === "team" && (
+            <TeamPage
+              upcoming={upcoming}
+              onSetAliases={(personId, aliases) => void change(() => store.setAliases(personId, aliases))}
+              work={work}
+              onOpen={(personId) => setOneOnOne({ personId, from: "team" })}
+              people={people}
+              captures={captures}
+              now={now}
+              onDone={(capture) => setDone(capture)}
+              onCapture={(personId, kind) => setInlineCapture({ personId, kind })}
+              onAddPM={(name) =>
+                void change(async () => {
+                  const person = await store.addPerson(name, true);
+                  if (!person.isPM) await store.setPersonIsPM(person.id, true);
+                })
+              }
+            />
+          )}
+          {loaded && oneOnOne === null && view === "leadership" && leadershipSettings && (
+            <LeadershipPage
+              upcoming={upcoming}
+              store={store}
+              people={people}
+              captures={captures}
+              work={work}
+              priorities={priorities}
+              roadmap={roadmap}
+              settings={leadershipSettings}
+              now={now}
+              change={change}
+              onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "leadership" })}
+              onDone={(capture) => setDone(capture)}
+              onDelete={removeCapture}
+            />
+          )}
+          {loaded && oneOnOne === null && view === "influence" && (
+            <InfluencePage
+              store={store}
+              people={people}
+              projects={projects}
+              captures={captures}
+              profiles={profiles}
+              prereads={prereads}
+              now={now}
+              change={change}
+              onCapture={(personId, kind) => setInlineCapture({ personId, kind })}
+              onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "influence" })}
+            />
+          )}
+          {loaded && oneOnOne === null && view === "commitments" && (
+            <CommitmentsPage
+              captures={captures}
+              now={now}
+              personName={personName}
+              onDone={(capture) => setDone(capture)}
+              onEdit={(capture) => setInlineCapture({ editing: capture })}
+            />
+          )}
+          {loaded && oneOnOne === null && view === "delivery" && <DeliveryPage work={work} now={now} />}
+          {loaded && oneOnOne === null && view === "handoff" && (
+            <HandoffPage store={store} work={work} captures={captures} meetings={meetings} now={now} />
+          )}
+          {loaded && oneOnOne === null && view === "connections" && (
+            <ConnectionsPage
+              store={store}
+              connections={connections}
+              now={now}
+              syncing={sync.syncing}
+              lastRun={sync.lastRun}
+              reports={sync.reports}
+              syncNow={sync.syncNow}
+              change={change}
+            />
+          )}
+          {loaded && oneOnOne === null && view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
+          {loaded && oneOnOne === null && view === "captures" && (
+            <CapturesPage
+              store={store}
+              people={people}
+              projects={projects}
+              waiting={waiting}
+              revision={revision}
+              selection={selection}
+              onSelect={setSelection}
+              onEdit={(capture) => setInlineCapture({ editing: capture })}
+              onDone={setDone}
+              onDelete={removeCapture}
+              change={change}
+            />
+          )}
+        </main>
+      </NavigateContext.Provider>
 
       <Modal
         open={inlineCapture !== null}

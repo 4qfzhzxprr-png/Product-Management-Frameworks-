@@ -1,6 +1,7 @@
 import { Button } from "antd";
 import type { CalendarEvent } from "../core/calendar";
 import { buildBrief, type Bucket, type SourceItem } from "../core/items";
+import { useNavigate } from "./navigation";
 import { GlassCard } from "./components";
 import { ItemRow } from "./ItemRow";
 
@@ -33,13 +34,17 @@ function TodaysMeetings({ meetings, now }: { meetings: CalendarEvent[]; now: num
 
 /** Shown wherever a page depends on connectors that are not set up yet. */
 export function NotConnected() {
+  const navigate = useNavigate();
   return (
     <GlassCard className="team-empty">
       <h2>Nothing synced yet</h2>
       <p className="muted">
-        This page fills from the systems you connect, such as email, a wiki or an issue tracker. Nothing is
-        connected yet, so there is nothing to show. Quick captures, the team board and analytics work without them.
+        This page fills from the systems you connect, such as email, a wiki or an issue tracker. None has sent
+        anything yet. Quick captures, the team board and analytics work without them.
       </p>
+      <Button type="primary" onClick={() => navigate("connections")}>
+        Set up connections
+      </Button>
     </GlassCard>
   );
 }

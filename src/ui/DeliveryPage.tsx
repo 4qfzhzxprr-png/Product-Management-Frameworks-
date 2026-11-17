@@ -1,8 +1,9 @@
-import { Progress, Tag } from "antd";
+import { Button, Progress, Tag } from "antd";
 import { ArrowUpRight } from "lucide-react";
 import { blockers, deliveryPulse, staleItems, type WorkItem } from "../core/work";
 import { openExternal } from "../platform";
 import { GlassCard } from "./components";
+import { useNavigate } from "./navigation";
 
 function daysSince(time: number, now: number): string {
   const days = Math.floor((now - time) / 86_400_000);
@@ -40,6 +41,7 @@ export function DeliveryPage({ work, now }: { work: WorkItem[]; now: number }) {
   const pulse = deliveryPulse(work, now);
   const stuck = blockers(work);
   const quiet = staleItems(work, now);
+  const navigate = useNavigate();
 
   return (
     <div className="page">
@@ -53,8 +55,11 @@ export function DeliveryPage({ work, now }: { work: WorkItem[]; now: number }) {
           <h2>No tickets synced yet</h2>
           <p className="muted">
             This page fills from an issue tracker. None is connected yet, so there is no sprint progress, blockers or
-            stale tickets to show.
+            stale tickets to show. A CSV export from any tracker is enough.
           </p>
+          <Button type="primary" onClick={() => navigate("connections")}>
+            Import tickets
+          </Button>
         </GlassCard>
       ) : (
         <>

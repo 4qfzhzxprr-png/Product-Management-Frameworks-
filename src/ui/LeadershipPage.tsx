@@ -26,6 +26,7 @@ import type { CaptureStore } from "../core/store";
 import { personCard } from "../core/team";
 import { epicHealth, HEALTH_LABELS, type EpicHealth, type WorkItem } from "../core/work";
 import { openExternal } from "../platform";
+import { useNavigate } from "./navigation";
 import { GlassCard, NextMeeting } from "./components";
 import { AddLine, Checklist } from "./OneOnOnePage";
 import { message } from "./useStore";
@@ -843,6 +844,7 @@ const WEEKS = [
 ];
 
 function ShippedLog({ work, now }: { work: WorkItem[]; now: number }) {
+  const navigate = useNavigate();
   const [weeksAgo, setWeeksAgo] = useState(0);
   const from = weekStart(now, weeksAgo);
   const shipped = shippedBetween(work, from, weekStart(now, weeksAgo - 1));
@@ -852,6 +854,9 @@ function ShippedLog({ work, now }: { work: WorkItem[]; now: number }) {
       <GlassCard className="team-empty">
         <h2>No tickets synced yet</h2>
         <p className="muted">The shipped log fills from an issue tracker. None is connected yet.</p>
+        <Button type="primary" onClick={() => navigate("connections")}>
+          Import tickets
+        </Button>
       </GlassCard>
     );
   }
