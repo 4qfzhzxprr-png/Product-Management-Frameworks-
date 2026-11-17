@@ -31,8 +31,8 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Phase 2: team and delivery | Built, apart from the parts that need connectors or AI. |
 | Phase 3: the CPO | Built, apart from the parts that need connectors or AI. |
 | Phase 4: C-suite influence | Built, apart from the three features that need AI. |
-| Connecting to other systems | Plumbing and Connections screen built; calendars connect, and tickets import from any tracker's CSV export. |
-| AI features | Not started. Claude is the approved provider (2026-11-17); calls go through Claude Code on the Mac first. |
+| Connecting to other systems | Calendars (.ics) connect and tickets import from CSV. Jira and Slack connectors are built but wait on approval. No mail or wiki connector yet. |
+| AI features | Built through Claude Code (Phase 6), except finding promises in email and better prose in the weekly update. |
 | Phase 6: making it daily | Built 2026-11-17, steps 1 to 11; Jira and Slack wait on approval to connect. |
 | Phase 5: the agent team | Built 2026-11-17: roster, runs, review queue, schedules and context. Needs a first real run on David's Mac. |
 | Apple distribution | Unsigned test builds only. |
@@ -134,9 +134,9 @@ Everything on it is private: stored on the Mac only and never synced.
 | --- | --- | --- |
 | Narrative bank | Wins, customer evidence and metrics collected as they happen: anything captured as a win, or with the new "Customer evidence" and "Metric" kinds, from the shortcut or the page. Filter by type, period and project; select entries and copy them as plain text grouped by project, ready for a deck. | Built |
 | Stakeholder map | Each executive's role, what they are trying to achieve and what worries them, what they last asked David for and whether it is done, when they were last in touch, and a flag after 30 days of no contact. Log an ask from the card, or open notes and an agenda for them. | Built |
-| Pre-read builder | A one-page brief for an exec meeting, ask first: the ask, why now, background, options, recommendation, and evidence chosen from the narrative bank. Shows the person's goals and concerns while writing, flags a missing ask, audience or recommendation, and counts words against one page. Saved, copied and sent by David. | Built, from a template. AI could draft the sections. |
-| Exec translator | Rewrites a product update for each audience: revenue for the CEO, cost and margin for the CFO, pipeline for sales. | Not built. Needs AI. |
-| Objection prep | Likely pushback on a proposal with drafted answers. | Not built. Needs AI. |
+| Pre-read builder | A one-page brief for an exec meeting, ask first: the ask, why now, background, options, recommendation, and evidence chosen from the narrative bank. Shows the person's goals and concerns while writing, flags a missing ask, audience or recommendation, and counts words against one page. Saved, copied and sent by David. | Built. Claude drafts empty sections (Phase 6). |
+| Exec translator | Rewrites a product update for each audience: revenue for the CEO, cost and margin for the CFO, pipeline for sales. | Built with Claude (Phase 6, Influence, "With Claude"). |
+| Objection prep | Likely pushback on a proposal with drafted answers. | Built with Claude (Phase 6). |
 
 ## Later or cut
 
@@ -148,12 +148,12 @@ Parked. Each is a nice-to-have or hard to do well. They do not shape current des
 | End-of-day close | What moved, what did not, and tomorrow's top three. | Nice-to-have. The handoff window covers part of it. |
 | Async decision log | Captures decisions made in email threads so neither team reopens them. | Hard to detect decisions reliably. |
 | Workload view | Who is carrying what across the PM team. | Partly covered by the team board. |
-| Coaching log | Private notes on wins, misses and growth areas per PM. | Lives as 1:1 notes and tagged captures for now. |
-| Spec quality check | First-pass read of a PRD against David's standards. | Needs those standards written down, and AI. |
+| Coaching log | Private notes on wins, misses and growth areas per PM. | Largely built: the feedback and praise log and review prep (Phase 6). |
+| Spec quality check | First-pass read of a PRD against David's standards. | Built against a general checklist (Phase 6); tune once David writes his standards down. |
 | Spec to ticket trace | Links each PRD to its epics. | Depends on consistent linking habits. |
 | Overlap planner | Who is online now and the best slot for a live conversation. | Small gain. The handoff window shows shared hours. |
 | Focus guard | Where the week went: meetings, deep work, reactive email. | Nice-to-have. |
-| Ask anything | One search box across email, documents and notes. | A big build on its own. |
+| Ask anything | One search box across email, documents and notes. | Command-K searches the app's own data (Phase 6); email and documents wait on those connectors. |
 
 ## Connecting to other systems
 
@@ -348,12 +348,12 @@ Guard rails:
 
 ## AI features
 
-Claude is approved (2026-11-17). The first model calls will be the agent runs in Phase 5,
-through Claude Code on David's Mac. Once that runner exists, the features below can use it.
+Claude is approved (2026-11-17). Every call goes through Claude Code on David's Mac, is checked
+for patient and customer details first, and is logged (Phase 6).
 
-Waiting on it: finding promises inside email and meeting notes, better prose in the weekly
-update, the exec translator, objection prep, drafting pre-read sections, and the spec quality
-check. Everything built so far is rule-based and makes no AI calls.
+Built: agent runs, meeting notes into actions, the exec translator, objection prep, drafting
+pre-read sections, the spec check and review prep. Still to do: finding promises inside email
+(needs a mail connector) and better prose in the weekly update (still rule-built).
 
 ## Apple distribution
 
