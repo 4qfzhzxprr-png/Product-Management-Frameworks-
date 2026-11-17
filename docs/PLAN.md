@@ -222,6 +222,10 @@ on its own. Status is kept next to each item.
    Linux build: daily backup written, restore applied at relaunch.
 3. **Meeting notes into actions.** Paste notes or a transcript; Claude lists decisions, David's
    promises, asks of others and dates; he ticks what to keep and they become captures.
+   *Built:* "Notes into actions" on the 1:1 workspace, Captures and Commitments
+   (`src/ui/MeetingNotes.tsx`, logic in `src/core/meetingNotes.ts`). Proposals can be edited,
+   matched people can be added, the notes can be kept as a 1:1 note, and all of it undone.
+   Simple rules (`proposeByRules`) work without Claude and drive the browser preview.
 4. **Agents read the app.** Each run gets a read-only snapshot of the app's data in a folder
    Claude Code may read (`--add-dir`), so the lead can look things up mid-task.
 5. **Reminders and the weekly review.** Mac notifications for promises due or slipping, the

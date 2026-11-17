@@ -101,3 +101,27 @@ export function sampleOutput(agentName: string, prompt: string): string {
     "2. Approve it, or send it back with what to change.",
   ].join("\n");
 }
+
+/**
+ * A stand-in answer for a plain question to Claude in the preview, by purpose. Meeting notes are
+ * read with the same simple rules the app falls back on, so the preview behaves sensibly.
+ */
+export async function samplePurposeAnswer(purpose: string, prompt: string): Promise<string> {
+  if (purpose === "meeting-actions") {
+    const { proposeByRules } = await import("../core/meetingNotes");
+    const names = /People David works with: (.+)\.$/m.exec(prompt)?.[1].split(", ") ?? [];
+    const people = names.map((name, index) => ({ id: index + 1, name, isPM: false, aliases: [] }));
+    const withName = /This was a meeting with (.+)\.$/m.exec(prompt)?.[1] ?? null;
+    const notes = prompt.split("\nNotes:\n")[1] ?? prompt;
+    const found = proposeByRules(notes, people, Date.now(), people.find((person) => person.name === withName) ?? null);
+    return JSON.stringify(
+      found.map((item) => ({
+        kind: item.kind,
+        text: item.text,
+        person: people.find((person) => person.id === item.personId)?.name ?? null,
+        due: item.due || null,
+      })),
+    );
+  }
+  return `Preview only: Claude was not asked. In the Mac app, the answer for "${purpose}" appears here.\n\n${prompt.split("\n").slice(0, 3).join("\n")}`;
+}

@@ -1,8 +1,9 @@
 import { Button, Checkbox, Tag } from "antd";
-import { Pencil } from "lucide-react";
+import { Pencil, Sparkles } from "lucide-react";
 import { commitmentBoard, type TrackedCommitment } from "../core/commitments";
 import type { Capture } from "../core/models";
 import { GlassCard } from "./components";
+import { useAppActions } from "./navigation";
 
 function dueText(entry: TrackedCommitment): string {
   if (entry.capture.dueAt === null) return "No date";
@@ -27,6 +28,7 @@ export function CommitmentsPage({
   onEdit: (capture: Capture) => void;
 }) {
   const board = commitmentBoard(captures, now);
+  const actions = useAppActions();
 
   const list = (title: string, empty: string, entries: TrackedCommitment[], index: number, who: (c: Capture) => string) => (
     <GlassCard className="brief-section" index={index} aria-label={title}>
@@ -74,14 +76,19 @@ export function CommitmentsPage({
 
   return (
     <div className="page">
-      <header className="page-head">
-        <h1>Commitments</h1>
-        <p>
-          {board.slipped === 0
-            ? "Nothing has slipped."
-            : `${board.slipped} ${board.slipped === 1 ? "promise has" : "promises have"} slipped past the date.`}{" "}
-          Give a commitment a date when you capture or edit it.
-        </p>
+      <header className="page-head with-controls">
+        <div>
+          <h1>Commitments</h1>
+          <p>
+            {board.slipped === 0
+              ? "Nothing has slipped."
+              : `${board.slipped} ${board.slipped === 1 ? "promise has" : "promises have"} slipped past the date.`}{" "}
+            Give a commitment a date when you capture or edit it.
+          </p>
+        </div>
+        <Button icon={<Sparkles size={14} aria-hidden="true" />} onClick={() => actions.openMeetingNotes()}>
+          Notes into actions
+        </Button>
       </header>
       <div className="brief-grid">
         {list("I promised", "You have no open commitments.", board.mine, 0, (capture) => {

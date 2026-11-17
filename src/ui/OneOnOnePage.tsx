@@ -1,10 +1,11 @@
 import { Button, Checkbox, Input, Tag } from "antd";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { CalendarEventRecord } from "../core/calendar";
 import type { Capture, CaptureKind, Person } from "../core/models";
 import { isCarriedOver, personCard } from "../core/team";
 import { GlassCard, NextMeeting } from "./components";
+import { useAppActions } from "./navigation";
 
 function day(time: number): string {
   return new Date(time).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
@@ -105,6 +106,7 @@ export function OneOnOnePage({
   onDelete: (capture: Capture) => void;
 }) {
   const [note, setNote] = useState("");
+  const actions = useAppActions();
   const person = people.find((candidate) => candidate.id === personId);
   const card = person ? personCard(person, captures, now) : null;
 
@@ -209,9 +211,14 @@ export function OneOnOnePage({
               value={note}
               onChange={(event) => setNote(event.target.value)}
             />
-            <Button htmlType="submit" type="primary" disabled={!note.trim()}>
-              Save note
-            </Button>
+            <div className="note-actions">
+              <Button icon={<Sparkles size={14} aria-hidden="true" />} onClick={() => actions.openMeetingNotes(personId)}>
+                Notes into actions
+              </Button>
+              <Button htmlType="submit" type="primary" disabled={!note.trim()}>
+                Save note
+              </Button>
+            </div>
           </form>
           {card.oneOnOnes.length === 0 ? (
             <p className="muted small">Notes you save appear here, newest first.</p>

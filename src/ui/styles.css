@@ -2762,3 +2762,74 @@ kbd {
   max-height: 220px;
   font-size: 12px;
 }
+
+/* Meeting notes into actions */
+
+.head-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.proposal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 52vh;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.proposal-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--inset);
+  border: 1px solid var(--line);
+}
+
+.proposal-list li.dropped {
+  opacity: 0.5;
+}
+
+.proposal-list .ant-checkbox-wrapper {
+  margin-top: 6px;
+}
+
+.proposal-fields {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.proposal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.proposal-meta .ant-select {
+  min-width: 140px;
+}
+
+.note-form .note-actions {
+  margin-top: 8px;
+}
+
+/* Header buttons wrap under the search box when the window is narrow. */
+.head-controls {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.head-controls .search {
+  min-width: 0;
+  flex: 1 1 180px;
+}

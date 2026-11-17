@@ -1,9 +1,10 @@
 import { Badge, Button, Checkbox, Empty, Input, Popconfirm, Tag } from "antd";
-import { Pencil, Search, Star, Trash2, X } from "lucide-react";
+import { Pencil, Search, Sparkles, Star, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isActionable, KIND_LABELS, type Capture, type CaptureFilter, type Person, type Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import { GlassCard } from "./components";
+import { useAppActions } from "./navigation";
 import { message } from "./useStore";
 
 export type Selection =
@@ -62,6 +63,7 @@ export function CapturesPage({
 }) {
   const [captures, setCaptures] = useState<Capture[]>([]);
   const [search, setSearch] = useState("");
+  const actions = useAppActions();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -112,15 +114,20 @@ export function CapturesPage({
           <h1>{title}</h1>
           <p>Everything you have captured, newest first.</p>
         </div>
-        <Input
-          className="search"
-          allowClear
-          prefix={<Search size={15} aria-hidden="true" />}
-          placeholder="Search captures"
-          aria-label="Search captures"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
+        <div className="head-controls">
+          <Button icon={<Sparkles size={14} aria-hidden="true" />} onClick={() => actions.openMeetingNotes()}>
+            Notes into actions
+          </Button>
+          <Input
+            className="search"
+            allowClear
+            prefix={<Search size={15} aria-hidden="true" />}
+            placeholder="Search captures"
+            aria-label="Search captures"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
       </header>
 
       <div className="captures-layout">

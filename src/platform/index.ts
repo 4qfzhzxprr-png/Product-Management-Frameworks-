@@ -190,9 +190,12 @@ function previewAgentRunner(): AgentRunner {
       return SAMPLE_AGENT_FILES;
     },
     async start(request, onLine) {
-      const { sampleOutput } = await import("./sampleAgents");
+      const { sampleOutput, samplePurposeAnswer } = await import("./sampleAgents");
       const prompt = request.args[request.args.indexOf("--append-system-prompt") + 1] ?? "";
       const name = /acting as "([^"]+)"/.exec(prompt)?.[1] ?? "the agent";
+      // A plain question names its purpose on the first line of its instructions.
+      const purpose = /^Purpose: ([\w-]+)/.exec(prompt)?.[1] ?? null;
+      const answer = purpose ? await samplePurposeAnswer(purpose, request.prompt) : sampleOutput(name, request.prompt);
       const lines = [
         { type: "system", subtype: "init", model: "preview", session_id: `preview-${request.runId}` },
         { type: "assistant", message: { content: [{ type: "text", text: "Reading the brief and what was attached." }] } },
@@ -201,7 +204,7 @@ function previewAgentRunner(): AgentRunner {
         {
           type: "result",
           subtype: "success",
-          result: sampleOutput(name, request.prompt),
+          result: answer,
           total_cost_usd: 0,
           duration_ms: 1200,
           session_id: `preview-${request.runId}`,

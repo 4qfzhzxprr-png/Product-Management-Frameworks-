@@ -50,7 +50,8 @@ import { Shortcuts } from "./Shortcuts";
 import { TeamPage } from "./TeamPage";
 import { quote, ToastProvider, useToast } from "./Toast";
 import { message, useStore } from "./useStore";
-import { NavigateContext } from "./navigation";
+import { AppActionsContext, NavigateContext } from "./navigation";
+import { MeetingNotesDialog } from "./MeetingNotes";
 import { useAgents } from "./useAgents";
 import { registry, useSync } from "./useSync";
 
@@ -149,6 +150,8 @@ function Shell({ store }: { store: CaptureStore }) {
   const [connected, setConnected] = useState(false);
   const [setupDismissed, setSetupDismissed] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  // "Meeting notes into actions", open for a meeting with this person (or no one).
+  const [meetingNotes, setMeetingNotes] = useState<{ personId: number | null } | null>(null);
   const [revision, setRevision] = useState(0);
   // False until the first load finishes, so pages never flash empty counts.
   const [loaded, setLoaded] = useState(false);
@@ -411,6 +414,7 @@ function Shell({ store }: { store: CaptureStore }) {
         </div>
       </aside>
 
+      <AppActionsContext.Provider value={{ openMeetingNotes: (personId = null) => setMeetingNotes({ personId }) }}>
       <NavigateContext.Provider
         value={(to) => {
           setOneOnOne(null);
@@ -575,8 +579,19 @@ function Shell({ store }: { store: CaptureStore }) {
           )}
         </main>
       </NavigateContext.Provider>
+      </AppActionsContext.Provider>
 
       <Shortcuts open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      {meetingNotes && (
+        <MeetingNotesDialog
+          store={store}
+          people={people}
+          ask={agents.ask}
+          initialPersonId={meetingNotes.personId}
+          onClose={() => setMeetingNotes(null)}
+          onSaved={refresh}
+        />
+      )}
       {/* Rendered only while open, so a quick open and close cannot leave a layer over the page. */}
       {inlineCapture !== null && (
         <Modal
