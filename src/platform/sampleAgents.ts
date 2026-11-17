@@ -123,5 +123,9 @@ export async function samplePurposeAnswer(purpose: string, prompt: string): Prom
       })),
     );
   }
+  if (purpose === "preread-draft") {
+    const sections = /Fill these sections: (.+)\.$/m.exec(prompt)?.[1].split(", ") ?? [];
+    return JSON.stringify(Object.fromEntries(sections.map((section) => [section, `Preview: Claude would draft the ${section} section here.`])));
+  }
   return `Preview only: Claude was not asked. In the Mac app, the answer for "${purpose}" appears here.\n\n${prompt.split("\n").slice(0, 3).join("\n")}`;
 }

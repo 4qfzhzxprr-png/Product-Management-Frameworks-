@@ -3040,3 +3040,24 @@ kbd {
   text-transform: uppercase;
   color: var(--eyebrow);
 }
+
+/* Leadership tools with Claude */
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.tools-grid .ant-segmented {
+  align-self: flex-start;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 900px) {
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
+}

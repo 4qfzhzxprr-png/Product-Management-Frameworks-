@@ -1,6 +1,6 @@
 import { Alert, Button, Checkbox, Input, Popconfirm, Segmented, Select, Tag } from "antd";
-import { Copy, Pencil, Plus, Trash2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Copy, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   buildPreread,
   exportNarrative,
@@ -21,16 +21,20 @@ import {
 } from "../core/influence";
 import type { Capture, CaptureKind, Person, Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
+import { audienceOf, GENERIC_AUDIENCES, OBJECTIONS_SYSTEM, objectionsPrompt, parsePrereadDraft, PREREAD_SECTIONS, PREREAD_SYSTEM, prereadPrompt } from "../core/leadershipAI";
+import { ClaudeTools, useClaudeTask } from "./LeadershipTools";
+import type { Agents } from "./useAgents";
 import { GlassCard } from "./components";
 import { AddLine } from "./OneOnOnePage";
 import { message } from "./useStore";
 
-type Tab = "bank" | "stakeholders" | "prereads";
+type Tab = "bank" | "stakeholders" | "prereads" | "claude";
 
 const TABS: { value: Tab; label: string }[] = [
   { value: "bank", label: "Narrative bank" },
   { value: "stakeholders", label: "Stakeholders" },
   { value: "prereads", label: "Pre-reads" },
+  { value: "claude", label: "With Claude" },
 ];
 
 /** Dropdowns cannot hold null, so "none" is stored as -1 while choosing. Ids start at 1. */
@@ -73,6 +77,8 @@ interface Props {
   /** Opens quick capture set to this person and kind. */
   onCapture: (personId: number, kind: CaptureKind) => void;
   onOpenOneOnOne: (personId: number) => void;
+  /** Asks Claude, checked and logged. */
+  ask: Agents["ask"];
 }
 
 /** C-suite influence: the stories to tell, who to tell them to, and one-page pre-reads. */
@@ -90,6 +96,7 @@ export function InfluencePage(props: Props) {
       {tab === "bank" && <NarrativeBank {...props} />}
       {tab === "stakeholders" && <Stakeholders {...props} />}
       {tab === "prereads" && <Prereads {...props} />}
+      {tab === "claude" && <ClaudeTools stakeholders={stakeholderMap(props.profiles, props.people, props.captures, props.now)} ask={props.ask} />}
       <p className="muted small private-note">
         Stakeholder notes and pre-reads are private: they are stored on this Mac only and are never synced.
       </p>
@@ -482,7 +489,7 @@ function toFields(preread: Preread): PrereadFields {
   return { title, personId, ask, whyNow, background, options, recommendation, evidenceIds };
 }
 
-function Prereads({ store, people, captures, profiles, prereads, now, change }: Props) {
+function Prereads({ store, people, captures, profiles, prereads, now, change, ask }: Props) {
   const [openId, setOpenId] = useState<number | null>(prereads[0]?.id ?? null);
   const [newTitle, setNewTitle] = useState("");
   const map = stakeholderMap(profiles, people, captures, now);
@@ -538,7 +545,7 @@ function Prereads({ store, people, captures, profiles, prereads, now, change }: 
       </GlassCard>
 
       {open ? (
-        <PrereadEditor key={open.id} preread={open} stakeholders={map} captures={captures} now={now} store={store} change={change} />
+        <PrereadEditor key={open.id} preread={open} stakeholders={map} captures={captures} now={now} store={store} change={change} ask={ask} />
       ) : (
         <GlassCard className="team-empty">
           <h2>One page, ask first</h2>
@@ -567,6 +574,7 @@ function PrereadEditor({
   now,
   store,
   change,
+  ask,
 }: {
   preread: Preread;
   stakeholders: Stakeholder[];
@@ -574,7 +582,11 @@ function PrereadEditor({
   now: number;
   store: CaptureStore;
   change: Props["change"];
+  ask: Agents["ask"];
 }) {
+  const drafting = useClaudeTask(ask);
+  const objections = useClaudeTask(ask);
+  const [showObjections, setShowObjections] = useState(false);
   const [fields, setFields] = useState<PrereadFields>(toFields(preread));
   const [saved, setSaved] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -679,6 +691,61 @@ function PrereadEditor({
             Save
           </Button>
         </div>
+        <div className="note-actions">
+          <Fragment key="drafting">{drafting.holder}</Fragment>
+          <Fragment key="objections">{objections.holder}</Fragment>
+          {drafting.error && <span className="error small">{drafting.error}</span>}
+          <Button
+            icon={<Sparkles size={14} aria-hidden="true" />}
+            loading={objections.busy}
+            disabled={!fields.ask.trim()}
+            onClick={() => {
+              setShowObjections(true);
+              void objections.run({
+                purpose: "objection-prep",
+                system: OBJECTIONS_SYSTEM,
+                prompt: objectionsPrompt(text, audience ? audienceOf(audience) : GENERIC_AUDIENCES[0]),
+              });
+            }}
+          >
+            Likely objections
+          </Button>
+          <Button
+            icon={<Sparkles size={14} aria-hidden="true" />}
+            loading={drafting.busy}
+            disabled={!fields.ask.trim() || PREREAD_SECTIONS.every((key) => fields[key].trim())}
+            title="Fills only the empty sections; you review before saving"
+            onClick={() => {
+              const missing = PREREAD_SECTIONS.filter((key) => !fields[key].trim());
+              void drafting
+                .run({
+                  purpose: "preread-draft",
+                  system: PREREAD_SYSTEM,
+                  prompt: prereadPrompt({
+                    title: fields.title,
+                    ask: fields.ask,
+                    filled: Object.fromEntries(PREREAD_SECTIONS.map((key) => [key, fields[key]])),
+                    missing,
+                    audience: audience ? audienceOf(audience) : null,
+                    evidence: evidence.filter((entry) => fields.evidenceIds.includes(entry.id)).map((entry) => entry.body),
+                  }),
+                })
+                .then((answer) => {
+                  if (!answer) return;
+                  const drafted = parsePrereadDraft(answer, missing);
+                  if (Object.keys(drafted).length > 0) update(drafted);
+                });
+            }}
+          >
+            Draft empty sections
+          </Button>
+        </div>
+        {showObjections && (objections.answer || objections.error) && (
+          <div className="pm-section">
+            <h3>Likely objections</h3>
+            {objections.error ? <p className="error small">{objections.error}</p> : <div className="run-output small">{objections.answer}</div>}
+          </div>
+        )}
       </GlassCard>
 
       <GlassCard className="workspace-card" aria-labelledby="preread-preview">

@@ -580,6 +580,7 @@ function Shell({ store }: { store: CaptureStore }) {
               change={change}
               onCapture={(personId, kind) => setInlineCapture({ personId, kind })}
               onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "influence" })}
+              ask={agents.ask}
             />
           )}
           {loaded && oneOnOne === null && view === "commitments" && (

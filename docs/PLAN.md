@@ -259,6 +259,10 @@ on its own. Status is kept next to each item.
    Team (`time_off` table) feeds a banner on Delivery for the sprint.
 8. **Leadership with Claude.** Exec translator, objection prep, pre-read section drafts and a
    spec quality check.
+   *Built:* a "With Claude" tab on Influence (translate for a stakeholder or a role, prepare
+   for objections, check a spec) and, in the pre-read editor, "Draft empty sections" (fills only
+   empty sections, unsaved until David saves) and "Likely objections". Prompts in
+   `src/core/leadershipAI.ts`; every send is checked and logged.
 9. **Decisions and metrics.** A decision register (why, who agreed) and targets with trends for
    metrics.
 10. **The agent team, further.** Saved briefs, approved work sent on to the weekly update, a

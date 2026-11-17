@@ -68,3 +68,20 @@ describe("Claude's answer", () => {
     expect(new Date(capture.dueAt!).getDate()).toBe(20);
   });
 });
+
+describe("leadership prompts", () => {
+  it("keep only the pre-read sections asked for, and describe the audience", async () => {
+    const { parsePrereadDraft, prereadPrompt, translatePrompt, GENERIC_AUDIENCES } = await import("./leadershipAI");
+    expect(parsePrereadDraft('{"whyNow": "The pilot ends soon.", "options": ["Expand", "Extend"], "ask": "ignored"}', ["whyNow", "options"])).toEqual({
+      whyNow: "The pilot ends soon.",
+      options: "1. Expand\n2. Extend",
+    });
+    expect(parsePrereadDraft("no json", ["whyNow"])).toEqual({});
+    const prompt = prereadPrompt({ title: "Expand the pilot", ask: "Approve $180k", filled: { whyNow: "Ends in two weeks" }, missing: ["background"], audience: GENERIC_AUDIENCES[1], evidence: ["Pickup up 13 points"] });
+    expect(prompt).toContain("Audience: the CFO.");
+    expect(prompt).toContain("whyNow: Ends in two weeks");
+    expect(prompt).toContain("- Pickup up 13 points");
+    expect(prompt.endsWith("Fill these sections: background.")).toBe(true);
+    expect(translatePrompt(" Our pilot ", GENERIC_AUDIENCES[0])).toMatch(/^Audience: the CEO\.\nThey are trying to achieve: .+\nThey worry about: .+\n\nRewrite this for them:\n\nOur pilot$/);
+  });
+});
