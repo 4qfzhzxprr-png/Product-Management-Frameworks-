@@ -6,6 +6,7 @@ const COMMAND = isMac ? "Command" : "Control";
 
 const SHORTCUTS: [string, string][] = [
   ["Control-Option-Space", "Quick capture, from any app"],
+  [`${COMMAND}-K`, "Search everything, or go to a page"],
   ["Return", "Save a capture"],
   ["Shift-Return", "New line in a capture"],
   ["Escape", "Close a dialog, or leave a 1:1 workspace"],

@@ -294,3 +294,29 @@ describe("context from the app", () => {
     expect(buildAgentContext([], { work: [], captures, people, stakeholder: null, now })).toEqual({ text: "", labels: [] });
   });
 });
+
+describe("search", () => {
+  it("finds people by other names, captures by words, and ranks pages and good matches first", async () => {
+    const { search } = await import("./search");
+    const now = new Date(2026, 10, 17).getTime();
+    const capture = (id: number, body: string, extra: Partial<Capture> = {}): Capture => ({
+      id, createdAt: now - id * 86_400_000, kind: "note", body, personId: null, projectId: null, isWin: false, doneAt: null, dueAt: null, ...extra,
+    });
+    const data = {
+      pages: [{ view: "delivery", label: "Delivery" }, { view: "agents", label: "Agents" }],
+      captures: [capture(1, "Refill pilot readout for Jordan", { personId: 1 }), capture(2, "Pricing experiment results")],
+      people: [{ id: 1, name: "Priya", isPM: true, aliases: ["Priya S."] }],
+      projects: [{ id: 1, name: "Refill flow" }],
+      work: [],
+      runs: [],
+      roadmap: [],
+      priorities: [],
+      now,
+    };
+    expect(search("", data)).toEqual([]);
+    expect(search("priya s", data)[0]).toMatchObject({ group: "Person", title: "Priya" });
+    expect(search("refill", data).map((result) => result.group)).toEqual(["Project", "Capture"]);
+    expect(search("pilot jordan", data)[0].title).toBe("Refill pilot readout for Jordan");
+    expect(search("deliv", data)[0]).toMatchObject({ group: "Page", target: { type: "page", view: "delivery" } });
+  });
+});

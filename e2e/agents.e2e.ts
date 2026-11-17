@@ -117,7 +117,7 @@ test("with no agent files, the page says where it looked and leads to settings",
   await expect(page.getByText("No agents found")).toBeVisible();
   await expect(page.getByText("There are no agent files in ~/.claude/agents.")).toBeVisible();
   await page.getByRole("button", { name: "Choose the agent folder" }).click();
-  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await expect(page.locator("#agent-settings")).toBeVisible();
   await expect(page.getByText("Agents can only read until you say otherwise")).toBeVisible();
   await page.getByLabel("Agent folder").fill("~/work/product/.claude/agents");
   await page.getByRole("button", { name: "Save" }).click();

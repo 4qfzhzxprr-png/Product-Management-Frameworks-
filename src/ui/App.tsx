@@ -12,6 +12,7 @@ import {
   ListChecks,
   Megaphone,
   Plug,
+  Search,
   Settings,
   NotebookPen,
   Plus,
@@ -32,7 +33,8 @@ import { BACKUP_SETTINGS, completeBackupSettings, isBackupDue, type BackupSettin
 import { SETUP_SETTINGS, setupSteps, waitingTotal, type SetupSettings } from "../core/setup";
 import type { WorkItem } from "../core/work";
 import type { SnapshotData } from "../core/snapshot";
-import { isTauri, notifyDataChanged, platformBackups, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
+import type { SearchTarget } from "../core/search";
+import { isTauri, notifyDataChanged, openExternal, platformBackups, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
 import { AgentsPage } from "./AgentsPage";
 import { AnalyticsPage } from "./AnalyticsPage";
 import { BriefPage } from "./BriefPage";
@@ -43,11 +45,12 @@ import { ConnectionsPage } from "./ConnectionsPage";
 import { DeliveryPage } from "./DeliveryPage";
 import { HandoffPage } from "./HandoffPage";
 import { InfluencePage } from "./InfluencePage";
-import { LeadershipPage, useLeadershipSettings } from "./LeadershipPage";
+import { LeadershipPage, useLeadershipSettings, type LeadershipTab } from "./LeadershipPage";
 import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
 import { makeBackup, SettingsPage } from "./SettingsPage";
+import { CommandPalette } from "./CommandPalette";
 import { Shortcuts } from "./Shortcuts";
 import { useReminders } from "./useReminders";
 import { WeeklyReviewPage } from "./WeeklyReviewPage";
@@ -156,6 +159,10 @@ function Shell({ store }: { store: CaptureStore }) {
   const [connected, setConnected] = useState(false);
   const [setupDismissed, setSetupDismissed] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  // Where search results lead inside a page.
+  const [agentFocus, setAgentFocus] = useState<{ id: number } | null>(null);
+  const [leadershipFocus, setLeadershipFocus] = useState<{ tab: LeadershipTab } | null>(null);
   // "Meeting notes into actions", open for a meeting with this person (or no one).
   const [meetingNotes, setMeetingNotes] = useState<{ personId: number | null } | null>(null);
   const [revision, setRevision] = useState(0);
@@ -231,6 +238,18 @@ function Shell({ store }: { store: CaptureStore }) {
   }, [refresh]);
 
   const sync = useSync(store, refresh);
+
+  // Command-K (Control-K off the Mac) opens search from anywhere, even while typing.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey) && !event.shiftKey && !event.altKey) {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   // What agents may read: the latest data, gathered only when a run starts.
   const snapshotData = useRef<SnapshotData | null>(null);
   const agents = useAgents(store, () => void refresh(), () => snapshotData.current!);
@@ -354,6 +373,16 @@ function Shell({ store }: { store: CaptureStore }) {
             <Inbox size={18} />
           </span>
           Daily Work
+          <Button
+            type="text"
+            size="small"
+            shape="circle"
+            className="brand-search"
+            icon={<Search size={16} aria-hidden="true" />}
+            aria-label="Search everything"
+            title="Search everything (Command-K)"
+            onClick={() => setPaletteOpen(true)}
+          />
         </div>
 
         <nav aria-label="Main">
@@ -520,6 +549,7 @@ function Shell({ store }: { store: CaptureStore }) {
               now={now}
               change={change}
               onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "leadership" })}
+            focusTab={leadershipFocus}
               onDone={(capture) => setDone(capture)}
               onDelete={removeCapture}
             />
@@ -563,7 +593,9 @@ function Shell({ store }: { store: CaptureStore }) {
               change={change}
             />
           )}
-          {loaded && oneOnOne === null && view === "settings" && <SettingsPage store={store} revision={revision} />}
+          {loaded && oneOnOne === null && view === "settings" && (
+            <SettingsPage store={store} revision={revision} agents={agents} snapshot={() => snapshotData.current!} onGo={setView} />
+          )}
           {loaded && oneOnOne === null && view === "review" && (
             <WeeklyReviewPage
               store={store}
@@ -585,6 +617,7 @@ function Shell({ store }: { store: CaptureStore }) {
               profiles={profiles}
               now={now}
               snapshot={() => snapshotData.current!}
+              focusRun={agentFocus}
             />
           )}
           {loaded && oneOnOne === null && view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
@@ -608,6 +641,41 @@ function Shell({ store }: { store: CaptureStore }) {
       </AppActionsContext.Provider>
 
       <Shortcuts open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      {paletteOpen && (
+        <CommandPalette
+          data={{
+            pages: NAV.map(({ view: page, label }) => ({ view: page, label })),
+            captures,
+            people,
+            projects,
+            work,
+            runs: agents.runs,
+            roadmap: roadmapItems,
+            priorities,
+            now,
+          }}
+          onClose={() => setPaletteOpen(false)}
+          onPick={(target: SearchTarget) => {
+            setOneOnOne(null);
+            if (target.type === "page") setView(target.view as View);
+            else if (target.type === "capture") setInlineCapture({ editing: target.capture });
+            else if (target.type === "person") {
+              if (target.person.isPM) setOneOnOne({ personId: target.person.id, from: view });
+              else openCaptures({ type: "person", id: target.person.id });
+            } else if (target.type === "project") openCaptures({ type: "project", id: target.project.id });
+            else if (target.type === "work") {
+              if (target.item.url) void openExternal(target.item.url);
+              else setView("delivery");
+            } else if (target.type === "run") {
+              setView("agents");
+              setAgentFocus({ id: target.run.id });
+            } else {
+              setView("leadership");
+              setLeadershipFocus({ tab: target.type === "roadmap" ? "roadmap" : "priorities" });
+            }
+          }}
+        />
+      )}
       {meetingNotes && (
         <MeetingNotesDialog
           store={store}

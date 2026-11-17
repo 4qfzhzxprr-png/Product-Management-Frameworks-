@@ -31,7 +31,8 @@ import { GlassCard, NextMeeting } from "./components";
 import { AddLine, Checklist } from "./OneOnOnePage";
 import { message } from "./useStore";
 
-type Tab = "update" | "prep" | "roadmap" | "priorities" | "shipped";
+export type LeadershipTab = "update" | "prep" | "roadmap" | "priorities" | "shipped";
+type Tab = LeadershipTab;
 
 const TABS: { value: Tab; label: string }[] = [
   { value: "update", label: "Weekly update" },
@@ -66,13 +67,18 @@ interface Props {
   onDone: (capture: Capture) => void;
   /** Deletes a capture, with undo. */
   onDelete: (capture: Capture) => void;
+  /** Opens on this tab; a new object each time, so the same tab can be asked for twice. */
+  focusTab?: { tab: LeadershipTab } | null;
   /** Meetings from connected calendars, for the next meeting with the CPO. */
   upcoming: CalendarEventRecord[];
 }
 
 /** The CPO features: the weekly update, 1:1 prep, the roadmap given to leadership, priorities, and what shipped. */
 export function LeadershipPage(props: Props) {
-  const [tab, setTab] = useState<Tab>("update");
+  const [tab, setTab] = useState<Tab>(props.focusTab?.tab ?? "update");
+  useEffect(() => {
+    if (props.focusTab) setTab(props.focusTab.tab);
+  }, [props.focusTab]);
   const alerts = noSurprises(props.roadmap);
 
   return (

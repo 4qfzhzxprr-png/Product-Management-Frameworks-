@@ -60,6 +60,7 @@ export function AgentsPage({
   profiles,
   now,
   snapshot,
+  focusRun,
 }: {
   agents: Agents;
   store: CaptureStore;
@@ -70,9 +71,16 @@ export function AgentsPage({
   now: number;
   /** The data agents may read, gathered now. */
   snapshot: () => SnapshotData;
+  /** Opens this run; a new object each time. */
+  focusRun?: { id: number } | null;
 }) {
   const [tab, setTab] = useState<Tab>("team");
-  const [openRun, setOpenRun] = useState<number | null>(null);
+  const [openRun, setOpenRun] = useState<number | null>(focusRun?.id ?? null);
+  useEffect(() => {
+    if (!focusRun) return;
+    setTab("runs");
+    setOpenRun(focusRun.id);
+  }, [focusRun]);
   const [guard, guardHolder] = useSensitiveGuard();
   // Every send to Claude from this page passes the sensitive-data check first.
   const team: Agents = {
@@ -149,7 +157,7 @@ export function AgentsPage({
       )}
       {tab === "runs" && <RunsTab team={team} store={store} openRun={openRun} onOpen={setOpenRun} />}
       {tab === "schedules" && <SchedulesTab team={team} store={store} now={now} onOpenRun={openRunPage} />}
-      {tab === "settings" && <SettingsTab team={team} snapshot={snapshot} />}
+      {tab === "settings" && <AgentSettingsCard team={team} snapshot={snapshot} />}
     </div>
   );
 }
@@ -892,7 +900,8 @@ function SchedulesTab({ team, store, now, onOpenRun }: { team: Agents; store: Ca
 
 // ---------- Settings ----------
 
-function SettingsTab({ team, snapshot }: { team: Agents; snapshot: () => SnapshotData }) {
+/** The agent settings; also shown on the Settings page. */
+export function AgentSettingsCard({ team, snapshot }: { team: Agents; snapshot: () => SnapshotData }) {
   const toast = useToast();
   const [viewing, setViewing] = useState<SnapshotFile[] | null>(null);
   const [file, setFile] = useState("README.md");
@@ -903,7 +912,7 @@ function SettingsTab({ team, snapshot }: { team: Agents; snapshot: () => Snapsho
 
   return (
     <GlassCard className="job-form" aria-labelledby="agent-settings">
-      <h2 id="agent-settings">Settings</h2>
+      <h2 id="agent-settings">Agents</h2>
       <label className="field">
         Agent folder
         <Input value={values.folder} onChange={(event) => setValues({ ...values, folder: event.target.value })} />

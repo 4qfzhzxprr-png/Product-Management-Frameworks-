@@ -96,13 +96,6 @@ export function HandoffPage({
 
   const ready = settings.offshoreZone !== "";
   const hours = ready ? overlap(settings, now) : null;
-  const time = (key: "myStart" | "myEnd" | "offshoreStart" | "offshoreEnd", label: string) => (
-    <label>
-      {label}
-      <input type="time" value={settings[key]} onChange={(event) => update({ [key]: event.target.value })} />
-    </label>
-  );
-
   return (
     <div className="page">
       <header className="page-head">
@@ -193,39 +186,11 @@ export function HandoffPage({
 
             <div className="pm-section">
               <h3>Settings</h3>
-              <div className="handoff-settings">
-                <label className="wide">
-                  Offshore time zone
-                  <Select
-                    showSearch
-                    placeholder="Choose a time zone"
-                    status={ready ? undefined : "warning"}
-                    open={zoneOpen}
-                    onOpenChange={setZoneOpen}
-                    ref={zoneSelect}
-                    value={settings.offshoreZone || undefined}
-                    onChange={(offshoreZone) => {
-                      setZoneOpen(false);
-                      update({ offshoreZone });
-                    }}
-                    options={ZONES.map((zone) => ({ value: zone, label: zoneLabel(zone) }))}
-                    optionFilterProp="label"
-                  />
-                </label>
-                {time("offshoreStart", "They start")}
-                {time("offshoreEnd", "They finish")}
-                {time("myStart", "I start")}
-                {time("myEnd", "I finish")}
-                <label className="wide">
-                  Offshore team name in the tracker
-                  <Input
-                    value={settings.offshoreTeam}
-                    placeholder="Leave empty for every team"
-                    onChange={(event) => update({ offshoreTeam: event.target.value })}
-                  />
-                </label>
-              </div>
-              <p className="muted small">Your time zone is {settings.myZone.replace(/_/g, " ")}, taken from this Mac.</p>
+              <HandoffSettingsFields
+                settings={settings}
+                update={update}
+                zone={{ open: zoneOpen, onOpenChange: setZoneOpen, ref: zoneSelect }}
+              />
             </div>
           </GlassCard>
         </div>
@@ -321,5 +286,86 @@ export function HandoffPage({
         </GlassCard>
       </div>
     </div>
+  );
+}
+
+/** The handoff hours, shared by the Handoff page and Settings. */
+export function HandoffSettingsFields({
+  settings,
+  update,
+  zone,
+}: {
+  settings: HandoffSettings;
+  update: (change: Partial<HandoffSettings>) => void;
+  /** Lets the Handoff page open the time zone list from its own button. */
+  zone?: { open: boolean; onOpenChange: (open: boolean) => void; ref: React.RefObject<RefSelectProps> };
+}) {
+  const ready = settings.offshoreZone !== "";
+  const time = (key: "myStart" | "myEnd" | "offshoreStart" | "offshoreEnd", label: string) => (
+    <label>
+      {label}
+      <input type="time" value={settings[key]} onChange={(event) => update({ [key]: event.target.value })} />
+    </label>
+  );
+  return (
+    <>
+              <div className="handoff-settings">
+                <label className="wide">
+                  Offshore time zone
+                  <Select
+                    showSearch
+                    placeholder="Choose a time zone"
+                    status={ready ? undefined : "warning"}
+                    open={zone?.open}
+                    onOpenChange={zone?.onOpenChange}
+                    ref={zone?.ref}
+                    value={settings.offshoreZone || undefined}
+                    onChange={(offshoreZone) => {
+                      zone?.onOpenChange(false);
+                      update({ offshoreZone });
+                    }}
+                    options={ZONES.map((entry) => ({ value: entry, label: zoneLabel(entry) }))}
+                    optionFilterProp="label"
+                  />
+                </label>
+                {time("offshoreStart", "They start")}
+                {time("offshoreEnd", "They finish")}
+                {time("myStart", "I start")}
+                {time("myEnd", "I finish")}
+                <label className="wide">
+                  Offshore team name in the tracker
+                  <Input
+                    value={settings.offshoreTeam}
+                    placeholder="Leave empty for every team"
+                    onChange={(event) => update({ offshoreTeam: event.target.value })}
+                  />
+                </label>
+              </div>
+              <p className="muted small">Your time zone is {settings.myZone.replace(/_/g, " ")}, taken from this Mac.</p>
+    </>
+  );
+}
+
+/** The handoff hours on their own, loading and saving themselves, for the Settings page. */
+export function HandoffSettingsCard({ store }: { store: CaptureStore }) {
+  const myZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [settings, setSettings] = useState<HandoffSettings | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    store.settings.get<HandoffSettings>(SETTINGS_KEY).then(
+      (saved) => setSettings({ ...defaultHandoffSettings(myZone), ...saved }),
+      (cause) => setError(message(cause)),
+    );
+  }, [store, myZone]);
+  if (!settings) return error ? <p className="error">{error}</p> : null;
+  return (
+    <HandoffSettingsFields
+      settings={settings}
+      update={(change) => {
+        const next = { ...settings, ...change };
+        setSettings(next);
+        store.settings.set(SETTINGS_KEY, next).catch((cause) => setError(message(cause)));
+      }}
+    />
   );
 }

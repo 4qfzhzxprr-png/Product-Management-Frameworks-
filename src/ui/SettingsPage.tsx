@@ -7,6 +7,10 @@ import type { CaptureStore } from "../core/store";
 import { notify, platformBackups, type BackupFile } from "../platform";
 import { completeReminderSettings, REMINDER_SETTINGS, type ReminderSettings } from "../core/reminders";
 import { REMINDER_HISTORY, type ShownReminder } from "./useReminders";
+import type { SnapshotData } from "../core/snapshot";
+import { AgentSettingsCard } from "./AgentsPage";
+import { HandoffSettingsCard } from "./HandoffPage";
+import type { Agents } from "./useAgents";
 import { GlassCard } from "./components";
 import { useToast } from "./Toast";
 import { message } from "./useStore";
@@ -24,17 +28,77 @@ export async function makeBackup(store: CaptureStore, now = Date.now()): Promise
   return path;
 }
 
-/** Backups, exports and the record of everything sent to Claude. */
-export function SettingsPage({ store, revision }: { store: CaptureStore; revision: number }) {
+const SECTIONS = [
+  ["settings-reminders", "Reminders"],
+  ["settings-handoff", "Handoff hours"],
+  ["settings-agents", "Agents"],
+  ["settings-elsewhere", "Set where it is used"],
+  ["settings-backups", "Backups"],
+  ["settings-claude", "Sent to Claude"],
+] as const;
+
+/** Every setting in one place, plus backups and the record of everything sent to Claude. */
+export function SettingsPage({
+  store,
+  revision,
+  agents,
+  snapshot,
+  onGo,
+}: {
+  store: CaptureStore;
+  revision: number;
+  agents: Agents;
+  snapshot: () => SnapshotData;
+  onGo: (view: "leadership" | "connections") => void;
+}) {
   return (
     <div className="page">
       <header className="page-head">
         <h1>Settings</h1>
-        <p>Reminders, backups of everything stored on this Mac, and a record of everything sent to Claude.</p>
+        <p>Everything you can set, backups of what is stored on this Mac, and a record of everything sent to Claude.</p>
       </header>
-      <RemindersCard store={store} revision={revision} />
-      <BackupsCard store={store} revision={revision} />
-      <ClaudeLogCard store={store} revision={revision} />
+      <nav className="settings-jump" aria-label="Settings sections">
+        {SECTIONS.map(([id, label]) => (
+          <button key={id} type="button" className="text-link" onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+            {label}
+          </button>
+        ))}
+      </nav>
+      <div id="settings-reminders">
+        <RemindersCard store={store} revision={revision} />
+      </div>
+      <GlassCard className="job-form" aria-labelledby="handoff-settings-title" id="settings-handoff">
+        <h2 id="handoff-settings-title">Handoff hours</h2>
+        <p className="muted small">Your hours and the offshore team's, for the Handoff page and its reminder.</p>
+        <HandoffSettingsCard store={store} />
+      </GlassCard>
+      <div id="settings-agents">
+        <AgentSettingsCard team={agents} snapshot={snapshot} />
+      </div>
+      <GlassCard className="job-form" aria-labelledby="elsewhere-title" id="settings-elsewhere">
+        <h2 id="elsewhere-title">Set where it is used</h2>
+        <ul className="review-list">
+          <li>
+            The weekly update's format, beside the draft it shapes:{" "}
+            <button type="button" className="text-link" onClick={() => onGo("leadership")}>
+              Leadership
+            </button>
+          </li>
+          <li>
+            Calendars and ticket imports, with their sync status:{" "}
+            <button type="button" className="text-link" onClick={() => onGo("connections")}>
+              Connections
+            </button>
+          </li>
+          <li>Other names people go by: on each PM's card on Team.</li>
+        </ul>
+      </GlassCard>
+      <div id="settings-backups">
+        <BackupsCard store={store} revision={revision} />
+      </div>
+      <div id="settings-claude">
+        <ClaudeLogCard store={store} revision={revision} />
+      </div>
     </div>
   );
 }

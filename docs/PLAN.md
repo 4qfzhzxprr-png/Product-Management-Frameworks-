@@ -244,6 +244,11 @@ on its own. Status is kept next to each item.
    the first time.
 6. **Search and settings.** Command-K finds captures, tickets, people, decisions and agent runs;
    one Settings page gathers the settings now spread across pages.
+   *Built:* Command-K (or the search button by the app name) searches pages, people (any of
+   their names), projects, captures, tickets, roadmap items, priorities and agent runs, and
+   opens each where it lives (`src/core/search.ts`, `src/ui/CommandPalette.tsx`). Settings now
+   holds reminders, handoff hours, agent settings, backups and the Claude log, and links to
+   the two settings that live beside what they shape (update format, connections).
 7. **Leading the PM team.** 1:1 cadence check, a private feedback log per PM, review and
    promotion prep over a chosen period, and time off that feeds delivery.
 8. **Leadership with Claude.** Exec translator, objection prep, pre-read section drafts and a
