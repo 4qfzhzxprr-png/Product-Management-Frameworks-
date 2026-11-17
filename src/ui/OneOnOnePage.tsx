@@ -1,5 +1,5 @@
 import { Button, Checkbox, Input, Tag } from "antd";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { CalendarEventRecord } from "../core/calendar";
 import type { Capture, CaptureKind, Person } from "../core/models";
@@ -66,7 +66,8 @@ export function Checklist({
             type="text"
             size="small"
             shape="circle"
-            icon={<X size={14} aria-hidden="true" />}
+            className="danger-hover"
+            icon={<Trash2 size={14} aria-hidden="true" />}
             aria-label={`Delete: ${item.body}`}
             title="Delete"
             onClick={() => onDelete(item)}

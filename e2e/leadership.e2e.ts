@@ -120,6 +120,7 @@ test.describe("leadership, with sample data", () => {
     await renamed.getByRole("button", { name: /Unlink Patient portal beta/ }).click();
     await expect(renamed.locator(".roadmap-state")).toHaveText("No epics linked");
     await renamed.getByRole("button", { name: /Delete Portal accessibility audit/ }).click();
+    await page.locator(".ant-popconfirm").getByRole("button", { name: "Delete" }).click();
     await expect(renamed).toHaveCount(0);
     expect(errors).toEqual([]);
   });

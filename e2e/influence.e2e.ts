@@ -76,6 +76,7 @@ test.describe("influence, with sample data", () => {
     const casey = page.locator(".pm-card", { hasText: "Casey" });
     await expect(casey).toContainText("COO");
     await casey.getByRole("button", { name: "Take Casey off the map" }).click();
+    await page.locator(".ant-popconfirm").getByRole("button", { name: "Take off" }).click();
     await expect(casey).toHaveCount(0);
 
     // Notes and agenda open the shared 1:1 workspace.
@@ -126,6 +127,7 @@ test.describe("influence, with sample data", () => {
     await page.locator(".filter-item", { hasText: "Hire a second offshore team" }).click();
     await expect(preview).toContainText("For Taylor, CEO");
     await page.getByRole("button", { name: "Delete" }).click();
+    await page.locator(".ant-popconfirm").getByRole("button", { name: "Delete" }).click();
     await expect(page.locator(".filter-item", { hasText: "Hire a second offshore team" })).toHaveCount(0);
     expect(errors).toEqual([]);
   });

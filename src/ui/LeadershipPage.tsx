@@ -1,4 +1,4 @@
-import { Button, Checkbox, Input, Progress, Segmented, Select, Tag } from "antd";
+import { Button, Checkbox, Input, Popconfirm, Progress, Segmented, Select, Tag } from "antd";
 import { ArrowDown, ArrowUp, ArrowUpRight, Copy, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { dateInputFromDue, dueFromDateInput } from "../core/commitments";
@@ -84,7 +84,19 @@ export function LeadershipPage(props: Props) {
         <Segmented<Tab> aria-label="Section" value={tab} onChange={setTab} options={TABS} />
       </header>
 
-      {alerts.length > 0 && (
+      {/* In full on the weekly update; one line elsewhere. The roadmap and 1:1 prep already list each slip. */}
+      {alerts.length > 0 && (tab === "priorities" || tab === "shipped") && (
+        <section className="slip-banner" aria-label="Leadership commitments slipping">
+          <p>
+            <strong>
+              {alerts.length} {alerts.length === 1 ? "commitment to leadership is" : "commitments to leadership are"} slipping:
+            </strong>{" "}
+            {alerts.map((status) => status.item.title).join(", ")}.
+          </p>
+          <Button onClick={() => setTab("roadmap")}>Open the roadmap</Button>
+        </section>
+      )}
+      {alerts.length > 0 && tab === "update" && (
         <GlassCard className="alerts" aria-labelledby="alerts-title">
           <h2 id="alerts-title">
             Tell the CPO before they hear it elsewhere <span className="count">{alerts.length}</span>
@@ -105,11 +117,9 @@ export function LeadershipPage(props: Props) {
               </li>
             ))}
           </ul>
-          {tab !== "roadmap" && (
-            <Button type="link" className="see-all" onClick={() => setTab("roadmap")}>
-              Open the roadmap
-            </Button>
-          )}
+          <Button type="link" className="see-all" onClick={() => setTab("roadmap")}>
+            Open the roadmap
+          </Button>
         </GlassCard>
       )}
 
@@ -384,12 +394,30 @@ function OneOnOnePrep({ store, people, captures, work, roadmap, settings, now, c
             </div>
             <div>
               <dt>Wins</dt>
-              <dd>{since.wins.length === 0 ? "None captured" : since.wins.map((win) => win.body).join(" · ")}</dd>
+              <dd>
+                {since.wins.length === 0 ? (
+                  "None captured"
+                ) : (
+                  <ul className="fact-list">
+                    {since.wins.map((win) => (
+                      <li key={win.id}>{win.body}</li>
+                    ))}
+                  </ul>
+                )}
+              </dd>
             </div>
             <div>
               <dt>Decisions</dt>
               <dd>
-                {since.decisions.length === 0 ? "None captured" : since.decisions.map((decision) => decision.body).join(" · ")}
+                {since.decisions.length === 0 ? (
+                  "None captured"
+                ) : (
+                  <ul className="fact-list">
+                    {since.decisions.map((decision) => (
+                      <li key={decision.id}>{decision.body}</li>
+                    ))}
+                  </ul>
+                )}
               </dd>
             </div>
           </dl>
@@ -587,14 +615,22 @@ function Roadmap({ store, work, roadmap, now, change }: Props) {
                       aria-label={`Edit ${item.title}`}
                       onClick={() => setEditing(item.id)}
                     />
-                    <Button
-                      type="text"
-                      size="small"
-                      shape="circle"
-                      icon={<Trash2 size={14} aria-hidden="true" />}
-                      aria-label={`Delete ${item.title}`}
-                      onClick={() => void change(() => store.leadership.deleteRoadmapItem(item.id))}
-                    />
+                    <Popconfirm
+                      title={`Delete ${item.title}?`}
+                      description="Its date and epic links go too."
+                      okText="Delete"
+                      okButtonProps={{ danger: true }}
+                      onConfirm={() => void change(() => store.leadership.deleteRoadmapItem(item.id))}
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        shape="circle"
+                        className="danger-hover"
+                        icon={<Trash2 size={14} aria-hidden="true" />}
+                        aria-label={`Delete ${item.title}`}
+                      />
+                    </Popconfirm>
                   </header>
                 )}
                 {status.total > 0 && (
@@ -734,14 +770,22 @@ function Priorities({ store, work, priorities, now, change }: Props) {
                       aria-label={`Edit ${priority.title}`}
                       onClick={() => setEditing(priority.id)}
                     />
-                    <Button
-                      type="text"
-                      size="small"
-                      shape="circle"
-                      icon={<Trash2 size={14} aria-hidden="true" />}
-                      aria-label={`Delete ${priority.title}`}
-                      onClick={() => void change(() => store.leadership.deletePriority(priority.id))}
-                    />
+                    <Popconfirm
+                      title={`Delete ${priority.title}?`}
+                      description="Its epic links go too."
+                      okText="Delete"
+                      okButtonProps={{ danger: true }}
+                      onConfirm={() => void change(() => store.leadership.deletePriority(priority.id))}
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        shape="circle"
+                        className="danger-hover"
+                        icon={<Trash2 size={14} aria-hidden="true" />}
+                        aria-label={`Delete ${priority.title}`}
+                      />
+                    </Popconfirm>
                   </header>
                 )}
                 <p className="muted small">

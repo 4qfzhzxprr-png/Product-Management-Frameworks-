@@ -2386,3 +2386,20 @@ button.pm-name:hover {
   color: var(--muted);
   text-decoration-style: dotted;
 }
+
+/* Several short entries under one fact, one per line. */
+.fact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding-left: 16px;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  /* Small windows: the step names alone, so the strip does not fill the screen. */
+  .setup-strip li .muted.small {
+    display: none;
+  }
+}

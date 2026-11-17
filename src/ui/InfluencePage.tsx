@@ -1,4 +1,4 @@
-import { Alert, Button, Checkbox, Input, Segmented, Select, Tag } from "antd";
+import { Alert, Button, Checkbox, Input, Popconfirm, Segmented, Select, Tag } from "antd";
 import { Copy, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -450,14 +450,22 @@ function Stakeholders({ store, people, captures, profiles, now, change, onCaptur
                     onClick={() => setEditing(stakeholder.person.id)}
                   />
                 )}
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<X size={14} aria-hidden="true" />}
-                  aria-label={`Take ${stakeholder.person.name} off the map`}
-                  title="Take off the map (their captures are kept)"
-                  onClick={() => void change(() => store.influence.removeStakeholder(stakeholder.person.id))}
-                />
+                <Popconfirm
+                  title={`Take ${stakeholder.person.name} off the map?`}
+                  description="Their profile notes are deleted. Their captures are kept."
+                  okText="Take off"
+                  okButtonProps={{ danger: true }}
+                  onConfirm={() => void change(() => store.influence.removeStakeholder(stakeholder.person.id))}
+                >
+                  <Button
+                    size="small"
+                    type="text"
+                    className="danger-hover"
+                    icon={<X size={14} aria-hidden="true" />}
+                    aria-label={`Take ${stakeholder.person.name} off the map`}
+                    title="Take off the map (their captures are kept)"
+                  />
+                </Popconfirm>
               </div>
             </GlassCard>
           ))}
@@ -657,13 +665,16 @@ function PrereadEditor({
         </label>
         {error && <p className="error">{error}</p>}
         <div className="note-actions">
-          <Button
-            danger
-            icon={<Trash2 size={14} aria-hidden="true" />}
-            onClick={() => void change(() => store.influence.deletePreread(preread.id))}
+          <Popconfirm
+            title="Delete this pre-read?"
+            okText="Delete"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => void change(() => store.influence.deletePreread(preread.id))}
           >
-            Delete
-          </Button>
+            <Button danger icon={<Trash2 size={14} aria-hidden="true" />}>
+              Delete
+            </Button>
+          </Popconfirm>
           <Button type="primary" disabled={saved || !fields.title.trim()} onClick={() => void save()}>
             Save
           </Button>
