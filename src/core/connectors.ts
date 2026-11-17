@@ -59,6 +59,11 @@ export interface SyncResult {
   activities: Activity[];
   /** Tickets and epics, for connectors that read an issue tracker. */
   work?: WorkRecord[];
+  /**
+   * True when `work` is everything the connection should hold, so tickets it held before and
+   * no longer reports (deleted or moved out of scope in the tracker) are removed.
+   */
+  workComplete?: boolean;
   /** Meetings, for connectors that read a calendar. Replaces everything the connection had. */
   events?: CalendarEventRecord[];
   /** Where to resume next time: a timestamp, a page token, anything. Omit to keep the old one. */
@@ -268,8 +273,12 @@ export async function syncAll(deps: {
         for (const activity of result.activities) {
           await deps.items.upsert({ ...activity, source: sourceOf(connection.id), sourceName: connection.name });
         }
-        for (const record of result.work ?? []) {
-          await deps.work.upsert({ ...record, source: sourceOf(connection.id), sourceName: connection.name });
+        if (result.workComplete && result.work) {
+          await deps.work.replaceSource(sourceOf(connection.id), connection.name, result.work);
+        } else {
+          for (const record of result.work ?? []) {
+            await deps.work.upsert({ ...record, source: sourceOf(connection.id), sourceName: connection.name });
+          }
         }
         if (result.events) {
           await deps.calendar.replaceSource(sourceOf(connection.id), connection.name, result.events);

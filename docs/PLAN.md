@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-17 (Phase 6 agreed: safety, Claude-powered features, reminders, team leadership, connectors).
+Last updated 2026-11-17 (Phase 6 built: safety, Claude-powered features, reminders, team leadership, connectors).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -33,7 +33,7 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Phase 4: C-suite influence | Built, apart from the three features that need AI. |
 | Connecting to other systems | Plumbing and Connections screen built; calendars connect, and tickets import from any tracker's CSV export. |
 | AI features | Not started. Claude is the approved provider (2026-11-17); calls go through Claude Code on the Mac first. |
-| Phase 6: making it daily | Agreed 2026-11-17; being built in the order below. |
+| Phase 6: making it daily | Built 2026-11-17, steps 1 to 11; Jira and Slack wait on approval to connect. |
 | Phase 5: the agent team | Built 2026-11-17: roster, runs, review queue, schedules and context. Needs a first real run on David's Mac. |
 | Apple distribution | Unsigned test builds only. |
 | Usability | Expert walkthrough and an overnight polish pass done 2026-11-17 (`docs/USABILITY.md`). A session with David is next. |
@@ -279,6 +279,13 @@ on its own. Status is kept next to each item.
 11. **Chat and tracker connectors.** Slack (and Teams) for asks and mentions; a live Jira
    connector for Cloud or self-hosted. Built and tested against recorded API responses; not
    switched on against company systems until IT and the workspace admins approve.
+   *Built:* `src/core/connectors/jira.ts` (Cloud with email and API token on
+   /rest/api/3/search/jql; self-hosted with a personal access token on /rest/api/2/search;
+   finds the Sprint, Team and Epic Link fields by name; reads open work plus 60 days of done,
+   so each sync is complete and `workComplete` removes tickets deleted in Jira) and
+   `src/core/connectors/slack.ts` (a user token with search:read and users:read; mentions and
+   direct messages since the last sync, into the brief and queue). Teams is not built: it needs
+   an app registered in the company's Microsoft tenant, which only IT can do.
 
 Recorded, not built: capture from the phone (needs a hosted inbox or an iOS Shortcut route)
 and automatic updates (need the signed, notarized download first).

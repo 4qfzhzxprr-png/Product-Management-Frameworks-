@@ -1,5 +1,7 @@
 import { ConnectorRegistry } from "../connectors";
 import { icalConnector } from "./ical";
+import { jiraConnector } from "./jira";
+import { slackConnector } from "./slack";
 import { ticketFileConnector } from "./ticketFile";
 
 /**
@@ -7,5 +9,5 @@ import { ticketFileConnector } from "./ticketFile";
  * and one line here; nothing else in the app changes.
  */
 export function createRegistry(): ConnectorRegistry {
-  return new ConnectorRegistry().register(icalConnector).register(ticketFileConnector);
+  return new ConnectorRegistry().register(icalConnector).register(ticketFileConnector).register(jiraConnector).register(slackConnector);
 }

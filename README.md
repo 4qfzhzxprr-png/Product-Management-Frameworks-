@@ -49,6 +49,10 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
 - **Menu bar item.** Shows how many open commitments and asks of you there are, plus items
   needing your decision.
 
+- **Phase 6 additions.** Meeting notes into actions, Command-K search, a Weekly review, reminders,
+  backups and export, a log of everything sent to Claude with a check for patient data, 1:1
+  cadence, feedback and review prep, time off, a decision register, metric targets, and
+  leadership tools with Claude. Jira and Slack connectors are built but not yet connected.
 - **Connections.** Add, pause, sync and remove connections to other systems. The first is any
   calendar that can publish an iCalendar (.ics) address; its meetings show on the Handoff page.
   Tickets and epics import from a CSV export of any tracker, such as Jira, and fill Delivery,

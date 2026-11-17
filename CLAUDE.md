@@ -65,7 +65,10 @@ when a feature is built, a decision is made or scope changes.
   neutral `CalendarEventRecord`s from `src/core/calendar.ts`) and `ticketFile.ts` (a CSV
   export of any tracker). A connector with `manual: true` is fed by hand and skipped by the
   timed sync; the import screen is `src/ui/TicketImport.tsx` and replaces the connection's
-  tickets with `WorkStore.replaceSource`.
+  tickets with `WorkStore.replaceSource`. `jira.ts` (Cloud or self-hosted) and `slack.ts`
+  (mentions and DMs) are built and tested against recorded responses, not yet against company
+  systems. A connector that returns `workComplete: true` has its tickets replaced, not merged,
+  so tickets deleted in the tracker disappear.
 - `src/ui/useSync.ts` syncs on launch, every 15 minutes and on demand, in the main window only.
   The Connections page (`src/ui/ConnectionsPage.tsx`) adds, pauses and removes connections.
 - In cloud sessions the wrapper's requests only reach hosts the sandbox allows; the npm
@@ -120,8 +123,8 @@ when a feature is built, a decision is made or scope changes.
   applied in `setup()` before the web app opens the database.
 - The morning brief must fit one screen at the smallest normal window (1240 by 860): today's
   meetings are a one-line strip, previews are one line, and the overnight list shows four.
-- A ticket deleted in the tracker stays in `work_items` until its connection is removed.
-  Handle that when the first tracker connector is written.
+- A ticket deleted in the tracker is removed at the next sync when the connector reports
+  `workComplete` (Jira does; the CSV import replaces in full).
 - Calendars connect live, and tickets import from a CSV export. Nothing writes activity
   (mail, wiki) yet, so in the Mac app the brief and queue say nothing is connected.
 - The sorting rules in `classify()` were written without seeing real mail. Expect to tune them
