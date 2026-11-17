@@ -36,7 +36,7 @@ Severity: **High** blocks or misleads; **Medium** slows David down or makes him 
 | # | Finding | Severity | Status |
 |---|---------|----------|--------|
 | 1 | **A new install gives no direction.** The first screen says "You're all clear" with every number at zero. Nothing says that the calendar, tickets, PMs and manager need setting up, or where. | High | Fixed: a "Get set up" strip on the Overview with five steps (connect a calendar, import tickets, add PMs, choose who you report to, try quick capture). Each step opens the page where it is done, ticks itself off from what is stored, and the strip can be hidden for good. |
-| 2 | **"Waiting on you" meant three different numbers.** The Overview counted open captures (7), the Queue badge counted email needing a decision (4), and the menu bar added both (11). David would see 11 in the menu bar and 7 on screen. | High | Fixed: the Overview's first line now gives the menu bar's number and splits it ("11 items are waiting on you (7 captured, 4 need your decision)"), with a link to the queue. The hero says "captures" so it no longer reads as the same total. |
+| 2 | **"Waiting on you" meant three different numbers.** The Overview counted open captures (7), the Queue badge counted email needing a decision (4), and the menu bar added both (11). David would see 11 in the menu bar and 7 on screen. | High | Fixed: the Overview's first line now gives the menu bar's number and splits it ("11 items are waiting on you (7 you owe, 4 need your decision)"), with a link to the queue. The hero says "captures" so it no longer reads as the same total. |
 | 3 | **Twelve pages in one flat list.** The sidebar gave no hint which pages are daily and which are weekly or set-up-once, so each one had to be read to be found. | Medium | Fixed: the sidebar is grouped under Today (Overview, Brief, Queue, Commitments, Captures), Team (Team, Delivery, Handoff), Upward (Leadership, Influence, Analytics) and Setup (Connections). Every page is still one click away, and the sidebar still fits without scrolling. |
 | 4 | "Change who I report to" is only found under Leadership, 1:1 prep. | Low | Covered by the setup step, which opens Leadership. Revisit if David looks for it in settings. |
 | 5 | Handoff needs the offshore time zone before it says anything useful, and the prompt to choose one is easy to read past. | Low | Fixed in the polish pass: the empty state has a "Choose time zone" button that opens the list, and the field is highlighted until set. |
@@ -65,6 +65,13 @@ keyboard. Changes made:
   line.
 - **Keyboard.** Escape leaves a 1:1 workspace; "?" opens a list of shortcuts. Every control
   showed a visible focus ring.
+
+## A day in David's life, 2026-11-17
+
+An end-to-end story test of a whole working day plus a "gremlin hour" of mistakes; see
+[`usability/DAY-IN-THE-LIFE.md`](usability/DAY-IN-THE-LIFE.md). A full day took 34 clicks. It
+found and fixed a dialog layer that could freeze the page, Return not saving from the capture
+lists, and an ambiguous "captured" in the waiting total (now "you owe").
 
 ## Checked by
 

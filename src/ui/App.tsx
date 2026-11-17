@@ -560,34 +560,36 @@ function Shell({ store }: { store: CaptureStore }) {
       </NavigateContext.Provider>
 
       <Shortcuts open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-      <Modal
-        open={inlineCapture !== null}
-        title={inlineCapture?.editing ? "Edit capture" : "Quick capture"}
-        footer={null}
-        destroyOnHidden
-        onCancel={() => setInlineCapture(null)}
-      >
-        <CaptureForm
-          store={store}
-          initial={inlineCapture ?? undefined}
-          editing={inlineCapture?.editing}
-          onSaved={(saved) => {
-            const before = inlineCapture?.editing;
-            setInlineCapture(null);
-            void refresh().then(() =>
-              toast(
-                before
-                  ? { text: `Saved ${quote(saved.body)}`, undo: () => change(() => store.updateCapture(before.id, before)) }
-                  : {
-                      text: `Captured ${quote(saved.body)} as ${KIND_LABELS[saved.kind].toLowerCase()}`,
-                      undo: () => change(() => store.deleteCapture(saved.id)),
-                    },
-              ),
-            );
-          }}
+      {/* Rendered only while open, so a quick open and close cannot leave a layer over the page. */}
+      {inlineCapture !== null && (
+        <Modal
+          open
+          title={inlineCapture?.editing ? "Edit capture" : "Quick capture"}
+          footer={null}
           onCancel={() => setInlineCapture(null)}
-        />
-      </Modal>
+        >
+          <CaptureForm
+            store={store}
+            initial={inlineCapture ?? undefined}
+            editing={inlineCapture?.editing}
+            onSaved={(saved) => {
+              const before = inlineCapture?.editing;
+              setInlineCapture(null);
+              void refresh().then(() =>
+                toast(
+                  before
+                    ? { text: `Saved ${quote(saved.body)}`, undo: () => change(() => store.updateCapture(before.id, before)) }
+                    : {
+                        text: `Captured ${quote(saved.body)} as ${KIND_LABELS[saved.kind].toLowerCase()}`,
+                        undo: () => change(() => store.deleteCapture(saved.id)),
+                      },
+                ),
+              );
+            }}
+            onCancel={() => setInlineCapture(null)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

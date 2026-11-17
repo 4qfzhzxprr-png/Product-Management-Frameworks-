@@ -76,6 +76,11 @@ export function CaptureForm({ store, onSaved, onCancel, initial, editing }: Prop
       }}
       onKeyDown={(event) => {
         if (event.key === "Escape") onCancel();
+        // "Return to save" holds after picking a kind, person or project too, not only in the text.
+        if (event.key === "Enter" && !event.shiftKey && (event.target as HTMLElement).tagName === "SELECT") {
+          event.preventDefault();
+          void save();
+        }
       }}
     >
       <Input.TextArea

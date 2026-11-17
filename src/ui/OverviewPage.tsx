@@ -77,7 +77,7 @@ export function OverviewPage({
           {decisions > 0 && (
             <>
               {" "}
-              ({stats.waitingOnMe} captured, {decisions}{" "}
+              ({stats.waitingOnMe} you owe, {decisions}{" "}
               <button type="button" className="link-button" onClick={onOpenQueue}>
                 {decisions === 1 ? "needs your decision" : "need your decision"}
               </button>

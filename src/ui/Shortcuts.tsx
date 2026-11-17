@@ -27,8 +27,11 @@ export function Shortcuts({ open, onOpenChange }: { open: boolean; onOpenChange:
     return () => window.removeEventListener("keydown", onKey);
   }, [onOpenChange]);
 
+  // Rendered only while open: reopening an Ant Design dialog during its closing animation can
+  // leave an invisible layer over the page that swallows clicks.
+  if (!open) return null;
   return (
-    <Modal open={open} title="Keyboard shortcuts" footer={null} onCancel={() => onOpenChange(false)} width={460}>
+    <Modal open title="Keyboard shortcuts" footer={null} onCancel={() => onOpenChange(false)} width={460}>
       <dl className="shortcuts">
         {SHORTCUTS.map(([keys, what]) => (
           <div key={keys}>

@@ -52,7 +52,7 @@ test.describe("usability fixes", () => {
     const captured = Number(await page.locator(".stat", { hasText: "Waiting on me" }).first().locator(".stat-value").innerText());
     const decisions = Number(await page.locator(".nav-item", { hasText: "Queue" }).locator(".nav-badge").innerText());
     const head = page.locator(".page-head p");
-    await expect(head).toContainText(`${captured + decisions} items are waiting on you (${captured} captured, ${decisions}`);
+    await expect(head).toContainText(`${captured + decisions} items are waiting on you (${captured} you owe, ${decisions}`);
     await head.getByRole("button", { name: /need your decision/ }).click();
     await expect(page.locator(".page-head h1")).toHaveText("Decision queue");
     expect(errors).toEqual([]);
