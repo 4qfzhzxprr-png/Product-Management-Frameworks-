@@ -133,14 +133,11 @@ export function ConnectionsPage({
             the app opens and every {SYNC_EVERY_MINUTES} minutes.
           </p>
         </div>
-        <Button
-          icon={<RefreshCw size={15} aria-hidden="true" />}
-          loading={syncing}
-          disabled={syncable.length === 0}
-          onClick={() => void syncNow()}
-        >
-          Sync now
-        </Button>
+        {syncable.length > 0 && (
+          <Button icon={<RefreshCw size={15} aria-hidden="true" />} loading={syncing} onClick={() => void syncNow()}>
+            Sync now
+          </Button>
+        )}
       </header>
 
       <Alert
@@ -283,7 +280,7 @@ export function ConnectionsPage({
         </GlassCard>
       )}
 
-      {lastRun !== null && (
+      {lastRun !== null && syncable.length > 0 && (
         <p className="muted small">
           Last sync run {when(lastRun, now)}. <Tag variant="filled">{syncable.filter((entry) => entry.enabled).length} syncing</Tag>
         </p>

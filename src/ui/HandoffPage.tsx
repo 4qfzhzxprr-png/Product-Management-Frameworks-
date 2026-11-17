@@ -1,6 +1,6 @@
-import { Button, Input, Select } from "antd";
+import { Button, Input, Select, type RefSelectProps } from "antd";
 import { Copy, RotateCcw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   defaultHandoffSettings,
   draftHandoffNote,
@@ -69,6 +69,8 @@ export function HandoffPage({
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [zoneOpen, setZoneOpen] = useState(false);
+  const zoneSelect = useRef<RefSelectProps>(null);
 
   useEffect(() => {
     store.settings.get<HandoffSettings>(SETTINGS_KEY).then(
@@ -113,7 +115,15 @@ export function HandoffPage({
           <GlassCard className="workspace-card" index={0} aria-labelledby="hours-title">
             <h2 id="hours-title">Working hours</h2>
             {!hours ? (
-              <p className="muted">Choose the offshore team's time zone below to see when your days overlap.</p>
+              <div className="setup-prompt">
+                <p className="muted">Choose the offshore team's time zone to see when your days overlap.</p>
+                <Button size="small" type="primary" onClick={() => {
+                    setZoneOpen(true);
+                    zoneSelect.current?.focus();
+                  }}>
+                  Choose time zone
+                </Button>
+              </div>
             ) : (
               <dl className="facts">
                 <div>
@@ -189,8 +199,15 @@ export function HandoffPage({
                   <Select
                     showSearch
                     placeholder="Choose a time zone"
+                    status={ready ? undefined : "warning"}
+                    open={zoneOpen}
+                    onOpenChange={setZoneOpen}
+                    ref={zoneSelect}
                     value={settings.offshoreZone || undefined}
-                    onChange={(offshoreZone) => update({ offshoreZone })}
+                    onChange={(offshoreZone) => {
+                      setZoneOpen(false);
+                      update({ offshoreZone });
+                    }}
                     options={ZONES.map((zone) => ({ value: zone, label: zoneLabel(zone) }))}
                     optionFilterProp="label"
                   />

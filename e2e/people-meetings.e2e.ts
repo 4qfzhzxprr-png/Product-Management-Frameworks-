@@ -35,7 +35,7 @@ test("a person's other names connect them to epics the tracker files under a dif
   await expect(priya.locator(".epics li")).toHaveCount(0);
   await expect(priya).toContainText("No epics are owned by Priya in the tracker.");
 
-  await priya.getByRole("button", { name: "Add the names they go by in other systems" }).click();
+  await priya.getByRole("button", { name: "Add other names" }).click();
   await priya.getByLabel("Other names for Priya").fill("Priya S., psharma");
   await priya.getByLabel("Other names for Priya").press("Enter");
   await expect(priya.locator(".aliases")).toContainText("Also known as Priya S., psharma.");

@@ -29,11 +29,10 @@ export function ItemRow({
       <div className="item-text">
         <p className="item-meta">
           <Tag variant="filled">{item.sourceName}</Tag>
-          <span>
-            {[item.kind, item.fromMe ? "You" : item.author, ago(item.occurredAt, now)]
-              .filter(Boolean)
-              .join(" · ")}
-          </span>
+          {(() => {
+            const meta = [item.kind, item.fromMe ? "You" : item.author, ago(item.occurredAt, now)].filter(Boolean).join(" · ");
+            return <span title={meta}>{meta}</span>;
+          })()}
         </p>
         <button className="item-title" onClick={() => void openExternal(item.url)} title="Open in its own system">
           {item.title} <ArrowUpRight size={14} aria-hidden="true" />

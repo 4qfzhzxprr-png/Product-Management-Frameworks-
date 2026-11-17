@@ -93,4 +93,15 @@ test.describe("usability fixes", () => {
     await expect(win.getByRole("button", { name: "Remove from wins" })).toBeVisible();
     expect(errors).toEqual([]);
   });
+
+  test("handoff offers a button that opens the time zone list", async ({ page }) => {
+    const errors = await open(page, { empty: true });
+    await go(page, "Handoff");
+    await page.getByRole("button", { name: "Choose time zone" }).click();
+    await page.keyboard.type("Kolkata");
+    await page.keyboard.press("Enter");
+    await expect(page.getByText("Their time now")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Choose time zone" })).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
 });

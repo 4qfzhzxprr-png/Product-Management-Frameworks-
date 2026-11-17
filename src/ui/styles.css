@@ -27,6 +27,8 @@
   --glass: rgba(255, 255, 255, 0.52);
   --glass-border: rgba(255, 255, 255, 0.8);
   --inset: rgba(255, 255, 255, 0.6);
+  /* Neutral tags and counts: visible on white glass, unlike --inset. */
+  --chip: rgba(100, 134, 247, 0.16);
   --solid: #f5f7fd;
   --text: #030069;
   --muted: #4a4a56;
@@ -73,6 +75,7 @@
     --glass: rgba(255, 255, 255, 0.07);
     --glass-border: rgba(255, 255, 255, 0.14);
     --inset: rgba(255, 255, 255, 0.08);
+    --chip: rgba(255, 255, 255, 0.12);
     --solid: #10123f;
     --text: #eef0ff;
     --muted: #bcc2e8;
@@ -779,7 +782,7 @@ select {
   margin-left: 4px;
   padding: 0 7px;
   border-radius: 9px;
-  background: var(--inset);
+  background: var(--chip);
   font-size: 12px;
 }
 
@@ -859,6 +862,15 @@ button.item-title:hover {
   flex: none;
 }
 
+.item-meta .ant-tag {
+  flex: none;
+}
+
+/* Three narrow columns: stack the two buttons so the text keeps its width. */
+.queue-grid .item-actions {
+  flex-direction: column;
+}
+
 .slipped.ant-tag {
   margin: 0 0 0 6px;
   border-radius: 999px;
@@ -899,6 +911,15 @@ button.item-title:hover {
 }
 
 
+.alerts h2 .count {
+  margin-left: 4px;
+  padding: 0 7px;
+  border-radius: 9px;
+  background: var(--gold);
+  color: var(--gold-text);
+  font-size: 12px;
+}
+
 .alerts {
   display: flex;
   flex-direction: column;
@@ -932,7 +953,7 @@ button.item-title:hover {
   margin: 0;
   border-radius: 999px;
   font-weight: 700;
-  background: var(--inset);
+  background: var(--chip);
   color: var(--text);
 }
 
@@ -1081,7 +1102,7 @@ button.item-title:hover {
   margin: 0;
   border-radius: 999px;
   font-weight: 600;
-  background: var(--inset);
+  background: var(--chip);
   color: var(--text);
 }
 
@@ -1431,7 +1452,7 @@ button.text-link {
   margin: 0;
   border-radius: 999px;
   font-weight: 600;
-  background: var(--inset);
+  background: var(--chip);
   color: var(--text);
 }
 
@@ -1521,7 +1542,7 @@ button.text-link {
   margin-left: 4px;
   padding: 0 6px;
   border-radius: 9px;
-  background: var(--inset);
+  background: var(--chip);
   color: var(--text);
   letter-spacing: 0;
 }
@@ -2339,5 +2360,22 @@ button.pm-name:hover {
 .pm-toggle.on.ant-tag {
   border-style: solid;
   border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-text);
   opacity: 1;
+}
+
+/* A short prompt with the one action that fills an empty card. */
+.setup-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* A rarely used link that should not compete with the card's content. */
+.text-link.quiet-link {
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration-style: dotted;
 }

@@ -33,7 +33,7 @@ test("a calendar feed connects, syncs, feeds the handoff window, and can be paus
 
   await go(page, "Connections");
   await expect(page.getByText("Check with IT or security before connecting company systems")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sync now" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Sync now" })).toHaveCount(0);
   await page.locator(".connector-list li", { hasText: "Calendar feed" }).getByRole("button", { name: "Connect" }).click();
 
   const form = page.locator(".connect-form");

@@ -172,12 +172,13 @@ export function TeamPage({
                 </form>
               ) : (
                 <p className="muted small aliases">
-                  {card.person.aliases.length > 0 ? `Also known as ${card.person.aliases.join(", ")}. ` : ""}
+                  {card.person.aliases.length > 0 ? `Also known as ${card.person.aliases.join(", ").replace(/\.$/, "")}. ` : ""}
                   <button
-                    className="text-link"
+                    className={card.person.aliases.length > 0 ? "text-link" : "text-link quiet-link"}
+                    title="Other names they go by in email, calendars or the tracker, so their tickets and meetings match"
                     onClick={() => setEditingNames({ personId: card.person.id, text: card.person.aliases.join(", ") })}
                   >
-                    {card.person.aliases.length > 0 ? "Edit" : "Add the names they go by in other systems"}
+                    {card.person.aliases.length > 0 ? "Edit" : "Add other names"}
                   </button>
                 </p>
               )}
