@@ -625,6 +625,7 @@ function Shell({ store }: { store: CaptureStore }) {
               people={people}
               now={now}
               onOpenLeadership={() => setView("leadership")}
+              runs={agents.runs}
             />
           )}
           {loaded && oneOnOne === null && view === "agents" && (

@@ -701,3 +701,57 @@ export const AGENT_TABLES = [
      created_at INTEGER NOT NULL
    )`,
 ];
+
+// ---------- The report ----------
+
+export interface AgentStats {
+  agentId: string;
+  agentName: string;
+  runs: number;
+  /** Jobs approved without being sent back, out of jobs approved or rejected. */
+  firstTime: number;
+  decided: number;
+  sentBack: number;
+  failed: number;
+  costUsd: number;
+  /** Average time for runs that finished, in milliseconds. */
+  averageMs: number | null;
+}
+
+/** How each agent has done since a time: volume, quality, failures, time and spend. */
+export function agentStats(runs: AgentRun[], since: number): AgentStats[] {
+  const recent = runs.filter((run) => run.startedAt >= since);
+  const ids = [...new Set(recent.map((run) => run.agentId))];
+  return ids
+    .map((agentId) => {
+      const mine = recent.filter((run) => run.agentId === agentId);
+      const record = agentRecord(recent, agentId);
+      const timed = mine.filter((run) => run.durationMs !== null || (run.finishedAt !== null && run.status === "done"));
+      const total = timed.reduce((sum, run) => sum + (run.durationMs ?? (run.finishedAt! - run.startedAt)), 0);
+      return {
+        agentId,
+        agentName: mine[0].agentName,
+        runs: mine.length,
+        firstTime: record.approvedFirstTime,
+        decided: record.decided,
+        sentBack: mine.filter((run) => run.review === "sent_back").length,
+        failed: record.failed,
+        costUsd: mine.reduce((sum, run) => sum + (run.costUsd ?? 0), 0),
+        averageMs: timed.length > 0 ? total / timed.length : null,
+      };
+    })
+    .sort((a, b) => b.runs - a.runs);
+}
+
+// ---------- Saved briefs ----------
+
+export const SAVED_BRIEFS = "agent-briefs";
+
+export interface SavedBrief {
+  id: string;
+  name: string;
+  agentId: string;
+  brief: string;
+  /** What to attach from the app, as context choice names. */
+  attach: string[];
+}

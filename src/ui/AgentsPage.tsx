@@ -1,12 +1,16 @@
-import { Alert, Button, Checkbox, Input, Modal, Popconfirm, Segmented, Select, Switch, Tag } from "antd";
-import { Bot, Copy, Crown, Play, RotateCcw, Square, Trash2 } from "lucide-react";
+import { Alert, Button, Checkbox, Input, Modal, Popconfirm, Segmented, Select, Switch, Table, Tag } from "antd";
+import { Bot, Copy, Crown, Download, FileText, Play, RotateCcw, Square, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { buildAgentContext, CONTEXT_LABELS, type ContextChoice } from "../core/agentContext";
 import {
   agentRecord,
   changingToolsOf,
+  agentStats,
   describeCadence,
   nextOccurrence,
+  SAVED_BRIEFS,
+  titleFrom,
+  type SavedBrief,
   TOOL_LABELS,
   type AgentRun,
   type Cadence,
@@ -16,7 +20,7 @@ import { buildSnapshot, type SnapshotData, type SnapshotFile } from "../core/sna
 import type { Capture, Person } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import type { WorkItem } from "../core/work";
-import { isTauri } from "../platform";
+import { isTauri, saveDocument } from "../platform";
 import { GlassCard } from "./components";
 import { quote, useToast } from "./Toast";
 import type { Agents } from "./useAgents";
@@ -26,7 +30,7 @@ import { useSensitiveGuard } from "./useSensitiveGuard";
 class NotSent extends Error {}
 import { message } from "./useStore";
 
-type Tab = "team" | "runs" | "schedules" | "settings";
+type Tab = "team" | "runs" | "schedules" | "report" | "settings";
 
 const when = (time: number) => new Date(time).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
@@ -119,6 +123,7 @@ export function AgentsPage({
             { value: "team", label: "Team" },
             { value: "runs", label: team.waiting > 0 ? `Runs · ${team.waiting}` : "Runs" },
             { value: "schedules", label: "Schedules" },
+            { value: "report", label: "Report" },
             { value: "settings", label: "Settings" },
           ]}
         />
@@ -143,6 +148,7 @@ export function AgentsPage({
 
       {tab === "team" && (
         <TeamTab
+          store={store}
           team={team}
           work={work}
           captures={captures}
@@ -157,6 +163,7 @@ export function AgentsPage({
       )}
       {tab === "runs" && <RunsTab team={team} store={store} openRun={openRun} onOpen={setOpenRun} />}
       {tab === "schedules" && <SchedulesTab team={team} store={store} now={now} onOpenRun={openRunPage} />}
+      {tab === "report" && <ReportTab team={team} now={now} />}
       {tab === "settings" && <AgentSettingsCard team={team} snapshot={snapshot} />}
     </div>
   );
@@ -165,6 +172,7 @@ export function AgentsPage({
 // ---------- Team ----------
 
 function TeamTab({
+  store,
   team,
   work,
   captures,
@@ -176,6 +184,7 @@ function TeamTab({
   onStarted,
   onSettings,
 }: {
+  store: CaptureStore;
   team: Agents;
   work: WorkItem[];
   captures: Capture[];
@@ -214,6 +223,7 @@ function TeamTab({
   return (
     <>
       <JobForm
+        store={store}
         team={team}
         work={work}
         captures={captures}
@@ -340,6 +350,7 @@ function TeamTab({
 }
 
 function JobForm({
+  store,
   team,
   work,
   captures,
@@ -350,6 +361,7 @@ function JobForm({
   onChoose,
   onStarted,
 }: {
+  store: CaptureStore;
   team: Agents;
   work: WorkItem[];
   captures: Capture[];
@@ -365,6 +377,15 @@ function JobForm({
   const [choices, setChoices] = useState<ContextChoice[]>([]);
   const [stakeholderId, setStakeholderId] = useState<number | null>(null);
   const [starting, setStarting] = useState(false);
+  const [saved, setSaved] = useState<SavedBrief[]>([]);
+  const [naming, setNaming] = useState<string | null>(null);
+  useEffect(() => {
+    void store.settings.get<SavedBrief[]>(SAVED_BRIEFS).then((list) => setSaved(list ?? []));
+  }, [store]);
+  const saveBriefs = async (list: SavedBrief[]) => {
+    setSaved(list);
+    await store.settings.set(SAVED_BRIEFS, list);
+  };
   const [error, setError] = useState<string | null>(null);
   const stakeholders = useMemo(() => stakeholderMap(profiles, people, captures, now), [profiles, people, captures, now]);
   const agentId = chosenAgent ?? team.lead?.id ?? team.agents[0]?.id;
@@ -410,6 +431,40 @@ function JobForm({
     <GlassCard aria-labelledby="job-title" className="job-form">
       <h2 id="job-title">Give the team a job</h2>
       <div className="job-row">
+        {saved.length > 0 && (
+          <label className="field">
+            Start from a saved brief
+            <Select
+              aria-label="Saved brief"
+              placeholder="Choose one"
+              value={null}
+              onChange={(id: string) => {
+                const entry = saved.find((item) => item.id === id);
+                if (!entry) return;
+                if (team.agents.some((agent) => agent.id === entry.agentId)) onChoose(entry.agentId);
+                setBrief(entry.brief);
+                setChoices(entry.attach.filter((choice): choice is ContextChoice => choice in CONTEXT_LABELS));
+              }}
+              options={saved.map((entry) => ({ value: entry.id, label: entry.name }))}
+              optionRender={(option) => (
+                <span className="saved-brief-option">
+                  {option.label}
+                  <Button
+                    type="text"
+                    size="small"
+                    className="danger-hover"
+                    icon={<Trash2 size={12} aria-hidden="true" />}
+                    aria-label={`Delete saved brief ${String(option.label)}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void saveBriefs(saved.filter((entry) => entry.id !== option.value));
+                    }}
+                  />
+                </span>
+              )}
+            />
+          </label>
+        )}
         <label className="field">
           Agent
           <Select
@@ -467,6 +522,31 @@ function JobForm({
       {error && <Alert type="error" showIcon title={error} />}
       <div className="note-actions">
         <span className="muted small">{agent?.id === team.lead?.id ? "The lead can hand parts of the job to the others." : ""}</span>
+        {naming === null ? (
+          <Button disabled={!agent || !brief.trim()} onClick={() => setNaming(titleFrom(brief))}>
+            Save as a brief
+          </Button>
+        ) : (
+          <span className="save-brief">
+            <Input
+              size="small"
+              autoFocus
+              aria-label="Name for the saved brief"
+              value={naming}
+              onChange={(event) => setNaming(event.target.value)}
+              onPressEnter={() => {
+                if (!naming.trim() || !agent) return;
+                void saveBriefs([...saved, { id: `${Date.now()}`, name: naming.trim(), agentId: agent.id, brief, attach: choices }]).then(() => {
+                  setNaming(null);
+                  toast({ text: `Saved the brief “${naming.trim()}”` });
+                });
+              }}
+            />
+            <Button size="small" onClick={() => setNaming(null)}>
+              Cancel
+            </Button>
+          </span>
+        )}
         <Button type="primary" icon={<Play size={14} aria-hidden="true" />} loading={starting} disabled={!agent || !brief.trim()} onClick={() => void run()}>
           Run
         </Button>
@@ -719,6 +799,34 @@ function RunDetail({ run, team, store, onOpen }: { run: AgentRun; team: Agents; 
           >
             <Button type="text" className="danger-hover" icon={<Trash2 size={14} aria-hidden="true" />} aria-label="Delete run" />
           </Popconfirm>
+        )}
+        {run.review === "approved" && run.output && (
+          <>
+            <Button
+              icon={<FileText size={14} aria-hidden="true" />}
+              onClick={() =>
+                void act(async () => {
+                  const id = await store.influence.createPreread(run.title, null);
+                  await store.influence.savePreread(id, { title: run.title, personId: null, ask: "", whyNow: "", background: run.output, options: "", recommendation: "", evidenceIds: [] });
+                  await team.refresh();
+                  toast({ text: `Started a pre-read from “${run.title}” under Influence` });
+                })
+              }
+            >
+              Make a pre-read
+            </Button>
+            <Button
+              icon={<Download size={14} aria-hidden="true" />}
+              onClick={() =>
+                void act(async () => {
+                  const where = await saveDocument(documentName(run), `# ${run.title}\n\nBy ${run.agentName}, approved by David.\n\n${run.output}\n`);
+                  toast({ text: `Saved to ${where}` });
+                })
+              }
+            >
+              Save as a file
+            </Button>
+          </>
         )}
         {run.output && (
           <Button
@@ -998,4 +1106,70 @@ export function AgentSettingsCard({ team, snapshot }: { team: Agents; snapshot: 
       </div>
     </GlassCard>
   );
+}
+
+// ---------- Report ----------
+
+/** How each agent has done this month and overall: volume, quality, failures, time and spend. */
+function ReportTab({ team, now }: { team: Agents; now: number }) {
+  const [period, setPeriod] = useState<"month" | "all">("month");
+  const today = new Date(now);
+  const since = period === "month" ? new Date(today.getFullYear(), today.getMonth(), 1).getTime() : 0;
+  const stats = agentStats(team.runs, since);
+  const spend = stats.reduce((sum, entry) => sum + entry.costUsd, 0);
+  const minutes = (ms: number | null) => (ms === null ? "–" : ms < 60_000 ? `${Math.max(1, Math.round(ms / 1000))} s` : `${(ms / 60_000).toFixed(1)} min`);
+
+  return (
+    <GlassCard className="job-form" aria-labelledby="report-title">
+      <div className="run-head">
+        <div>
+          <h2 id="report-title">How the team is doing</h2>
+          <p className="muted small">
+            {stats.length === 0
+              ? "No runs in this period."
+              : `${stats.reduce((sum, entry) => sum + entry.runs, 0)} runs, $${spend.toFixed(2)} as reported by Claude Code.`}
+          </p>
+        </div>
+        <Segmented<"month" | "all">
+          aria-label="Period"
+          value={period}
+          onChange={setPeriod}
+          options={[
+            { value: "month", label: "This month" },
+            { value: "all", label: "All time" },
+          ]}
+        />
+      </div>
+      {stats.length > 0 && (
+        <Table
+          size="small"
+          className="chart-table"
+          pagination={false}
+          rowKey="agentId"
+          dataSource={stats}
+          columns={[
+            { title: "Agent", dataIndex: "agentName" },
+            { title: "Runs", dataIndex: "runs", align: "right" },
+            {
+              title: "Approved first time",
+              key: "first",
+              align: "right",
+              render: (_, entry) => (entry.decided === 0 ? "–" : `${entry.firstTime} of ${entry.decided} (${Math.round((entry.firstTime / entry.decided) * 100)}%)`),
+            },
+            { title: "Sent back", dataIndex: "sentBack", align: "right" },
+            { title: "Failed", dataIndex: "failed", align: "right" },
+            { title: "Average time", key: "time", align: "right", render: (_, entry) => minutes(entry.averageMs) },
+            { title: "Spend", key: "cost", align: "right", render: (_, entry) => `$${entry.costUsd.toFixed(2)}` },
+          ]}
+        />
+      )}
+    </GlassCard>
+  );
+}
+
+/** A file name for approved work: the date it ran and its title, such as "2026-11-17-refill-prd.md". */
+function documentName(run: AgentRun): string {
+  const date = new Date(run.startedAt).toISOString().slice(0, 10);
+  const words = run.title.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).join("-").slice(0, 50);
+  return `${date}-${words || "agent-work"}.md`;
 }

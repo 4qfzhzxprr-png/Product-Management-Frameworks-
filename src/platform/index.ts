@@ -290,3 +290,14 @@ export async function notify(title: string, body: string): Promise<boolean> {
   sendNotification({ title, body });
   return true;
 }
+
+/** Saves a document as a file: ~/Documents/Daily Work/Agent work in the app, a download in the browser. Returns where it went. */
+export async function saveDocument(name: string, text: string): Promise<string> {
+  if (isTauri) return (await import("@tauri-apps/api/core")).invoke<string>("documents_save", { name, text });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([text], { type: "text/markdown" }));
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  return `your Downloads folder as ${name}`;
+}

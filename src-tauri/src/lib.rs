@@ -198,7 +198,8 @@ pub fn run() {
             files::backups_prune,
             files::backups_write_text,
             files::backups_restore,
-            files::snapshot_write
+            files::snapshot_write,
+            files::documents_save
         ])
         .manage(agents::Runs::default())
         .setup(|app| {

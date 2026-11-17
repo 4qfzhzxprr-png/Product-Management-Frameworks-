@@ -3148,3 +3148,22 @@ kbd {
 .metric-value .stat-value {
   font-size: 34px;
 }
+
+/* Saved briefs */
+
+.saved-brief-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.save-brief {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-brief .ant-input {
+  width: 220px;
+}

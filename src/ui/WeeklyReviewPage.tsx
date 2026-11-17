@@ -7,6 +7,7 @@ import { KIND_LABELS, type Capture, type Person } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import { reviewText, weekKey, weekReview, WEEKLY_SETTINGS, type WeekPlan } from "../core/weekly";
 import type { WorkItem } from "../core/work";
+import type { AgentRun } from "../core/agents";
 import { GlassCard } from "./components";
 import { useToast } from "./Toast";
 import { message } from "./useStore";
@@ -22,6 +23,7 @@ export function WeeklyReviewPage({
   people,
   now,
   onOpenLeadership,
+  runs = [],
 }: {
   store: CaptureStore;
   captures: Capture[];
@@ -30,6 +32,8 @@ export function WeeklyReviewPage({
   people: Person[];
   now: number;
   onOpenLeadership: () => void;
+  /** Agent runs, for the work approved this week. */
+  runs?: AgentRun[];
 }) {
   const toast = useToast();
   const review = useMemo(() => weekReview({ captures, work, roadmap, now }), [captures, work, roadmap, now]);
@@ -37,6 +41,7 @@ export function WeeklyReviewPage({
   const [plan, setPlan] = useState<WeekPlan>({ priorities: ["", "", ""], note: "" });
   const [copied, setCopied] = useState(false);
   const name = (id: number | null) => people.find((person) => person.id === id)?.name;
+  const approvedRuns = runs.filter((run) => run.review === "approved" && run.startedAt >= review.from && run.startedAt < review.to);
 
   useEffect(() => {
     let stale = false;
@@ -175,7 +180,23 @@ export function WeeklyReviewPage({
           )}
         </GlassCard>
 
-        <GlassCard index={5} className="review-plan" aria-labelledby="review-next">
+        {approvedRuns.length > 0 && (
+          <GlassCard index={5} aria-labelledby="review-agents">
+            <h2 id="review-agents">
+              Agent work approved <span className="count">{approvedRuns.length}</span>
+            </h2>
+            <ul className="review-list">
+              {approvedRuns.map((run) => (
+                <li key={run.id}>
+                  {run.title}
+                  <span className="muted small"> · {run.agentName}</span>
+                </li>
+              ))}
+            </ul>
+          </GlassCard>
+        )}
+
+        <GlassCard index={6} className="review-plan" aria-labelledby="review-next">
           <h2 id="review-next">Next week's three priorities</h2>
           <ol className="priority-inputs">
             {plan.priorities.map((value, index) => (

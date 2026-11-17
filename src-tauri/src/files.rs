@@ -158,3 +158,22 @@ pub fn snapshot_write(app: AppHandle, files: Vec<SnapshotFile>) -> Result<String
     }
     Ok(dir.display().to_string())
 }
+
+/// Saves a document (approved agent work) as a file in ~/Documents/Daily Work/Agent work and
+/// returns its path. An existing file of the same name gets a number added rather than replaced.
+#[tauri::command]
+pub fn documents_save(name: String, text: String) -> Result<String, String> {
+    let home = std::env::var_os("HOME").map(PathBuf::from).ok_or("No home folder.")?;
+    let dir = home.join("Documents").join("Daily Work").join("Agent work");
+    std::fs::create_dir_all(&dir).map_err(|e| format!("Could not create {}: {e}", dir.display()))?;
+    let name = safe_name(&name)?;
+    let (stem, extension) = name.rsplit_once('.').unwrap_or((name, "md"));
+    let mut path = dir.join(format!("{stem}.{extension}"));
+    let mut counter = 2;
+    while path.exists() {
+        path = dir.join(format!("{stem}-{counter}.{extension}"));
+        counter += 1;
+    }
+    std::fs::write(&path, text).map_err(|e| format!("Could not write {}: {e}", path.display()))?;
+    Ok(path.display().to_string())
+}

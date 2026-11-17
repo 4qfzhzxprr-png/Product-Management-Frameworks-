@@ -272,6 +272,10 @@ on its own. Status is kept next to each item.
    `src/core/metrics.ts`.
 10. **The agent team, further.** Saved briefs, approved work sent on to the weekly update, a
    pre-read or a folder, and each agent's cost and quality over time.
+   *Built:* saved briefs (agent, text and attachments) in the job form; approved runs can
+   become a pre-read or a Markdown file in ~/Documents/Daily Work/Agent work (`documents_save`),
+   and appear in the weekly review; a Report tab gives each agent's runs, first-time approval
+   rate, sent back, failed, average time and spend, this month or all time.
 11. **Chat and tracker connectors.** Slack (and Teams) for asks and mentions; a live Jira
    connector for Cloud or self-hosted. Built and tested against recorded API responses; not
    switched on against company systems until IT and the workspace admins approve.

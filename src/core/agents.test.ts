@@ -320,3 +320,21 @@ describe("search", () => {
     expect(search("deliv", data)[0]).toMatchObject({ group: "Page", target: { type: "page", view: "delivery" } });
   });
 });
+
+describe("the agent report", () => {
+  it("counts runs, first-time approvals, sends back, failures, time and spend since a date", async () => {
+    const { agentStats } = await import("./agents");
+    const base = { title: "", brief: "", attached: [], scheduleId: null, feedback: "", output: "", error: "", steps: [] };
+    const runs: AgentRun[] = [
+      { ...base, id: 1, agentId: "w", agentName: "writer", parentId: null, status: "done", review: "approved", startedAt: 100, finishedAt: 200, costUsd: 0.5, durationMs: 60_000 },
+      { ...base, id: 2, agentId: "w", agentName: "writer", parentId: null, status: "done", review: "sent_back", startedAt: 300, finishedAt: 400, costUsd: 0.25, durationMs: 120_000 },
+      { ...base, id: 3, agentId: "w", agentName: "writer", parentId: 2, status: "done", review: "approved", startedAt: 500, finishedAt: 600, costUsd: 0.25, durationMs: null },
+      { ...base, id: 4, agentId: "r", agentName: "researcher", parentId: null, status: "failed", review: null, startedAt: 700, finishedAt: 710, costUsd: null, durationMs: null },
+      { ...base, id: 5, agentId: "r", agentName: "researcher", parentId: null, status: "done", review: "approved", startedAt: 10, finishedAt: 20, costUsd: 9, durationMs: 1 },
+    ];
+    const [writer, researcher] = agentStats(runs, 50);
+    expect(writer).toMatchObject({ agentName: "writer", runs: 3, firstTime: 1, decided: 2, sentBack: 1, failed: 0, costUsd: 1 });
+    expect(writer.averageMs).toBeCloseTo((60_000 + 120_000 + 100) / 3);
+    expect(researcher).toMatchObject({ runs: 1, failed: 1, costUsd: 0, averageMs: null });
+  });
+});
