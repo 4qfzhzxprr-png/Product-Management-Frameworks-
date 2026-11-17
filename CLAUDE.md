@@ -106,6 +106,13 @@ when a feature is built, a decision is made or scope changes.
   Command-Z too); lasting deletes of set-up data (people, projects, roadmap, priorities,
   pre-reads, stakeholders) ask first with a Popconfirm. Empty states link to where their data
   comes from via `useNavigate` (`src/ui/navigation.ts`). "?" opens the shortcuts list.
+- Phase 5, the agent team, is built (Agents page; scope and status in `docs/PLAN.md`). The
+  agent files are the source of truth and are never written. Runs start Claude Code with
+  `-p --output-format stream-json`, the agent's instructions appended to the system prompt,
+  read-only tools allowed and changing tools (`CHANGING_TOOLS`, and any `mcp__` tool) blocked
+  unless switched on per agent. The brief goes in on standard input; there is no shell. Every
+  finished run waits for review. Runs and schedules live in the main window only
+  (`useAgents`). Agent reviews are not in the menu bar count yet.
 - The morning brief must fit one screen at the smallest normal window (1240 by 860): today's
   meetings are a one-line strip, previews are one line, and the overnight list shows four.
 - A ticket deleted in the tracker stays in `work_items` until its connection is removed.
@@ -127,6 +134,9 @@ when a feature is built, a decision is made or scope changes.
   `npx tauri build --debug --no-bundle`, run `src-tauri/target/debug/daily-work` under
   `dbus-run-session -- xvfb-run`, drive it with `xdotool` (Control-Alt-Space opens capture),
   and read `~/.config/app.dailywork.desktop/dailywork.db` with `sqlite3`.
+- To check agent runs on Linux, point the agent settings (the `agents` row in `settings`) at a
+  test folder and a stand-in `claude` script that records its arguments and standard input and
+  prints stream-json lines. Do not let a test run reach a real `claude` on the machine.
 - Both windows open the database at launch. Every migration step must be safe to run twice
   and safe to run from two windows at once; `CaptureStore.open` retries for that reason.
 - `npm run dev` serves the UI in a browser with an in-memory database, so it can be driven

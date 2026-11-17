@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-17 (Claude approved as the AI provider; Phase 5, the agent team, scoped).
+Last updated 2026-11-17 (Phase 5, the agent team, built; to be checked against David's real agents on his Mac).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -33,7 +33,7 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Phase 4: C-suite influence | Built, apart from the three features that need AI. |
 | Connecting to other systems | Plumbing and Connections screen built; calendars connect, and tickets import from any tracker's CSV export. |
 | AI features | Not started. Claude is the approved provider (2026-11-17); calls go through Claude Code on the Mac first. |
-| Phase 5: the agent team | Scoped 2026-11-17, not started. See below. |
+| Phase 5: the agent team | Built 2026-11-17: roster, runs, review queue, schedules and context. Needs a first real run on David's Mac. |
 | Apple distribution | Unsigned test builds only. |
 | Usability | Expert walkthrough and an overnight polish pass done 2026-11-17 (`docs/USABILITY.md`). A session with David is next. |
 
@@ -220,6 +220,18 @@ What David told us:
   next launch.
 - A separate Agents page, not mixed into the PM Team board.
 - He will name the nine agents at his Mac; the app should read them from the files.
+
+Status (2026-11-17): all five parts below are built. The runner was checked on Linux against a
+stand-in `claude` program (arguments, work folder, brief on standard input, streamed progress,
+result, Stop) and found Claude Code from a bare PATH. Not yet run against real Claude Code or
+David's own agent files; that is the first thing to do on his Mac. Approved output can be
+copied; saving it as a capture was left out, because captures are short notes.
+
+How it works: `src/core/agents.ts` (files, tool policy, Claude Code arguments, output parsing,
+schedules, the `agent_runs` and `agent_schedules` tables), `src/core/agentContext.ts` (what
+can be attached), `src/ui/useAgents.ts` (runs and the schedule check, main window only),
+`src/ui/AgentsPage.tsx`, and `src-tauri/src/agents.rs` (read the folder, find `claude` through
+the login shell's PATH, start it without a shell, stream lines, stop it).
 
 Scope, in build order:
 

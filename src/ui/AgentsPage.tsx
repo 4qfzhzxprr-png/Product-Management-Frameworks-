@@ -77,7 +77,7 @@ export function AgentsPage({
       <header className="page-head with-controls">
         <div>
           <h1>Agents</h1>
-          <p>Your Claude Code agents: give them work, review what comes back, and set jobs to repeat.</p>
+          <p>Your Claude Code agent team: give them work, review it, and set jobs to repeat.</p>
         </div>
         <Segmented<Tab>
           aria-label="Section"

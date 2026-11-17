@@ -17,6 +17,7 @@ import {
   type AgentRun,
   type AgentSchedule,
 } from "./agents";
+import type { Capture } from "./models";
 import { CaptureStore } from "./store";
 
 const LEAD = `---
@@ -261,5 +262,35 @@ describe("AgentStore", () => {
     ]);
     await store.agents.deleteSchedule(id);
     expect(await store.agents.schedules()).toEqual([]);
+  });
+});
+
+describe("context from the app", () => {
+  it("attaches only the parts that have something in them, labelled", async () => {
+    const { buildAgentContext } = await import("./agentContext");
+    const now = new Date(2026, 10, 17, 9).getTime();
+    const capture = (id: number, body: string, kind: Capture["kind"], extra: Partial<Capture> = {}): Capture => ({
+      id,
+      createdAt: now - id * 86_400_000,
+      kind,
+      body,
+      personId: null,
+      projectId: null,
+      isWin: false,
+      doneAt: null,
+      dueAt: null,
+      ...extra,
+    });
+    const captures = [
+      capture(1, "Send pilot numbers to Morgan", "commitment", { personId: 7 }),
+      capture(2, "Portal beta cut support tickets by a third", "note", { isWin: true }),
+    ];
+    const people = [{ id: 7, name: "Morgan", isPM: false, aliases: [] }];
+    const result = buildAgentContext(["work", "commitments", "bank", "stakeholder"], { work: [], captures, people, stakeholder: null, now });
+    expect(result.labels).toEqual(["My open commitments and asks", "Wins, evidence and metrics (90 days)"]);
+    expect(result.text).toContain("- My commitment: Send pilot numbers to Morgan (Morgan)");
+    expect(result.text).toContain("Portal beta cut support tickets by a third");
+    expect(result.text).not.toContain("Epics in progress");
+    expect(buildAgentContext([], { work: [], captures, people, stakeholder: null, now })).toEqual({ text: "", labels: [] });
   });
 });

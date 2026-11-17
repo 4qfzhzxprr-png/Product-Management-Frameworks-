@@ -39,6 +39,10 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
 - **Handoff.** When your working day overlaps the offshore team's, what to send them before you
   sign off, and a draft end-of-day note to edit, copy and send yourself. Set the offshore time
   zone and hours on the page.
+- **Agents.** Your Claude Code agent team, read from its `.claude/agents` files: give the lead
+  or a specialist a job, attach what the app knows, watch it run, then approve it, send it back
+  with feedback or reject it. Jobs can repeat daily, on weekdays or weekly. Agents can only read
+  until you switch on a tool that changes things for that agent.
 - **Analytics.** Captures per day or week over 7 days, 30 days or 13 weeks, with totals for the period.
 - **Captures.** Browse and search captures by person, project, open items and wins. Mark
   commitments and asks done.
