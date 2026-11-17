@@ -40,7 +40,7 @@ test.describe("usability fixes", () => {
     const groups = page.locator(".sidebar nav").getByRole("group");
     await expect(groups).toHaveCount(4);
     await expect(page.locator(".nav-heading")).toHaveText(["Today", "Team", "Upward", "Setup"]);
-    await expect(page.locator(".sidebar nav").getByRole("group", { name: "Today" }).getByRole("button")).toHaveCount(5);
+    await expect(page.locator(".sidebar nav").getByRole("group", { name: "Today" }).getByRole("button")).toHaveCount(6);
     // The whole sidebar fits at the smallest normal window without scrolling.
     const nav = page.locator(".sidebar nav");
     expect(await nav.evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(true);

@@ -4,6 +4,7 @@ import {
   Handshake,
   Send,
   Bot,
+  CalendarCheck,
   Inbox,
   Keyboard,
   Landmark,
@@ -48,6 +49,8 @@ import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
 import { makeBackup, SettingsPage } from "./SettingsPage";
 import { Shortcuts } from "./Shortcuts";
+import { useReminders } from "./useReminders";
+import { WeeklyReviewPage } from "./WeeklyReviewPage";
 import { TeamPage } from "./TeamPage";
 import { quote, ToastProvider, useToast } from "./Toast";
 import { message, useStore } from "./useStore";
@@ -70,7 +73,8 @@ type View =
   | "captures"
   | "connections"
   | "agents"
-  | "settings";
+  | "settings"
+  | "review";
 
 interface NavEntry {
   view: View;
@@ -87,6 +91,7 @@ const NAV_GROUPS: { heading: string; entries: NavEntry[] }[] = [
       { view: "queue", label: "Queue", icon: ListChecks },
       { view: "commitments", label: "Commitments", icon: Handshake },
       { view: "captures", label: "Captures", icon: NotebookPen },
+      { view: "review", label: "Weekly review", icon: CalendarCheck },
     ],
   },
   {
@@ -285,6 +290,11 @@ function Shell({ store }: { store: CaptureStore }) {
   const meetings = upcoming.filter((meeting) => meeting.startsAt < tomorrow);
   const roadmap = roadmapStatus(roadmapItems, work, now);
   snapshotData.current = { captures, people, projects, work, roadmap, priorities, profiles, meetings: upcoming, now };
+  useReminders(store, loaded, () => ({
+    captures: snapshotData.current!.captures,
+    decisions: items.filter((item) => item.bucket === "decision").length,
+    agentRuns: agents.runs.filter((run) => run.review === "pending").map((run) => ({ id: run.id, agentName: run.agentName, title: run.title })),
+  }));
   const alerts = noSurprises(roadmap);
   const decisions = items.filter((item) => item.bucket === "decision").length;
   const setup = setupSteps({
@@ -554,6 +564,17 @@ function Shell({ store }: { store: CaptureStore }) {
             />
           )}
           {loaded && oneOnOne === null && view === "settings" && <SettingsPage store={store} revision={revision} />}
+          {loaded && oneOnOne === null && view === "review" && (
+            <WeeklyReviewPage
+              store={store}
+              captures={captures}
+              work={work}
+              roadmap={roadmap}
+              people={people}
+              now={now}
+              onOpenLeadership={() => setView("leadership")}
+            />
+          )}
           {loaded && oneOnOne === null && view === "agents" && (
             <AgentsPage
               agents={agents}

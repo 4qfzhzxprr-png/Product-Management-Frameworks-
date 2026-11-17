@@ -279,3 +279,14 @@ export async function writeAgentSnapshot(files: { name: string; text: string }[]
   if (!isTauri) return "~/Library/Application Support/app.dailywork.desktop/agent-snapshot";
   return (await import("@tauri-apps/api/core")).invoke<string>("snapshot_write", { files });
 }
+
+/** Shows a Mac notification. Returns false where there are none (the browser preview), or when David turned them off. */
+export async function notify(title: string, body: string): Promise<boolean> {
+  if (!isTauri) return false;
+  const { isPermissionGranted, requestPermission, sendNotification } = await import("@tauri-apps/plugin-notification");
+  let granted = await isPermissionGranted();
+  if (!granted) granted = (await requestPermission()) === "granted";
+  if (!granted) return false;
+  sendNotification({ title, body });
+  return true;
+}

@@ -2,7 +2,10 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "What the two windows may ask the wrapper to do",
-  "windows": ["main", "capture"],
+  "windows": [
+    "main",
+    "capture"
+  ],
   "permissions": [
     "core:default",
     "core:window:allow-hide",
@@ -10,9 +13,17 @@
     "opener:allow-open-url",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "https://*" }, { "url": "https://*/*" }]
+      "allow": [
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "https://*/*"
+        }
+      ]
     },
     "sql:default",
-    "sql:allow-execute"
+    "sql:allow-execute",
+    "notification:default"
   ]
 }

@@ -235,6 +235,13 @@ on its own. Status is kept next to each item.
    Checked in the Linux build.
 5. **Reminders and the weekly review.** Mac notifications for promises due or slipping, the
    morning brief, the handoff window and agent work to review; a Friday wrap-up page.
+   *Built:* `src/core/reminders.ts` (each reminder has a key and comes once; checked every
+   minute in the main window by `useReminders`; several slips at once become one notice) with
+   `tauri-plugin-notification`, settings and a "Recent reminders" list under Settings. The
+   Weekly review page (`src/core/weekly.ts`) shows shipped, wins, done, decisions and slips
+   (looking at last week on Mondays and Tuesdays), keeps three priorities per week, and copies or
+   saves itself as a note. Not yet checked on a Mac: macOS asks for notification permission
+   the first time.
 6. **Search and settings.** Command-K finds captures, tickets, people, decisions and agent runs;
    one Settings page gathers the settings now spread across pages.
 7. **Leading the PM team.** 1:1 cadence check, a private feedback log per PM, review and
