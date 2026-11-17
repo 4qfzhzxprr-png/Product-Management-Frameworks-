@@ -8,8 +8,8 @@ import { message } from "./useStore";
 
 interface Props {
   store: CaptureStore;
-  /** Called after a save. */
-  onSaved: () => void;
+  /** Called after a save, with the capture as saved. */
+  onSaved: (capture: Capture) => void;
   onCancel: () => void;
   /** What the form starts on, for a capture opened from a person's card. */
   initial?: { kind?: CaptureKind; personId?: number };
@@ -56,9 +56,12 @@ export function CaptureForm({ store, onSaved, onCancel, initial, editing }: Prop
         isWin,
         dueAt: datable ? dueFromDateInput(due) : null,
       };
-      if (editing) await store.updateCapture(editing.id, values);
-      else await store.addCapture(values);
-      onSaved();
+      if (editing) {
+        await store.updateCapture(editing.id, values);
+        onSaved({ ...editing, ...values, body: values.body.trim() });
+      } else {
+        onSaved(await store.addCapture(values));
+      }
     } catch (cause) {
       setError(message(cause));
     }

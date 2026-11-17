@@ -104,4 +104,24 @@ test.describe("usability fixes", () => {
     await expect(page.getByRole("button", { name: "Choose time zone" })).toHaveCount(0);
     expect(errors).toEqual([]);
   });
+
+  test("a new capture is confirmed and can be taken back; Escape leaves a 1:1", async ({ page }) => {
+    const errors = await open(page, { empty: true });
+    await capture(page, { text: "Ship the pilot readout", kind: "My commitment" });
+    const toast = page.locator(".toast");
+    await expect(toast).toContainText("Captured “Ship the pilot readout” as my commitment");
+    await expect(page.locator(".stat", { hasText: "Waiting on me" }).first().locator(".stat-value")).toHaveText("1");
+    await toast.getByRole("button", { name: "Undo" }).click();
+    await expect(page.locator(".stat", { hasText: "Waiting on me" }).first().locator(".stat-value")).toHaveText("0");
+
+    await go(page, "Team");
+    await page.getByLabel("Add a PM by name").fill("Priya");
+    await page.getByLabel("Add a PM by name").press("Enter");
+    await page.locator(".pm-name", { hasText: "Priya" }).click();
+    await expect(page.locator(".page-head h1")).toContainText("Priya");
+    await page.locator("body").click({ position: { x: 5, y: 5 } });
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".page-head h1")).toHaveText("Team");
+    expect(errors).toEqual([]);
+  });
 });

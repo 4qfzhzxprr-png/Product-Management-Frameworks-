@@ -22,7 +22,7 @@ import type { Preread, StakeholderProfile } from "../core/influence";
 import { dayStart } from "../core/insights";
 import { BUCKET_LABELS, type Bucket, type SourceItem } from "../core/items";
 import { noSurprises, roadmapStatus, type Priority, type RoadmapItem } from "../core/leadership";
-import type { Capture, CaptureKind, Person, Project } from "../core/models";
+import { KIND_LABELS, type Capture, type CaptureKind, type Person, type Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import { SETUP_SETTINGS, setupSteps, waitingTotal, type SetupSettings } from "../core/setup";
 import type { WorkItem } from "../core/work";
@@ -206,6 +206,20 @@ function Shell({ store }: { store: CaptureStore }) {
   }, [refresh]);
 
   const sync = useSync(store, refresh);
+
+  // Escape leaves the 1:1 workspace, unless a dialog or list is open or a field is being typed in.
+  useEffect(() => {
+    if (oneOnOne === null) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (document.querySelector(".ant-modal-wrap:not([style*='display: none']), .ant-popover:not(.ant-popover-hidden), .ant-select-dropdown:not(.ant-select-dropdown-hidden)")) return;
+      setOneOnOne(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [oneOnOne]);
 
   // The capture window saves on its own, then tells this window.
   useEffect(() => onDataChanged(() => void refresh()), [refresh]);
@@ -513,9 +527,19 @@ function Shell({ store }: { store: CaptureStore }) {
           store={store}
           initial={inlineCapture ?? undefined}
           editing={inlineCapture?.editing}
-          onSaved={() => {
+          onSaved={(saved) => {
+            const before = inlineCapture?.editing;
             setInlineCapture(null);
-            void refresh();
+            void refresh().then(() =>
+              toast(
+                before
+                  ? { text: `Saved ${quote(saved.body)}`, undo: () => change(() => store.updateCapture(before.id, before)) }
+                  : {
+                      text: `Captured ${quote(saved.body)} as ${KIND_LABELS[saved.kind].toLowerCase()}`,
+                      undo: () => change(() => store.deleteCapture(saved.id)),
+                    },
+              ),
+            );
           }}
           onCancel={() => setInlineCapture(null)}
         />

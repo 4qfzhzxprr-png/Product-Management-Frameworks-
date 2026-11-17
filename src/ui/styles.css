@@ -375,6 +375,13 @@ select {
   gap: 20px;
   max-width: 1120px;
   margin: 0 auto;
+  animation: page-in 160ms ease-out;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .page-head h1 {
