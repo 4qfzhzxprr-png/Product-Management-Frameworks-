@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { capture, go, open } from "./helpers";
+import { capture, card, go, open } from "./helpers";
 
 // Fixes from the usability walkthrough in docs/USABILITY.md.
 test.describe("usability fixes", () => {
@@ -55,6 +55,42 @@ test.describe("usability fixes", () => {
     await expect(head).toContainText(`${captured + decisions} items are waiting on you (${captured} captured, ${decisions}`);
     await head.getByRole("button", { name: /need your decision/ }).click();
     await expect(page.locator(".page-head h1")).toHaveText("Decision queue");
+    expect(errors).toEqual([]);
+  });
+
+  test("done, clear and delete can each be undone from the toast", async ({ page }) => {
+    const errors = await open(page);
+    const toast = page.locator(".toast");
+
+    // Mark a commitment done, then undo it.
+    await go(page, "Commitments");
+    const promised = card(page, "I promised");
+    const before = await promised.locator(".item").count();
+    await promised.getByRole("checkbox", { name: "Mark done: Send Marco feedback on the portal PRD" }).click();
+    await expect(toast).toContainText("Done: “Send Marco feedback on the portal PRD”");
+    await expect(promised.locator(".item")).toHaveCount(before - 1);
+    await toast.getByRole("button", { name: "Undo" }).click();
+    await expect(promised.locator(".item")).toHaveCount(before);
+    await expect(toast).toHaveCount(0);
+
+    // Clear an item from the brief, then undo with the keyboard.
+    await go(page, "Brief");
+    const decisions = card(page, "Needs my decision");
+    await decisions.locator(".item", { hasText: "Release 4.2" }).getByRole("button", { name: "Clear" }).click();
+    await expect(toast).toContainText("Cleared");
+    await expect(decisions.locator(".item", { hasText: "Release 4.2" })).toHaveCount(0);
+    await page.keyboard.press("ControlOrMeta+z");
+    await expect(decisions.locator(".item", { hasText: "Release 4.2" })).toHaveCount(1);
+
+    // Delete a capture, then bring it back with everything it had.
+    await go(page, "Captures");
+    const win = page.locator(".capture", { hasText: "Portal beta cut support tickets by a third" });
+    const detail = await win.locator(".capture-detail").innerText();
+    await win.getByRole("button", { name: "Delete capture" }).click();
+    await expect(win).toHaveCount(0);
+    await toast.getByRole("button", { name: "Undo" }).click();
+    await expect(win.locator(".capture-detail")).toHaveText(detail);
+    await expect(win.getByRole("button", { name: "Remove from wins" })).toBeVisible();
     expect(errors).toEqual([]);
   });
 });

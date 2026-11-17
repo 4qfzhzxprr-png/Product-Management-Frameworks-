@@ -61,6 +61,10 @@ interface Props {
   /** Runs a change, then reloads everything on screen. */
   change: (work: () => Promise<unknown>) => Promise<void>;
   onOpenOneOnOne: (personId: number) => void;
+  /** Marks a capture done, with undo. */
+  onDone: (capture: Capture) => void;
+  /** Deletes a capture, with undo. */
+  onDelete: (capture: Capture) => void;
   /** Meetings from connected calendars, for the next meeting with the CPO. */
   upcoming: CalendarEventRecord[];
 }
@@ -246,7 +250,7 @@ function WeeklyUpdate({ store, captures, work, roadmap, settings, now, change }:
 
 // ---------- 1:1 prep ----------
 
-function OneOnOnePrep({ store, people, captures, work, roadmap, settings, now, change, onOpenOneOnOne, upcoming }: Props) {
+function OneOnOnePrep({ store, people, captures, work, roadmap, settings, now, change, onOpenOneOnOne, upcoming, onDone, onDelete }: Props) {
   const manager = people.find((person) => person.id === settings.managerId) ?? null;
   const [choosing, setChoosing] = useState(false);
 
@@ -289,8 +293,8 @@ function OneOnOnePrep({ store, people, captures, work, roadmap, settings, now, c
   const alerts = noSurprises(roadmap);
   const add = (kind: CaptureKind) => (body: string) =>
     void change(() => store.addCapture({ kind, body, personId: manager.id }));
-  const done = (capture: Capture) => void change(() => store.setCaptureDone(capture.id, true));
-  const remove = (capture: Capture) => void change(() => store.deleteCapture(capture.id));
+  const done = onDone;
+  const remove = onDelete;
 
   return (
     <>

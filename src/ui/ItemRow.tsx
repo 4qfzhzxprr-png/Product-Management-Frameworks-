@@ -1,5 +1,5 @@
 import { Button, Dropdown, Tag } from "antd";
-import { ArrowUpRight, Check, MoveRight } from "lucide-react";
+import { ArrowLeftRight, ArrowUpRight, Check } from "lucide-react";
 import { BUCKET_LABELS, BUCKETS, type Bucket, type SourceItem } from "../core/items";
 import { openExternal } from "../platform";
 
@@ -51,14 +51,20 @@ export function ItemRow({
             onClick: ({ key }) => onMove(item, key as Bucket),
           }}
         >
-          <Button type="text" shape="circle" icon={<MoveRight size={16} aria-hidden="true" />} aria-label="Move to another list" title="Move to another list" />
+          <Button
+            type="text"
+            shape="circle"
+            icon={<ArrowLeftRight size={15} aria-hidden="true" />}
+            aria-label="Move to another list"
+            title="Move to another list"
+          />
         </Dropdown>
         <Button
           type="text"
           shape="circle"
           icon={<Check size={16} aria-hidden="true" />}
-          aria-label="Dismiss"
-          title="Dismiss"
+          aria-label="Clear"
+          title="Clear: handled, take it off the list"
           onClick={() => onDismiss(item)}
         />
       </div>

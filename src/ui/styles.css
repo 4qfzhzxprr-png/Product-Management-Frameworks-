@@ -812,10 +812,18 @@ select {
 .item-meta {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 2px;
+  min-width: 0;
   font-size: 12px;
   color: var(--muted);
+}
+
+/* One line, so narrow queue columns do not wrap the source and age onto three lines. */
+.item-meta > span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .item-meta .ant-tag {
@@ -2242,4 +2250,94 @@ button.pm-name:hover {
   font: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+/* Undo toast. */
+.toast-region {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 1100;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 8px 8px 8px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--sidebar-from), var(--sidebar-to));
+  border: 1px solid var(--hero-border);
+  box-shadow: var(--lift-shadow);
+  color: var(--sidebar-text);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  pointer-events: auto;
+  animation: toast-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.toast-icon {
+  flex: none;
+  color: var(--gold);
+}
+
+.toast-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+}
+
+.toast .toast-undo.ant-btn {
+  flex: none;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.toast .toast-undo.ant-btn:hover {
+  color: var(--gold) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.toast .toast-close.ant-btn {
+  flex: none;
+  color: var(--sidebar-muted);
+}
+
+.toast .toast-close.ant-btn:hover {
+  color: var(--sidebar-text) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Delete buttons turn red only when pointed at. */
+.danger-hover.ant-btn:hover {
+  color: var(--danger) !important;
+}
+
+/* The PM toggle on people: filled when on, a dashed outline inviting a click when off. */
+.pm-toggle.ant-tag {
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.pm-toggle.ant-tag:hover {
+  opacity: 1;
+}
+
+.pm-toggle.on.ant-tag {
+  border-style: solid;
+  border-color: transparent;
+  opacity: 1;
 }

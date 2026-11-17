@@ -151,6 +151,7 @@ test.describe("first run, with nothing stored", () => {
     await edited.getByRole("button", { name: "Delete capture" }).click();
     await expect(page.locator(".capture")).toHaveCount(2);
     await page.getByRole("button", { name: "Remove Marco" }).click();
+    await page.locator(".ant-popconfirm").getByRole("button", { name: "Remove" }).click();
     await expect(page.locator(".filters")).not.toContainText("Marco");
     await expect(page.locator(".capture", { hasText: "Ask Marco for the estimate" })).toBeVisible();
 

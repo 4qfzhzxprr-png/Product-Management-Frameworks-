@@ -1,5 +1,5 @@
-import { Badge, Button, Checkbox, Empty, Input, Tag } from "antd";
-import { Pencil, Search, Star, X } from "lucide-react";
+import { Badge, Button, Checkbox, Empty, Input, Popconfirm, Tag } from "antd";
+import { Pencil, Search, Star, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isActionable, KIND_LABELS, type Capture, type CaptureFilter, type Person, type Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
@@ -41,6 +41,8 @@ export function CapturesPage({
   selection,
   onSelect,
   onEdit,
+  onDone,
+  onDelete,
   change,
 }: {
   store: CaptureStore;
@@ -52,6 +54,10 @@ export function CapturesPage({
   selection: Selection;
   onSelect: (selection: Selection) => void;
   onEdit: (capture: Capture) => void;
+  /** Marks a capture done (with undo) or open again. */
+  onDone: (capture: Capture, done: boolean) => void;
+  /** Deletes a capture, with undo. */
+  onDelete: (capture: Capture) => void;
   change: (work: () => Promise<unknown>) => Promise<void>;
 }) {
   const [captures, setCaptures] = useState<Capture[]>([]);
@@ -136,24 +142,32 @@ export function CapturesPage({
                 <span className="row-actions">
                   <span title={person.isPM ? "One of my PMs. Click to unmark." : "Mark as one of my PMs"}>
                     <Tag.CheckableTag
+                      className={person.isPM ? "pm-toggle on" : "pm-toggle"}
                       checked={person.isPM}
                       onChange={(checked) => change(() => store.setPersonIsPM(person.id, checked))}
                     >
                       PM
                     </Tag.CheckableTag>
                   </span>
-                  <Button
-                    type="text"
-                    size="small"
-                    shape="circle"
-                    icon={<X size={14} aria-hidden="true" />}
-                    title={`Remove ${person.name}`}
-                    aria-label={`Remove ${person.name}`}
-                    onClick={() => {
+                  <Popconfirm
+                    title={`Remove ${person.name}?`}
+                    description="Their captures stay, without a name on them."
+                    okText="Remove"
+                    okButtonProps={{ danger: true }}
+                    onConfirm={() => {
                       if (sameSelection(selection, { type: "person", id: person.id })) onSelect({ type: "all" });
                       void change(() => store.deletePerson(person.id));
                     }}
-                  />
+                  >
+                    <Button
+                      type="text"
+                      size="small"
+                      shape="circle"
+                      icon={<X size={14} aria-hidden="true" />}
+                      title={`Remove ${person.name}`}
+                      aria-label={`Remove ${person.name}`}
+                    />
+                  </Popconfirm>
                 </span>,
               ),
             )}
@@ -168,18 +182,25 @@ export function CapturesPage({
                 project.name,
                 undefined,
                 <span className="row-actions">
-                  <Button
-                    type="text"
-                    size="small"
-                    shape="circle"
-                    icon={<X size={14} aria-hidden="true" />}
-                    title={`Remove ${project.name}`}
-                    aria-label={`Remove ${project.name}`}
-                    onClick={() => {
+                  <Popconfirm
+                    title={`Remove ${project.name}?`}
+                    description="Its captures stay, without a project on them."
+                    okText="Remove"
+                    okButtonProps={{ danger: true }}
+                    onConfirm={() => {
                       if (sameSelection(selection, { type: "project", id: project.id })) onSelect({ type: "all" });
                       void change(() => store.deleteProject(project.id));
                     }}
-                  />
+                  >
+                    <Button
+                      type="text"
+                      size="small"
+                      shape="circle"
+                      icon={<X size={14} aria-hidden="true" />}
+                      title={`Remove ${project.name}`}
+                      aria-label={`Remove ${project.name}`}
+                    />
+                  </Popconfirm>
                 </span>,
               ),
             )}
@@ -213,7 +234,7 @@ export function CapturesPage({
                       <Checkbox
                         checked={done}
                         aria-label={done ? "Mark not done" : "Mark done"}
-                        onChange={() => change(() => store.setCaptureDone(capture.id, !done))}
+                        onChange={() => onDone(capture, !done)}
                       />
                     ) : (
                       <span className="no-check" />
@@ -243,10 +264,11 @@ export function CapturesPage({
                     <Button
                       type="text"
                       shape="circle"
-                      icon={<X size={16} aria-hidden="true" />}
+                      className="danger-hover"
+                      icon={<Trash2 size={15} aria-hidden="true" />}
                       title="Delete"
                       aria-label="Delete capture"
-                      onClick={() => change(() => store.deleteCapture(capture.id))}
+                      onClick={() => onDelete(capture)}
                     />
                   </li>
                 );

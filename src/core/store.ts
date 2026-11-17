@@ -420,6 +420,26 @@ export class CaptureStore {
   async deleteCapture(id: number): Promise<void> {
     await this.db.run("DELETE FROM captures WHERE id = ?", [id]);
   }
+
+  /** Puts a deleted capture back exactly as it was, for undo. Its person or project may have gone since. */
+  async restoreCapture(capture: Capture): Promise<void> {
+    const exists = async (table: "people" | "projects", id: number | null) =>
+      id !== null && (await this.db.all(`SELECT 1 FROM ${table} WHERE id = ?`, [id])).length > 0;
+    await this.db.run(
+      "INSERT OR REPLACE INTO captures (id, created_at, kind, body, person_id, project_id, is_win, done_at, due_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        capture.id,
+        capture.createdAt,
+        capture.kind,
+        capture.body,
+        (await exists("people", capture.personId)) ? capture.personId : null,
+        (await exists("projects", capture.projectId)) ? capture.projectId : null,
+        capture.isWin ? 1 : 0,
+        capture.doneAt,
+        capture.dueAt,
+      ],
+    );
+  }
 }
 
 async function migrate(db: Db): Promise<void> {

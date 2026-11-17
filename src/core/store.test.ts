@@ -18,6 +18,19 @@ describe("CaptureStore", () => {
     expect(captures[0]).toMatchObject({ createdAt: 200, kind: "note", isWin: false, doneAt: null });
   });
 
+  it("restores a deleted capture exactly, dropping a person deleted since", async () => {
+    const { store } = await makeStore();
+    const priya = await store.addPerson("Priya");
+    const portal = await store.addProject("Portal");
+    const capture = await store.addCapture({ body: "Pilot readout", kind: "commitment", personId: priya.id, projectId: portal.id, isWin: true, dueAt: 900, at: 100 });
+    await store.setCaptureDone(capture.id, true, 500);
+    const [stored] = await store.captures();
+    await store.deleteCapture(capture.id);
+    await store.deletePerson(priya.id);
+    await store.restoreCapture(stored);
+    expect(await store.captures()).toEqual([{ ...stored, personId: null }]);
+  });
+
   it("rejects an empty capture", async () => {
     const { store } = await makeStore();
     await expect(store.addCapture({ body: "  \n" })).rejects.toThrow();

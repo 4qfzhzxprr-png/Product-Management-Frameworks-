@@ -20,7 +20,7 @@ import type { CalendarEvent } from "../core/calendar";
 import type { Connection } from "../core/connectors";
 import type { Preread, StakeholderProfile } from "../core/influence";
 import { dayStart } from "../core/insights";
-import type { Bucket, SourceItem } from "../core/items";
+import { BUCKET_LABELS, type Bucket, type SourceItem } from "../core/items";
 import { noSurprises, roadmapStatus, type Priority, type RoadmapItem } from "../core/leadership";
 import type { Capture, CaptureKind, Person, Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
@@ -41,6 +41,7 @@ import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
+import { quote, ToastProvider, useToast } from "./Toast";
 import { message, useStore } from "./useStore";
 import { registry, useSync } from "./useSync";
 
@@ -103,7 +104,11 @@ export function App() {
   const { store, error } = useStore();
   if (error) return <p className="error page-message">{error}</p>;
   if (!store) return null;
-  return <Shell store={store} />;
+  return (
+    <ToastProvider>
+      <Shell store={store} />
+    </ToastProvider>
+  );
 }
 
 /** The app shell: sidebar navigation, the current page, and the data they share. */
@@ -133,6 +138,7 @@ function Shell({ store }: { store: CaptureStore }) {
   const [loaded, setLoaded] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   // Set while the in-window capture dialog is open; holds what the form starts on.
   const [inlineCapture, setInlineCapture] = useState<{
     kind?: CaptureKind;
@@ -241,8 +247,47 @@ function Shell({ store }: { store: CaptureStore }) {
     managerChosen: leadershipSettings?.managerId != null,
     hasCaptures: captures.length > 0,
   });
-  const moveItem = (item: SourceItem, bucket: Bucket) => void change(() => store.items.move(item.id, bucket));
-  const dismissItem = (item: SourceItem) => void change(() => store.items.dismiss(item.id));
+  const moveItem = (item: SourceItem, bucket: Bucket) =>
+    void change(() => store.items.move(item.id, bucket)).then(() =>
+      toast({
+        text: `Moved ${quote(item.title, 36)} to ${BUCKET_LABELS[bucket]}`,
+        undo: () => change(() => store.items.move(item.id, item.bucket)),
+      }),
+    );
+  const dismissItem = (item: SourceItem) =>
+    void change(() => store.items.dismiss(item.id)).then(() =>
+      toast({ text: `Cleared ${quote(item.title, 40)}`, undo: () => change(() => store.items.restore(item.id)) }),
+    );
+  /** Marks a capture done or open again; marking done can be undone from the toast. */
+  const setDone = (capture: Capture, done = true) =>
+    void change(async () => {
+      await store.setCaptureDone(capture.id, done);
+      await notifyDataChanged();
+    }).then(() => {
+      if (done)
+        toast({
+          text: `Done: ${quote(capture.body)}`,
+          undo: () =>
+            change(async () => {
+              await store.setCaptureDone(capture.id, false);
+              await notifyDataChanged();
+            }),
+        });
+    });
+  const removeCapture = (capture: Capture) =>
+    void change(async () => {
+      await store.deleteCapture(capture.id);
+      await notifyDataChanged();
+    }).then(() =>
+      toast({
+        text: `Deleted ${quote(capture.body)}`,
+        undo: () =>
+          change(async () => {
+            await store.restoreCapture(capture);
+            await notifyDataChanged();
+          }),
+      }),
+    );
 
   return (
     <div className="shell">
@@ -325,8 +370,8 @@ function Shell({ store }: { store: CaptureStore }) {
             backLabel={NAV.find((entry) => entry.view === oneOnOne.from)?.label}
             onBack={() => setOneOnOne(null)}
             onAdd={(kind, body) => void change(() => store.addCapture({ kind, body, personId: oneOnOne.personId }))}
-            onDone={(capture, done) => void change(() => store.setCaptureDone(capture.id, done))}
-            onDelete={(capture) => void change(() => store.deleteCapture(capture.id))}
+            onDone={setDone}
+            onDelete={removeCapture}
           />
         )}
         {loaded && oneOnOne === null && view === "overview" && (
@@ -347,12 +392,7 @@ function Shell({ store }: { store: CaptureStore }) {
             onOpenCaptures={openCaptures}
             onOpenAnalytics={() => setView("analytics")}
             onCapture={() => void openCapture()}
-            onDone={(capture) =>
-              void change(async () => {
-                await store.setCaptureDone(capture.id, true);
-                await notifyDataChanged();
-              })
-            }
+            onDone={(capture) => setDone(capture)}
           />
         )}
         {loaded && oneOnOne === null && view === "brief" && (
@@ -378,7 +418,7 @@ function Shell({ store }: { store: CaptureStore }) {
             people={people}
             captures={captures}
             now={now}
-            onDone={(capture) => void change(() => store.setCaptureDone(capture.id, true))}
+            onDone={(capture) => setDone(capture)}
             onCapture={(personId, kind) => setInlineCapture({ personId, kind })}
             onAddPM={(name) =>
               void change(async () => {
@@ -401,6 +441,8 @@ function Shell({ store }: { store: CaptureStore }) {
             now={now}
             change={change}
             onOpenOneOnOne={(personId) => setOneOnOne({ personId, from: "leadership" })}
+            onDone={(capture) => setDone(capture)}
+            onDelete={removeCapture}
           />
         )}
         {loaded && oneOnOne === null && view === "influence" && (
@@ -422,7 +464,7 @@ function Shell({ store }: { store: CaptureStore }) {
             captures={captures}
             now={now}
             personName={personName}
-            onDone={(capture) => void change(() => store.setCaptureDone(capture.id, true))}
+            onDone={(capture) => setDone(capture)}
             onEdit={(capture) => setInlineCapture({ editing: capture })}
           />
         )}
@@ -453,6 +495,8 @@ function Shell({ store }: { store: CaptureStore }) {
             selection={selection}
             onSelect={setSelection}
             onEdit={(capture) => setInlineCapture({ editing: capture })}
+            onDone={setDone}
+            onDelete={removeCapture}
             change={change}
           />
         )}

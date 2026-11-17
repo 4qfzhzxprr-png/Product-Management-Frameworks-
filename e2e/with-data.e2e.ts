@@ -48,7 +48,7 @@ test.describe("with sample data", () => {
     await expect(badge).toHaveText("4");
 
     // Dismissing a decision takes it out of the brief, the queue and the count.
-    await card(page, "Needs my decision").locator(".item", { hasText: "Release 4.2" }).getByRole("button", { name: "Dismiss" }).click();
+    await card(page, "Needs my decision").locator(".item", { hasText: "Release 4.2" }).getByRole("button", { name: "Clear" }).click();
     await expect(card(page, "Needs my decision").locator(".item")).toHaveCount(2);
     await expect(badge).toHaveText("3");
 
