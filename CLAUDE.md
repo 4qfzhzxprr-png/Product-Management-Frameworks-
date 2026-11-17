@@ -9,8 +9,12 @@ when a feature is built, a decision is made or scope changes.
 - **Stack:** a web app (React, TypeScript, Vite) in a Tauri 2 wrapper. David ruled out Swift;
   the wrapper exists for distribution through Apple. Keep product logic in TypeScript and the
   Rust in `src-tauri` to wrapper duties only (menu bar, shortcut, windows).
-- **AI provider:** a company-approved provider, not yet named. Make no AI calls until it is
-  named; keep sorting rule-based and put any model use behind one interface.
+- **AI provider:** Claude (Anthropic) is approved (David, 2026-11-17). Put every model call
+  behind one interface; run through Claude Code on David's Mac first (his existing login, no
+  API key in the app). Keep sorting rule-based until a feature is built on the model.
+- **Agent team (David, 2026-11-17):** a separate Agents page for his nine Claude Code
+  subagents (a lead plus eight specialists), read from `.claude/agents/*.md` on his Mac. Run,
+  review and schedule them from the app. Scope in `docs/PLAN.md`, Phase 5.
 - **Connectors come last (David, 2026-11-16).** Build every feature against the app's own
   source-neutral records first; write the real connectors at the end.
 - **Connect to anything (David, 2026-11-16).** Nothing outside a connector may name or assume
@@ -110,8 +114,9 @@ when a feature is built, a decision is made or scope changes.
   (mail, wiki) yet, so in the Mac app the brief and queue say nothing is connected.
 - The sorting rules in `classify()` were written without seeing real mail. Expect to tune them
   once a connector delivers real items.
-- Still open with David: the approved AI vendor, and what "distribution through Apple" means
-  (App Store or notarized download).
+- Still open with David: what data may go to Claude, the names of the nine agents, and what
+  "distribution through Apple" means (App Store or notarized download; the agent runner needs
+  the download route).
 
 ## Working here
 

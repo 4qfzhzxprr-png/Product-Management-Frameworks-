@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-17 (UI and interaction polish: undo, confirmations, empty-state actions, shortcuts).
+Last updated 2026-11-17 (Claude approved as the AI provider; Phase 5, the agent team, scoped).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -32,7 +32,8 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Phase 3: the CPO | Built, apart from the parts that need connectors or AI. |
 | Phase 4: C-suite influence | Built, apart from the three features that need AI. |
 | Connecting to other systems | Plumbing and Connections screen built; calendars connect, and tickets import from any tracker's CSV export. |
-| AI features | Not started. Waiting on an approved provider. |
+| AI features | Not started. Claude is the approved provider (2026-11-17); calls go through Claude Code on the Mac first. |
+| Phase 5: the agent team | Scoped 2026-11-17, not started. See below. |
 | Apple distribution | Unsigned test builds only. |
 | Usability | Expert walkthrough and an overnight polish pass done 2026-11-17 (`docs/USABILITY.md`). A session with David is next. |
 
@@ -51,8 +52,9 @@ These apply to every phase.
 3. **Read-only before anything that writes or sends.** Drafting features produce text David
    reviews and sends himself.
 4. **Daily-use features before weekly ones.**
-5. **No AI calls until a provider is approved.** Until then, sorting and drafting are
-   rule-based, and any model use will sit behind one interface.
+5. **AI goes through one interface, and only to Claude.** Claude (Anthropic) is the approved
+   provider (David, 2026-11-17). Every model call sits behind one interface; nothing calls a
+   model from a page. Sorting and drafting stay rule-based until a feature is built on it.
 6. **Company data stays on the laptop** unless IT or security has cleared where it goes.
    Tokens go in the Mac Keychain, never in files or the repository.
 7. **Numbers on screen are real.** Invented sample data exists only in the browser preview,
@@ -202,10 +204,54 @@ Done last, by David's decision, and built so that any system can be added.
 2. Removing tickets deleted in the tracker, for live tracker connectors (imports already do).
 3. Tuning the decision-queue rules against real mail.
 
+## Phase 5: the agent team
+
+Asked for 2026-11-17. David runs a product agent team of nine Claude Code subagents: a lead
+that assigns work to eight specialists. He wants one place to see, run and review them.
+
+What David told us:
+
+- The agents are Claude Code subagents (`.claude/agents/*.md` files) kept only on his Mac.
+- They work as a lead plus specialists, not a fixed pipeline.
+- Jobs take a brief and return a document; some need company data; some should recur; all
+  output needs David's sign-off before anyone else sees it.
+- Pressing Run should start Claude Code on his Mac with his existing login, not a new API key.
+- Scheduled jobs may run only while the Mac is awake and the app is open, catching up at the
+  next launch.
+- A separate Agents page, not mixed into the PM Team board.
+- He will name the nine agents at his Mac; the app should read them from the files.
+
+Scope, in build order:
+
+1. **Roster.** Read the agent files from a folder David chooses (default `~/.claude/agents`),
+   one card per agent: name, description, tools, model, the lead marked as lead. The files
+   stay the source of truth; the app re-reads them and never edits them.
+2. **Jobs and runs.** Start a job with a brief, aimed at the lead or one specialist. The app
+   runs Claude Code in its non-interactive mode in the background, records each run (brief,
+   agent, start, finish, status, cost and time where reported, output) and shows progress.
+   A neutral `AgentRun` record, with the Claude Code runner behind one interface, so a
+   Claude API runner can be added later.
+3. **Review queue.** Every finished run waits for David: approve, send back with feedback
+   (which starts a follow-up run), or reject. A per-agent record of how often work is approved
+   first time. Approved output can be copied or saved as a capture.
+4. **Schedules.** Recurring jobs (for example a Monday status summary) that run when due while
+   the app is open and catch up at the next launch.
+5. **Context from the app.** Attach what the app already holds to a brief: tickets and epics,
+   captures, the narrative bank, a stakeholder profile.
+
+Guard rails:
+
+- Agents run read-only by default: no file edits, commands or web posts unless David allows a
+  tool for that agent. Output always lands in the review queue first.
+- Data sent to Claude follows the company's terms for Claude. Customer and patient data is not
+  attached unless IT confirms it is allowed.
+- Running Claude Code means starting another program on the Mac, which the Mac App Store
+  sandbox does not allow. This feature points to the signed, notarized download route.
+
 ## AI features
 
-Not started. Blocked on an approved provider, because any AI summarizing or drafting sends
-email and document content to that provider.
+Claude is approved (2026-11-17). The first model calls will be the agent runs in Phase 5,
+through Claude Code on David's Mac. Once that runner exists, the features below can use it.
 
 Waiting on it: finding promises inside email and meeting notes, better prose in the weekly
 update, the exec translator, objection prep, drafting pre-read sections, and the spec quality
@@ -236,11 +282,12 @@ Each push builds an unsigned Mac app for testing. Still to do:
 
 | Question | Blocks |
 | --- | --- |
-| Which AI provider is approved, and for what data? | All AI features. |
+| Which data may go to Claude (customer or patient data)? | Attaching such data to agent briefs. |
+| The nine agents: names, jobs, and which one is the lead. | Checking the Agents page against reality (read from the files). |
 | Is Atlassian on Cloud or self-hosted, and are personal API tokens allowed? | The tracker and wiki connectors. |
 | Will the Workspace admin approve read-only access to mail and calendar for a personal app? | The mail and calendar connectors. |
 | Has IT or security cleared the design? | Any real company data flowing through the app. |
-| Mac App Store, or a signed download? | Distribution work. |
+| Mac App Store, or a signed download? The agent runner needs the download route. | Distribution work. |
 | What format does the CPO expect for the weekly update? | The weekly update drafter. |
 | How many PMs are there, and how do epics map to each one? | Checking the team board against reality. |
 | What is the offshore team's time zone, working hours, and team name in the tracker? | Handoff settings (can be set in the app). |
