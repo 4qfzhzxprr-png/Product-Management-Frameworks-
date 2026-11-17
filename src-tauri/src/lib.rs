@@ -1,6 +1,8 @@
 //! The native wrapper: menu bar item, global shortcut and windows.
 //! All product logic lives in the web app under `src/`.
 
+mod agents;
+
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::TrayIconBuilder,
@@ -183,8 +185,13 @@ pub fn run() {
             show_capture,
             secret_get,
             secret_set,
-            secret_delete
+            secret_delete,
+            agents::agents_read_dir,
+            agents::agent_find_claude,
+            agents::agent_start,
+            agents::agent_cancel
         ])
+        .manage(agents::Runs::default())
         .setup(|app| {
             build_tray(app.handle())?;
 

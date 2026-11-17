@@ -3,6 +3,7 @@ import {
   BarChart3,
   Handshake,
   Send,
+  Bot,
   Inbox,
   Keyboard,
   Landmark,
@@ -28,6 +29,7 @@ import type { CaptureStore } from "../core/store";
 import { SETUP_SETTINGS, setupSteps, waitingTotal, type SetupSettings } from "../core/setup";
 import type { WorkItem } from "../core/work";
 import { isTauri, notifyDataChanged, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
+import { AgentsPage } from "./AgentsPage";
 import { AnalyticsPage } from "./AnalyticsPage";
 import { BriefPage } from "./BriefPage";
 import { CaptureForm } from "./CaptureForm";
@@ -46,6 +48,7 @@ import { TeamPage } from "./TeamPage";
 import { quote, ToastProvider, useToast } from "./Toast";
 import { message, useStore } from "./useStore";
 import { NavigateContext } from "./navigation";
+import { useAgents } from "./useAgents";
 import { registry, useSync } from "./useSync";
 
 type View =
@@ -60,7 +63,8 @@ type View =
   | "handoff"
   | "analytics"
   | "captures"
-  | "connections";
+  | "connections"
+  | "agents";
 
 interface NavEntry {
   view: View;
@@ -83,6 +87,7 @@ const NAV_GROUPS: { heading: string; entries: NavEntry[] }[] = [
     heading: "Team",
     entries: [
       { view: "team", label: "Team", icon: Users },
+      { view: "agents", label: "Agents", icon: Bot },
       { view: "delivery", label: "Delivery", icon: Truck },
       { view: "handoff", label: "Handoff", icon: Send },
     ],
@@ -210,6 +215,7 @@ function Shell({ store }: { store: CaptureStore }) {
   }, [refresh]);
 
   const sync = useSync(store, refresh);
+  const agents = useAgents(store, () => void refresh());
 
   // Escape leaves the 1:1 workspace, unless a dialog or list is open or a field is being typed in.
   useEffect(() => {
@@ -343,6 +349,11 @@ function Shell({ store }: { store: CaptureStore }) {
                   {target === "queue" && decisions > 0 && (
                     <span className="nav-badge" aria-label={`${decisions} need your decision`}>
                       {decisions}
+                    </span>
+                  )}
+                  {target === "agents" && agents.waiting > 0 && (
+                    <span className="nav-badge" aria-label={`${agents.waiting} agent runs to review`}>
+                      {agents.waiting}
                     </span>
                   )}
                   {target === "captures" && waiting > 0 && (
@@ -516,6 +527,17 @@ function Shell({ store }: { store: CaptureStore }) {
               reports={sync.reports}
               syncNow={sync.syncNow}
               change={change}
+            />
+          )}
+          {loaded && oneOnOne === null && view === "agents" && (
+            <AgentsPage
+              agents={agents}
+              store={store}
+              work={work}
+              captures={captures}
+              people={people}
+              profiles={profiles}
+              now={now}
             />
           )}
           {loaded && oneOnOne === null && view === "analytics" && <AnalyticsPage captures={captures} now={now} />}

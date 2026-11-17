@@ -758,6 +758,7 @@ name = "daily-work"
 version = "0.1.0"
 dependencies = [
  "keyring",
+ "serde",
  "tauri",
  "tauri-build",
  "tauri-plugin-global-shortcut",

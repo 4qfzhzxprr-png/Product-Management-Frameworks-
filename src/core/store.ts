@@ -1,3 +1,4 @@
+import { AGENT_TABLES, AgentStore } from "./agents";
 import type { Db, SqlParam } from "./db";
 import { CalendarStore } from "./calendar";
 import { ConnectionStore } from "./connectors";
@@ -218,6 +219,8 @@ const MIGRATIONS: Step[][] = [
   ],
   // Other names a person goes by in other systems, one per line.
   [addColumn("people", "aliases", "TEXT NOT NULL DEFAULT ''")],
+  // Phase 5: runs of David's agents and their schedules; see agents.ts.
+  AGENT_TABLES,
 ];
 
 interface PersonRow {
@@ -255,6 +258,8 @@ export class CaptureStore {
   readonly leadership: LeadershipStore;
   /** Stakeholder profiles and pre-reads. */
   readonly influence: InfluenceStore;
+  /** Runs of David's agents, and their schedules. */
+  readonly agents: AgentStore;
 
   private constructor(private readonly db: Db) {
     this.items = new ItemStore(db);
@@ -263,6 +268,7 @@ export class CaptureStore {
     this.leadership = new LeadershipStore(db);
     this.influence = new InfluenceStore(db);
     this.calendar = new CalendarStore(db);
+    this.agents = new AgentStore(db);
     this.connections = new ConnectionStore(db, this.items, this.work, this.calendar);
   }
 

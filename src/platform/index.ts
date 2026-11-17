@@ -1,3 +1,4 @@
+import type { AgentFile, AgentRunner } from "../core/agents";
 import { MemorySecretStore, type HttpClient, type SecretStore } from "../core/connectors";
 import type { Db } from "../core/db";
 
@@ -128,6 +129,105 @@ export function platformSecrets(): SecretStore {
     },
     async delete(connectionId) {
       await call("secret_delete", { connectionId });
+    },
+  };
+}
+
+/**
+ * Runs David's agents. The Mac app starts Claude Code through the wrapper; the browser preview
+ * reads invented sample agents and pretends to run them, so the page can be tried anywhere.
+ */
+export function platformAgentRunner(): AgentRunner {
+  return isTauri ? tauriAgentRunner() : previewAgentRunner();
+}
+
+function tauriAgentRunner(): AgentRunner {
+  const call = async <T>(command: string, args: Record<string, unknown>) =>
+    (await import("@tauri-apps/api/core")).invoke<T>(command, args);
+  return {
+    async check(configuredPath) {
+      try {
+        return { ok: true, program: await call<string>("agent_find_claude", { configured: configuredPath }) };
+      } catch (cause) {
+        return { ok: false, reason: String(cause) };
+      }
+    },
+    readFolder: (folder) => call<AgentFile[]>("agents_read_dir", { folder }),
+    async start(request, onLine) {
+      const { listen } = await import("@tauri-apps/api/event");
+      let finish: (value: { code: number | null; stderr: string }) => void = () => {};
+      const finished = new Promise<{ code: number | null; stderr: string }>((resolve) => (finish = resolve));
+      const stopLines = await listen<{ runId: number; line: string }>("agent-line", (event) => {
+        if (event.payload.runId === request.runId) onLine(event.payload.line);
+      });
+      const stopExit = await listen<{ runId: number; code: number | null; stderr: string }>("agent-exit", (event) => {
+        if (event.payload.runId === request.runId) finish({ code: event.payload.code, stderr: event.payload.stderr });
+      });
+      try {
+        await call("agent_start", { ...request });
+        return await finished;
+      } finally {
+        stopLines();
+        stopExit();
+      }
+    },
+    async cancel(runId) {
+      await call("agent_cancel", { runId });
+    },
+  };
+}
+
+function previewAgentRunner(): AgentRunner {
+  const timers = new Map<number, { stop: () => void }>();
+  const blank = new URLSearchParams(window.location.search).has("empty");
+  return {
+    async check() {
+      return { ok: true, program: "claude (preview)" };
+    },
+    async readFolder() {
+      if (blank) return [];
+      const { SAMPLE_AGENT_FILES } = await import("./sampleAgents");
+      return SAMPLE_AGENT_FILES;
+    },
+    async start(request, onLine) {
+      const { sampleOutput } = await import("./sampleAgents");
+      const prompt = request.args[request.args.indexOf("--append-system-prompt") + 1] ?? "";
+      const name = /acting as "([^"]+)"/.exec(prompt)?.[1] ?? "the agent";
+      const lines = [
+        { type: "system", subtype: "init", model: "preview", session_id: `preview-${request.runId}` },
+        { type: "assistant", message: { content: [{ type: "text", text: "Reading the brief and what was attached." }] } },
+        { type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: { file_path: "brief.md" } }] } },
+        { type: "assistant", message: { content: [{ type: "text", text: "Drafting the answer." }] } },
+        {
+          type: "result",
+          subtype: "success",
+          result: sampleOutput(name, request.prompt),
+          total_cost_usd: 0,
+          duration_ms: 1200,
+          session_id: `preview-${request.runId}`,
+        },
+      ];
+      return new Promise((resolve) => {
+        let index = 0;
+        const timer = setInterval(() => {
+          if (index < lines.length) onLine(JSON.stringify(lines[index++]));
+          else {
+            clearInterval(timer);
+            timers.delete(request.runId);
+            resolve({ code: 0, stderr: "" });
+          }
+        }, 300);
+        timers.set(request.runId, {
+          stop: () => {
+            clearInterval(timer);
+            timers.delete(request.runId);
+            resolve({ code: null, stderr: "" });
+          },
+        });
+      });
+    },
+    async cancel(runId) {
+      timers.get(runId)?.stop();
     },
   };
 }
