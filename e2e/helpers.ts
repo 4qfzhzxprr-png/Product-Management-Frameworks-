@@ -27,11 +27,18 @@ export function stat(page: Page, label: string): Locator {
 }
 
 /** Opens quick capture from the sidebar and fills it in. Leaves the dialog open. */
+/** Waits until no dialog is still zooming in, so clicks land where the buttons end up. */
+export async function dialogSettled(page: Page): Promise<void> {
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.locator(".ant-zoom-appear, .ant-zoom-enter, .ant-zoom-appear-active, .ant-zoom-enter-active")).toHaveCount(0);
+}
+
 export async function startCapture(
   page: Page,
   values: { text: string; kind?: string; person?: string; project?: string; due?: string; win?: boolean },
 ): Promise<void> {
   await page.locator(".capture-button").click();
+  await dialogSettled(page);
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Capture text").fill(values.text);
   if (values.kind) await dialog.getByLabel("Kind").selectOption({ label: values.kind });

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { card, go, noSidewaysScroll, open, PAGES, stat } from "./helpers";
+import { card, dialogSettled, go, noSidewaysScroll, open, PAGES, stat } from "./helpers";
 
 // The preview's sample data: a few weeks of captures, synced activity and tickets.
 test.describe("with sample data", () => {
@@ -187,8 +187,10 @@ test.describe("layout and access", () => {
     }
     // Quick capture is reachable and usable at this width.
     await page.getByRole("button", { name: "Quick capture" }).first().click();
+    await dialogSettled(page);
     await page.getByRole("dialog").getByLabel("Capture text").fill("From a phone-width window");
     await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("dialog")).toBeHidden();
     await page.locator(".sidebar nav .nav-item", { hasText: "Captures" }).click();
     await expect(page.locator(".capture", { hasText: "From a phone-width window" })).toBeVisible();
     expect(errors).toEqual([]);
