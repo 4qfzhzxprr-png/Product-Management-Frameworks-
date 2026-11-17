@@ -126,3 +126,37 @@ test("with no agent files, the page says where it looked and leads to settings",
   await expect(page.getByText("There are no agent files in ~/work/product/.claude/agents.")).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("agents can read a copy of the app's data, which David can see and switch off", async ({ page }) => {
+  const errors = await openAgents(page);
+  await tab(page, "Settings");
+  await page.getByRole("button", { name: "See what they can read" }).click();
+  const viewer = page.getByRole("dialog", { name: "What agents can read" });
+  await expect(viewer.locator(".snapshot-view")).toContainText("David's Daily Work app: read-only data");
+  await viewer.getByText("commitments.md", { exact: true }).click();
+  await expect(viewer.locator(".snapshot-view")).toContainText("Confirm the Q1 roadmap themes with the CPO");
+  await page.keyboard.press("Escape");
+
+  // A run by an agent that can read files is told where the copy is.
+  await tab(page, "Team");
+  await runJob(page, "What did I promise Jordan?");
+  await expect(detail(page).locator(".run-state")).toHaveText("Waiting for review", { timeout: 10_000 });
+  await go(page, "Settings");
+  const entry = page.locator(".claude-log li").first();
+  await entry.getByRole("button").first().click();
+  await expect(entry.locator(".log-detail")).toContainText("A read-only copy is in");
+
+  // Switched off, the next run is not.
+  await go(page, "Agents");
+  await tab(page, "Settings");
+  await page.getByRole("switch", { name: "Let agents read the app's data" }).click();
+  await expect(page.locator(".toast")).toContainText("Agents no longer get the app's data");
+  await tab(page, "Team");
+  await runJob(page, "Another question");
+  await expect(detail(page).locator(".run-state")).toHaveText("Waiting for review", { timeout: 10_000 });
+  await go(page, "Settings");
+  const latest = page.locator(".claude-log li").first();
+  await latest.getByRole("button").first().click();
+  await expect(latest.locator(".log-detail")).not.toContainText("A read-only copy is in");
+  expect(errors).toEqual([]);
+});

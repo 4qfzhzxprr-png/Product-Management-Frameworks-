@@ -135,3 +135,26 @@ pub fn apply_pending_restore(config: &Path) {
         eprintln!("Restore failed: {error}");
     }
 }
+
+#[derive(serde::Deserialize)]
+pub struct SnapshotFile {
+    name: String,
+    text: String,
+}
+
+/// Replaces the agent snapshot: the read-only copy of the app's data that agent runs may read.
+/// Lives in the app's own data folder; returns its path.
+#[tauri::command]
+pub fn snapshot_write(app: AppHandle, files: Vec<SnapshotFile>) -> Result<String, String> {
+    let dir = app.path().app_data_dir().map_err(|e| e.to_string())?.join("agent-snapshot");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    for entry in std::fs::read_dir(&dir).map_err(|e| e.to_string())?.flatten() {
+        if entry.path().extension().map(|ext| ext == "md").unwrap_or(false) {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
+    for file in files {
+        std::fs::write(dir.join(safe_name(&file.name)?), file.text).map_err(|e| e.to_string())?;
+    }
+    Ok(dir.display().to_string())
+}

@@ -196,7 +196,8 @@ pub fn run() {
             files::backups_new_path,
             files::backups_prune,
             files::backups_write_text,
-            files::backups_restore
+            files::backups_restore,
+            files::snapshot_write
         ])
         .manage(agents::Runs::default())
         .setup(|app| {

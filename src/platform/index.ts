@@ -273,3 +273,9 @@ export const platformBackups = {
     await (await import("@tauri-apps/api/core")).invoke("backups_restore", { name });
   },
 };
+
+/** Writes the read-only copy of the app's data that agent runs may read; returns its folder. */
+export async function writeAgentSnapshot(files: { name: string; text: string }[]): Promise<string> {
+  if (!isTauri) return "~/Library/Application Support/app.dailywork.desktop/agent-snapshot";
+  return (await import("@tauri-apps/api/core")).invoke<string>("snapshot_write", { files });
+}

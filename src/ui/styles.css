@@ -2833,3 +2833,17 @@ kbd {
   min-width: 0;
   flex: 1 1 180px;
 }
+
+.share-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.snapshot-view {
+  margin-top: 12px;
+  max-height: 60vh;
+  font-size: 12px;
+}

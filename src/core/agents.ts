@@ -176,17 +176,23 @@ export function changingToolsOf(agent: AgentDefinition): string[] {
 
 // ---------- Running ----------
 
-/** The command-line arguments for one run of Claude Code in its non-interactive mode. The brief goes in on standard input. */
-export function claudeArgs(agent: AgentDefinition, switchedOn: string[]): string[] {
+/**
+ * The command-line arguments for one run of Claude Code in its non-interactive mode. The brief
+ * goes in on standard input. With a snapshot folder, an agent that may read files is also let
+ * into that folder and told what is there.
+ */
+export function claudeArgs(agent: AgentDefinition, switchedOn: string[], snapshot?: { folder: string; note: string }): string[] {
   const { allowed, blocked } = toolPolicy(agent, switchedOn);
+  const reads = snapshot && allowed.includes("Read");
   const args = [
     "-p",
     "--output-format",
     "stream-json",
     "--verbose",
     "--append-system-prompt",
-    `You are acting as "${agent.name}", one of David's product agents.\n\n${agent.prompt}`.trim(),
+    [`You are acting as "${agent.name}", one of David's product agents.`, agent.prompt, reads ? snapshot.note : ""].filter(Boolean).join("\n\n").trim(),
   ];
+  if (reads) args.push("--add-dir", snapshot.folder);
   if (allowed.length > 0) args.push("--allowedTools", allowed.join(","));
   if (blocked.length > 0) args.push("--disallowedTools", blocked.join(","));
   if (agent.model) args.push("--model", agent.model);
@@ -536,6 +542,8 @@ export interface AgentSettings {
   leadId: string | null;
   /** Tools that can change things, switched on per agent. */
   switchedOn: Record<string, string[]>;
+  /** Whether agents that can read files may read a copy of the app's data. */
+  shareAppData: boolean;
 }
 
 export function completeAgentSettings(saved: Partial<AgentSettings> | null): AgentSettings {
@@ -545,6 +553,7 @@ export function completeAgentSettings(saved: Partial<AgentSettings> | null): Age
     workFolder: saved?.workFolder || "~",
     leadId: saved?.leadId ?? null,
     switchedOn: saved?.switchedOn ?? {},
+    shareAppData: saved?.shareAppData ?? true,
   };
 }
 

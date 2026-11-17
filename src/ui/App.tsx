@@ -18,7 +18,7 @@ import {
   Truck,
   Users,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalendarEvent } from "../core/calendar";
 import type { Connection } from "../core/connectors";
 import type { Preread, StakeholderProfile } from "../core/influence";
@@ -30,6 +30,7 @@ import type { CaptureStore } from "../core/store";
 import { BACKUP_SETTINGS, completeBackupSettings, isBackupDue, type BackupSettings } from "../core/backup";
 import { SETUP_SETTINGS, setupSteps, waitingTotal, type SetupSettings } from "../core/setup";
 import type { WorkItem } from "../core/work";
+import type { SnapshotData } from "../core/snapshot";
 import { isTauri, notifyDataChanged, platformBackups, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
 import { AgentsPage } from "./AgentsPage";
 import { AnalyticsPage } from "./AnalyticsPage";
@@ -225,7 +226,9 @@ function Shell({ store }: { store: CaptureStore }) {
   }, [refresh]);
 
   const sync = useSync(store, refresh);
-  const agents = useAgents(store, () => void refresh());
+  // What agents may read: the latest data, gathered only when a run starts.
+  const snapshotData = useRef<SnapshotData | null>(null);
+  const agents = useAgents(store, () => void refresh(), () => snapshotData.current!);
 
   // One automatic backup a day, when the app opens. The browser preview saves nothing to back up.
   useEffect(() => {
@@ -281,6 +284,7 @@ function Shell({ store }: { store: CaptureStore }) {
   const tomorrow = dayStart(now, -1);
   const meetings = upcoming.filter((meeting) => meeting.startsAt < tomorrow);
   const roadmap = roadmapStatus(roadmapItems, work, now);
+  snapshotData.current = { captures, people, projects, work, roadmap, priorities, profiles, meetings: upcoming, now };
   const alerts = noSurprises(roadmap);
   const decisions = items.filter((item) => item.bucket === "decision").length;
   const setup = setupSteps({
@@ -559,6 +563,7 @@ function Shell({ store }: { store: CaptureStore }) {
               people={people}
               profiles={profiles}
               now={now}
+              snapshot={() => snapshotData.current!}
             />
           )}
           {loaded && oneOnOne === null && view === "analytics" && <AnalyticsPage captures={captures} now={now} />}

@@ -228,6 +228,11 @@ on its own. Status is kept next to each item.
    Simple rules (`proposeByRules`) work without Claude and drive the browser preview.
 4. **Agents read the app.** Each run gets a read-only snapshot of the app's data in a folder
    Claude Code may read (`--add-dir`), so the lead can look things up mid-task.
+   *Built:* `src/core/snapshot.ts` writes README, commitments, captures, tickets, roadmap,
+   people, wins and calendar files to the app's data folder (`snapshot_write`) before each run
+   of an agent allowed to read files; lines that look like patient or customer details are
+   withheld. On by default; switch and "See what they can read" on the Agents Settings tab.
+   Checked in the Linux build.
 5. **Reminders and the weekly review.** Mac notifications for promises due or slipping, the
    morning brief, the handoff window and agent work to review; a Friday wrap-up page.
 6. **Search and settings.** Command-K finds captures, tickets, people, decisions and agent runs;

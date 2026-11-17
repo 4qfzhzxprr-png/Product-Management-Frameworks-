@@ -1,4 +1,4 @@
-import { Alert, Button, Checkbox, Input, Popconfirm, Segmented, Select, Switch, Tag } from "antd";
+import { Alert, Button, Checkbox, Input, Modal, Popconfirm, Segmented, Select, Switch, Tag } from "antd";
 import { Bot, Copy, Crown, Play, RotateCcw, Square, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { buildAgentContext, CONTEXT_LABELS, type ContextChoice } from "../core/agentContext";
@@ -12,6 +12,7 @@ import {
   type Cadence,
 } from "../core/agents";
 import { stakeholderMap, type StakeholderProfile } from "../core/influence";
+import { buildSnapshot, type SnapshotData, type SnapshotFile } from "../core/snapshot";
 import type { Capture, Person } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import type { WorkItem } from "../core/work";
@@ -58,6 +59,7 @@ export function AgentsPage({
   people,
   profiles,
   now,
+  snapshot,
 }: {
   agents: Agents;
   store: CaptureStore;
@@ -66,6 +68,8 @@ export function AgentsPage({
   people: Person[];
   profiles: StakeholderProfile[];
   now: number;
+  /** The data agents may read, gathered now. */
+  snapshot: () => SnapshotData;
 }) {
   const [tab, setTab] = useState<Tab>("team");
   const [openRun, setOpenRun] = useState<number | null>(null);
@@ -145,7 +149,7 @@ export function AgentsPage({
       )}
       {tab === "runs" && <RunsTab team={team} store={store} openRun={openRun} onOpen={setOpenRun} />}
       {tab === "schedules" && <SchedulesTab team={team} store={store} now={now} onOpenRun={openRunPage} />}
-      {tab === "settings" && <SettingsTab team={team} />}
+      {tab === "settings" && <SettingsTab team={team} snapshot={snapshot} />}
     </div>
   );
 }
@@ -888,8 +892,10 @@ function SchedulesTab({ team, store, now, onOpenRun }: { team: Agents; store: Ca
 
 // ---------- Settings ----------
 
-function SettingsTab({ team }: { team: Agents }) {
+function SettingsTab({ team, snapshot }: { team: Agents; snapshot: () => SnapshotData }) {
   const toast = useToast();
+  const [viewing, setViewing] = useState<SnapshotFile[] | null>(null);
+  const [file, setFile] = useState("README.md");
   const [values, setValues] = useState(team.settings);
   const [saving, setSaving] = useState(false);
   const changed =
@@ -928,6 +934,33 @@ function SettingsTab({ team }: { team: Agents }) {
               : team.claude.reason}
         </span>
       </label>
+      <div className="field share-data">
+        <span className="share-row">
+          <Switch
+            checked={team.settings.shareAppData}
+            aria-label="Let agents read the app's data"
+            onChange={(shareAppData) =>
+              void team.saveSettings({ ...team.settings, shareAppData }).then(() =>
+                toast({ text: shareAppData ? "Agents can read the app's data" : "Agents no longer get the app's data" }),
+              )
+            }
+          />
+          <span>Let agents read the app's data</span>
+          <Button size="small" type="link" onClick={() => setViewing(buildSnapshot(snapshot()))}>
+            See what they can read
+          </Button>
+        </span>
+        <span className="muted small">
+          Before each run, a read-only copy of your commitments, captures, tickets, roadmap, people, wins and meetings is
+          written for agents that can read files. Lines that look like patient or customer details are withheld.
+        </span>
+      </div>
+      {viewing && (
+        <Modal open title="What agents can read" width={820} footer={null} onCancel={() => setViewing(null)}>
+          <Segmented<string> aria-label="File" value={file} onChange={setFile} options={viewing.map((entry) => entry.name)} />
+          <div className="run-output snapshot-view">{viewing.find((entry) => entry.name === file)?.text ?? ""}</div>
+        </Modal>
+      )}
       <Alert
         type="info"
         showIcon

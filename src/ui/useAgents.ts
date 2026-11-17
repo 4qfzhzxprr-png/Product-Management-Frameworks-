@@ -8,6 +8,7 @@ import {
   isDue,
   parseStreamLine,
   readTeam,
+  toolPolicy,
   type AgentDefinition,
   type AgentFileProblem,
   type AgentRun,
@@ -18,7 +19,8 @@ import {
 } from "../core/agents";
 import { askClaude, findSensitive, SensitiveDataError, type Purpose } from "../core/claude";
 import type { CaptureStore } from "../core/store";
-import { platformAgentRunner } from "../platform";
+import { platformAgentRunner, writeAgentSnapshot } from "../platform";
+import { buildSnapshot, snapshotNote, type SnapshotData } from "../core/snapshot";
 import { message } from "./useStore";
 
 const runner = platformAgentRunner();
@@ -71,7 +73,7 @@ export interface Agents {
  * The agent team, its runs and its schedules. Used once, in the main window, so runs keep
  * going while David moves between pages and schedules are checked in one place only.
  */
-export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
+export function useAgents(store: CaptureStore, onChanged: () => void, snapshotSource?: () => SnapshotData): Agents {
   const [settings, setSettings] = useState<AgentSettings>(completeAgentSettings(null));
   const [team, setTeam] = useState<{ agents: AgentDefinition[]; problems: AgentFileProblem[] }>({ agents: [], problems: [] });
   const [folderError, setFolderError] = useState<string | null>(null);
@@ -84,6 +86,8 @@ export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
   // The app passes a new callback each render; keep the latest without re-creating everything.
   const onChangedRef = useRef(onChanged);
   onChangedRef.current = onChanged;
+  const snapshotRef = useRef(snapshotSource);
+  snapshotRef.current = snapshotSource;
   // Stops two schedule checks from overlapping and starting the same job twice.
   const checking = useRef(false);
   const latest = useRef({ settings, agents: team.agents, schedules });
@@ -145,7 +149,21 @@ export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
         parentId: request.parentId ?? null,
         scheduleId: request.scheduleId ?? null,
       });
-      const logId = await store.claudeLog.add({ purpose: "agent", agentName: agent.name, runId, system: agent.prompt, prompt, warnings: findings });
+      // A fresh read-only copy of the app's data, for agents that may read files.
+      let snapshot: { folder: string; note: string } | undefined;
+      if (current.shareAppData && snapshotRef.current && toolPolicy(agent, current.switchedOn[agent.id] ?? []).allowed.includes("Read")) {
+        const folder = await writeAgentSnapshot(buildSnapshot(snapshotRef.current()));
+        snapshot = { folder, note: snapshotNote(folder) };
+      }
+      const args = claudeArgs(agent, current.switchedOn[agent.id] ?? [], snapshot);
+      const logId = await store.claudeLog.add({
+        purpose: "agent",
+        agentName: agent.name,
+        runId,
+        system: args[args.indexOf("--append-system-prompt") + 1],
+        prompt,
+        warnings: findings,
+      });
       setLive((now) => ({ ...now, [runId]: [] }));
       await changed();
 
@@ -158,7 +176,7 @@ export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
             {
               runId,
               program: check.program,
-              args: claudeArgs(agent, current.switchedOn[agent.id] ?? []),
+              args,
               prompt,
               cwd: current.workFolder,
             },
