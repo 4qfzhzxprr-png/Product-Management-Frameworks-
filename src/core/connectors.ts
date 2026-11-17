@@ -1,3 +1,4 @@
+import type { CalendarEventRecord, CalendarStore } from "./calendar";
 import type { Db } from "./db";
 import type { ItemStore } from "./itemStore";
 import type { Activity } from "./items";
@@ -53,6 +54,8 @@ export interface SyncResult {
   activities: Activity[];
   /** Tickets and epics, for connectors that read an issue tracker. */
   work?: WorkRecord[];
+  /** Meetings, for connectors that read a calendar. Replaces everything the connection had. */
+  events?: CalendarEventRecord[];
   /** Where to resume next time: a timestamp, a page token, anything. Omit to keep the old one. */
   cursor?: string | null;
 }
@@ -139,6 +142,7 @@ export class ConnectionStore {
     private readonly db: Db,
     private readonly items: ItemStore,
     private readonly work: WorkStore,
+    private readonly calendar: CalendarStore,
   ) {}
 
   async list(): Promise<Connection[]> {
@@ -182,6 +186,7 @@ export class ConnectionStore {
   async remove(id: number): Promise<void> {
     await this.items.deleteSource(sourceOf(id));
     await this.work.deleteSource(sourceOf(id));
+    await this.calendar.deleteSource(sourceOf(id));
     await this.db.run("DELETE FROM connections WHERE id = ?", [id]);
   }
 }
@@ -221,6 +226,7 @@ export async function syncAll(deps: {
   connections: ConnectionStore;
   items: ItemStore;
   work: WorkStore;
+  calendar: CalendarStore;
   secrets: SecretStore;
   http: HttpClient;
   now?: () => number;
@@ -253,8 +259,12 @@ export async function syncAll(deps: {
         for (const record of result.work ?? []) {
           await deps.work.upsert({ ...record, source: sourceOf(connection.id), sourceName: connection.name });
         }
+        if (result.events) {
+          await deps.calendar.replaceSource(sourceOf(connection.id), connection.name, result.events);
+        }
         await deps.connections.recordSync(connection.id, now(), { cursor: result.cursor });
-        return { connection, received: result.activities.length, error: null };
+        const received = result.activities.length + (result.work?.length ?? 0) + (result.events?.length ?? 0);
+        return { connection, received, error: null };
       } catch (cause) {
         const error = cause instanceof Error ? cause.message : String(cause);
         await deps.connections.recordSync(connection.id, now(), { error });

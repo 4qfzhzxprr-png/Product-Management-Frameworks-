@@ -1131,6 +1131,38 @@ button.item-title:hover {
   font-weight: 600;
 }
 
+/* Connections */
+
+.connect-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 640px;
+}
+
+.connector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.connector-list li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--inset);
+}
+
+.connector-list li > div {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Handoff */
 
 .handoff-grid {

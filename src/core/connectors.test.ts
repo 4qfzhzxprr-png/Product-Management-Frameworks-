@@ -40,6 +40,7 @@ async function setup(...connectors: Connector[]) {
       connections: store.connections,
       items: store.items,
       work: store.work,
+      calendar: store.calendar,
       secrets,
       http: noHttp,
       now: () => now,

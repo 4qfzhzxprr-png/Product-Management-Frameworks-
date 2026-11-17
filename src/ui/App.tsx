@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Megaphone,
+  Plug,
   NotebookPen,
   Plus,
   Sunrise,
@@ -15,7 +16,10 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import type { CalendarEvent } from "../core/calendar";
+import type { Connection } from "../core/connectors";
 import type { Preread, StakeholderProfile } from "../core/influence";
+import { dayStart } from "../core/insights";
 import type { Bucket, SourceItem } from "../core/items";
 import { noSurprises, roadmapStatus, type Priority, type RoadmapItem } from "../core/leadership";
 import type { Capture, CaptureKind, Person, Project } from "../core/models";
@@ -27,6 +31,7 @@ import { BriefPage } from "./BriefPage";
 import { CaptureForm } from "./CaptureForm";
 import { CapturesPage, type Selection } from "./CapturesPage";
 import { CommitmentsPage } from "./CommitmentsPage";
+import { ConnectionsPage } from "./ConnectionsPage";
 import { DeliveryPage } from "./DeliveryPage";
 import { HandoffPage } from "./HandoffPage";
 import { InfluencePage } from "./InfluencePage";
@@ -36,6 +41,7 @@ import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
 import { message, useStore } from "./useStore";
+import { useSync } from "./useSync";
 
 type View =
   | "overview"
@@ -44,7 +50,12 @@ type View =
   | "team"
   | "leadership"
   | "influence"
-  | "commitments" | "delivery" | "handoff" | "analytics" | "captures";
+  | "commitments"
+  | "delivery"
+  | "handoff"
+  | "analytics"
+  | "captures"
+  | "connections";
 
 const NAV = [
   { view: "overview", label: "Overview", icon: LayoutDashboard },
@@ -58,6 +69,7 @@ const NAV = [
   { view: "handoff", label: "Handoff", icon: Send },
   { view: "analytics", label: "Analytics", icon: BarChart3 },
   { view: "captures", label: "Captures", icon: NotebookPen },
+  { view: "connections", label: "Connections", icon: Plug },
 ] as const;
 
 export function App() {
@@ -83,6 +95,9 @@ function Shell({ store }: { store: CaptureStore }) {
   const [roadmapItems, setRoadmapItems] = useState<RoadmapItem[]>([]);
   const [profiles, setProfiles] = useState<StakeholderProfile[]>([]);
   const [prereads, setPrereads] = useState<Preread[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  // Today's meetings from connected calendars.
+  const [meetings, setMeetings] = useState<CalendarEvent[]>([]);
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -110,6 +125,8 @@ function Shell({ store }: { store: CaptureStore }) {
         loadedRoadmap,
         loadedProfiles,
         loadedPrereads,
+        loadedConnections,
+        loadedMeetings,
       ] =
         await Promise.all([
         store.people(),
@@ -122,6 +139,8 @@ function Shell({ store }: { store: CaptureStore }) {
         store.leadership.roadmap(),
         store.influence.stakeholders(),
         store.influence.prereads(),
+        store.connections.list(),
+        store.calendar.between(dayStart(Date.now()), dayStart(Date.now(), -1)),
       ]);
       const openItems = allItems;
       setItems(openItems);
@@ -130,6 +149,8 @@ function Shell({ store }: { store: CaptureStore }) {
       setRoadmapItems(loadedRoadmap);
       setProfiles(loadedProfiles);
       setPrereads(loadedPrereads);
+      setConnections(loadedConnections);
+      setMeetings(loadedMeetings);
       setConnected(await store.items.hasAny());
       setPeople(loadedPeople);
       setProjects(loadedProjects);
@@ -148,6 +169,8 @@ function Shell({ store }: { store: CaptureStore }) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const sync = useSync(store, refresh);
 
   // The capture window saves on its own, then tells this window.
   useEffect(() => onDataChanged(() => void refresh()), [refresh]);
@@ -346,7 +369,21 @@ function Shell({ store }: { store: CaptureStore }) {
           />
         )}
         {loaded && oneOnOne === null && view === "delivery" && <DeliveryPage work={work} now={now} />}
-        {loaded && oneOnOne === null && view === "handoff" && <HandoffPage store={store} work={work} captures={captures} now={now} />}
+        {loaded && oneOnOne === null && view === "handoff" && (
+          <HandoffPage store={store} work={work} captures={captures} meetings={meetings} now={now} />
+        )}
+        {loaded && oneOnOne === null && view === "connections" && (
+          <ConnectionsPage
+            store={store}
+            connections={connections}
+            now={now}
+            syncing={sync.syncing}
+            lastRun={sync.lastRun}
+            reports={sync.reports}
+            syncNow={sync.syncNow}
+            change={change}
+          />
+        )}
         {loaded && oneOnOne === null && view === "analytics" && <AnalyticsPage captures={captures} now={now} />}
         {loaded && oneOnOne === null && view === "captures" && (
           <CapturesPage

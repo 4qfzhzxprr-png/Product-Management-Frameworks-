@@ -52,11 +52,17 @@ when a feature is built, a decision is made or scope changes.
   connector and nothing else. When a feature needs a new kind of record (tickets, epics,
   sprints, calendar events), add another neutral record type beside `Activity`; do not reach
   into a specific system from a page.
-- Secret fields go through `SecretStore` (Keychain in the Mac app; not built yet), never the
-  database. Web requests go through the injected `HttpClient`.
-- Not built yet: any real connector, the Keychain-backed `SecretStore`, the `HttpClient` for
-  the Mac app (webview `fetch` will hit CORS; use a Tauri HTTP plugin), the screen for adding
-  a connection, and the sync timer.
+- Secret fields go through `SecretStore`, never the database: the Mac Keychain via the
+  `secret_get/set/delete` commands in `src-tauri/src/lib.rs` (in memory on Linux test runs).
+  Web requests go through the injected `HttpClient`: `tauri-plugin-http` with native TLS in
+  the app (so company inspection certificates are trusted), `window.fetch` in the preview.
+- Connectors live in `src/core/connectors/`, one file each, registered in
+  `src/core/connectors/index.ts`. The first is `ical.ts` (any .ics calendar feed), which
+  reports neutral `CalendarEventRecord`s (`src/core/calendar.ts`).
+- `src/ui/useSync.ts` syncs on launch, every 15 minutes and on demand, in the main window only.
+  The Connections page (`src/ui/ConnectionsPage.tsx`) adds, pauses and removes connections.
+- In cloud sessions the wrapper's requests only reach hosts the sandbox allows; the npm
+  registry is reachable and makes a quick "fetches but is not a calendar" check.
 
 ## Where things stand (2026-11-16)
 
@@ -86,8 +92,9 @@ when a feature is built, a decision is made or scope changes.
   and the app, add aliases to people rather than special-casing a tracker.
 - A ticket deleted in the tracker stays in `work_items` until its connection is removed.
   Handle that when the first tracker connector is written.
-- Nothing writes activity or tickets except the browser preview's sample data, so in the Mac
-  app the brief, queue and delivery pages say nothing is connected.
+- Only calendars can be connected so far. Nothing writes activity or tickets except the
+  browser preview's sample data, so in the Mac app the brief, queue and delivery pages say
+  nothing is connected.
 - The sorting rules in `classify()` were written without seeing real mail. Expect to tune them
   once a connector delivers real items.
 - Still open with David: the approved AI vendor, and what "distribution through Apple" means

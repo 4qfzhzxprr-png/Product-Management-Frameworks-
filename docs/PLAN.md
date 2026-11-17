@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-16 (Phase 4 built).
+Last updated 2026-11-17 (connections and the calendar feed built).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -31,7 +31,7 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Phase 2: team and delivery | Built, apart from the parts that need connectors or AI. |
 | Phase 3: the CPO | Built, apart from the parts that need connectors or AI. |
 | Phase 4: C-suite influence | Built, apart from the three features that need AI. |
-| Connecting to other systems | Framework built and tested. No real connector yet. |
+| Connecting to other systems | Plumbing, Connections screen and the first connector (any calendar feed) built. |
 | AI features | Not started. Waiting on an approved provider. |
 | Apple distribution | Unsigned test builds only. |
 
@@ -160,24 +160,34 @@ Done last, by David's decision, and built so that any system can be added.
 - One connector contract: an adapter per kind of system declares the fields a user fills in
   and has a single read-only sync.
 - Neutral records that every page reads: activity (email, comments, mentions, review
-  requests) and work items (tickets and epics).
+  requests), work items (tickets and epics) and calendar events.
 - Several connections per connector, each with its own name, last sync time and last error.
 - A sync that runs every connection independently, so one failure never blocks the rest.
-- Secrets kept apart from the database.
+  It runs when the app opens, every 15 minutes, and on "Sync now".
+- Secrets (tokens, passwords, secret addresses) in the Mac Keychain, never in the database.
+- Requests sent from the native side using the Mac's own TLS, so they trust what the Mac
+  trusts, including certificates a company network adds to inspect traffic.
+- A Connections screen: add a connection from any installed connector, see each one's last
+  sync and error in plain words, pause, sync now, and remove (which deletes what it brought
+  in and its Keychain entry). It reminds David to clear company data with IT first.
+- **Calendar feed connector.** Reads any calendar that can publish an iCalendar (.ics)
+  address: Google Calendar's secret address, a published Outlook or Apple calendar, and
+  others. Keeps meetings from a week back to 30 days ahead, expands repeating meetings
+  (daily, weekly on chosen days, monthly, yearly) across clock changes, and handles
+  exceptions, moved occurrences, cancellations and Outlook's time zone names. Monthly rules
+  like "the second Tuesday" show only their first meeting for now.
+- The handoff window now lists today's meetings and how much shared time is left after them.
 
 **To build**
 
-1. A Keychain-backed secret store.
-2. A request layer for the Mac app (the web view cannot call other sites directly).
-3. A screen to add, pause and remove connections, showing each one's status.
-4. A sync timer, and sync on launch.
-5. The first connectors. Expected: a mail connector, a calendar connector, an issue tracker
-   connector and a wiki connector. Which products they target depends on the open questions
-   below.
-6. A neutral calendar record, so the handoff window and meeting features can see meetings.
-7. Name aliases on people, for matching epic owners.
-8. Removing tickets that were deleted in the tracker.
-9. Tuning the decision-queue rules against real mail.
+1. More connectors. Each is one file in `src/core/connectors/` and one line in the registry.
+   Expected next: an issue tracker (the most pages depend on it), mail, and a wiki. Which
+   products they target depends on the open questions below.
+2. Name aliases on people, for matching epic owners.
+3. Removing tickets that were deleted in the tracker.
+4. Tuning the decision-queue rules against real mail.
+5. Using meetings elsewhere: 1:1 prep could find the next 1:1, and the brief could list
+   today's meetings.
 
 ## AI features
 

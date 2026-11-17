@@ -64,6 +64,84 @@ fn show_capture(app: AppHandle) {
     open_capture(&app);
 }
 
+/// Secrets for connections (tokens, passwords), one Keychain entry per connection.
+/// The app stores them as a JSON string; this layer only moves the string in and out.
+mod secrets {
+    const SERVICE: &str = "app.dailywork.desktop";
+
+    fn account(connection_id: u32) -> String {
+        format!("connection-{connection_id}")
+    }
+
+    #[cfg(target_os = "macos")]
+    pub fn get(connection_id: u32) -> Result<Option<String>, String> {
+        let entry = keyring::Entry::new(SERVICE, &account(connection_id)).map_err(|e| e.to_string())?;
+        match entry.get_password() {
+            Ok(value) => Ok(Some(value)),
+            Err(keyring::Error::NoEntry) => Ok(None),
+            Err(error) => Err(error.to_string()),
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    pub fn set(connection_id: u32, value: &str) -> Result<(), String> {
+        let entry = keyring::Entry::new(SERVICE, &account(connection_id)).map_err(|e| e.to_string())?;
+        entry.set_password(value).map_err(|e| e.to_string())
+    }
+
+    #[cfg(target_os = "macos")]
+    pub fn delete(connection_id: u32) -> Result<(), String> {
+        let entry = keyring::Entry::new(SERVICE, &account(connection_id)).map_err(|e| e.to_string())?;
+        match entry.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+            Err(error) => Err(error.to_string()),
+        }
+    }
+
+    // The app ships for macOS only. Elsewhere (Linux test runs) secrets live in memory for
+    // the session and are never written anywhere.
+    #[cfg(not(target_os = "macos"))]
+    static MEMORY: std::sync::Mutex<Option<std::collections::HashMap<String, String>>> =
+        std::sync::Mutex::new(None);
+
+    #[cfg(not(target_os = "macos"))]
+    pub fn get(connection_id: u32) -> Result<Option<String>, String> {
+        let memory = MEMORY.lock().map_err(|e| e.to_string())?;
+        Ok(memory.as_ref().and_then(|map| map.get(&account(connection_id)).cloned()))
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    pub fn set(connection_id: u32, value: &str) -> Result<(), String> {
+        let mut memory = MEMORY.lock().map_err(|e| e.to_string())?;
+        memory.get_or_insert_with(Default::default).insert(account(connection_id), value.to_string());
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    pub fn delete(connection_id: u32) -> Result<(), String> {
+        let mut memory = MEMORY.lock().map_err(|e| e.to_string())?;
+        if let Some(map) = memory.as_mut() {
+            map.remove(&account(connection_id));
+        }
+        Ok(())
+    }
+}
+
+#[tauri::command]
+fn secret_get(connection_id: u32) -> Result<Option<String>, String> {
+    secrets::get(connection_id)
+}
+
+#[tauri::command]
+fn secret_set(connection_id: u32, value: String) -> Result<(), String> {
+    secrets::set(connection_id, &value)
+}
+
+#[tauri::command]
+fn secret_delete(connection_id: u32) -> Result<(), String> {
+    secrets::delete(connection_id)
+}
+
 fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let capture = MenuItem::with_id(app, "capture", "Quick Capture", true, None::<&str>)?;
     let open = MenuItem::with_id(app, "open", "Open Daily Work", true, None::<&str>)?;
@@ -90,6 +168,7 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_http::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, _shortcut, event| {
@@ -99,7 +178,13 @@ pub fn run() {
                 })
                 .build(),
         )
-        .invoke_handler(tauri::generate_handler![set_waiting_count, show_capture])
+        .invoke_handler(tauri::generate_handler![
+            set_waiting_count,
+            show_capture,
+            secret_get,
+            secret_set,
+            secret_delete
+        ])
         .setup(|app| {
             build_tray(app.handle())?;
 

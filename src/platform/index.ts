@@ -1,3 +1,4 @@
+import { MemorySecretStore, type HttpClient, type SecretStore } from "../core/connectors";
 import type { Db } from "../core/db";
 
 /** True inside the native wrapper; false in a plain browser tab (preview). */
@@ -88,5 +89,45 @@ function subscribe(event: string, callback: () => void): () => void {
   return () => {
     cancelled = true;
     unlisten?.();
+  };
+}
+
+/**
+ * Makes web requests for connectors. The Mac app sends them from the native side, which
+ * avoids the browser's cross-site limits; the browser preview uses ordinary fetch.
+ */
+export function platformHttp(): HttpClient {
+  return async (url, init = {}) => {
+    const request = { method: init.method ?? "GET", headers: init.headers, body: init.body };
+    const response = isTauri
+      ? await (await import("@tauri-apps/plugin-http")).fetch(url, request)
+      : await window.fetch(url, request);
+    return { status: response.status, text: () => response.text() };
+  };
+}
+
+let previewSecrets: SecretStore | null = null;
+
+/** Where connection secrets live: the Mac Keychain, or memory in the browser preview. */
+export function platformSecrets(): SecretStore {
+  if (!isTauri) return (previewSecrets ??= new MemorySecretStore());
+  const call = async <T>(command: string, args: Record<string, unknown>) =>
+    (await import("@tauri-apps/api/core")).invoke<T>(command, args);
+  return {
+    async get(connectionId) {
+      const value = await call<string | null>("secret_get", { connectionId });
+      if (!value) return {};
+      try {
+        return JSON.parse(value) as Record<string, string>;
+      } catch {
+        return {};
+      }
+    },
+    async set(connectionId, secrets) {
+      await call("secret_set", { connectionId, value: JSON.stringify(secrets) });
+    },
+    async delete(connectionId) {
+      await call("secret_delete", { connectionId });
+    },
   };
 }

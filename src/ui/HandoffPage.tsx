@@ -8,6 +8,7 @@ import {
   overlap,
   type HandoffSettings,
 } from "../core/handoff";
+import { freeSlots, type CalendarEvent } from "../core/calendar";
 import type { Capture } from "../core/models";
 import type { CaptureStore } from "../core/store";
 import type { WorkItem } from "../core/work";
@@ -53,11 +54,14 @@ export function HandoffPage({
   store,
   work,
   captures,
+  meetings,
   now,
 }: {
   store: CaptureStore;
   work: WorkItem[];
   captures: Capture[];
+  /** Today's meetings from connected calendars. */
+  meetings: CalendarEvent[];
   now: number;
 }) {
   const myZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -137,7 +141,44 @@ export function HandoffPage({
                   <dt>They start next</dt>
                   <dd>{timeIn(settings.myZone, hours.offshoreStartsAt)} your time</dd>
                 </div>
+                {hours.window && meetings.length > 0 && (
+                  <div>
+                    <dt>Free shared time, after your meetings</dt>
+                    <dd>
+                      {(() => {
+                        const free = freeSlots(hours.window, meetings);
+                        const total = free.reduce((sum, [start, end]) => sum + end - start, 0);
+                        return total === 0
+                          ? "None: meetings fill the shared hours."
+                          : `${duration(total)}: ${free
+                              .map(([start, end]) => `${timeIn(settings.myZone, start)} to ${timeIn(settings.myZone, end)}`)
+                              .join(", ")}`;
+                      })()}
+                    </dd>
+                  </div>
+                )}
               </dl>
+            )}
+
+            {meetings.length > 0 && (
+              <div className="pm-section">
+                <h3>Your meetings today</h3>
+                <ul className="workspace-list">
+                  {meetings.map((meeting) => (
+                    <li key={meeting.id}>
+                      <div>
+                        <p>{meeting.title}</p>
+                        <p className="muted small">
+                          {meeting.allDay
+                            ? "All day"
+                            : `${timeIn(settings.myZone, meeting.startsAt)} to ${timeIn(settings.myZone, meeting.endsAt)}`}
+                          {meeting.location ? ` · ${meeting.location}` : ""}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             <div className="pm-section">

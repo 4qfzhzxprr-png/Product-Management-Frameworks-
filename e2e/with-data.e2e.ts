@@ -187,6 +187,7 @@ test.describe("layout and access", () => {
     await page.getByRole("button", { name: "Quick capture" }).first().click();
     await page.getByRole("dialog").getByLabel("Capture text").fill("From a phone-width window");
     await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+    await page.locator(".sidebar nav .nav-item", { hasText: "Captures" }).click();
     await expect(page.locator(".capture", { hasText: "From a phone-width window" })).toBeVisible();
     expect(errors).toEqual([]);
   });

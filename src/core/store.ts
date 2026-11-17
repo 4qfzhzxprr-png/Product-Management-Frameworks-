@@ -1,4 +1,5 @@
 import type { Db, SqlParam } from "./db";
+import { CalendarStore } from "./calendar";
 import { ConnectionStore } from "./connectors";
 import { SettingsStore } from "./handoff";
 import { ItemStore } from "./itemStore";
@@ -199,6 +200,22 @@ const MIGRATIONS: Step[][] = [
        updated_at INTEGER NOT NULL
      )`,
   ],
+  // Meetings from any calendar; see calendar.ts.
+  [
+    `CREATE TABLE IF NOT EXISTS calendar_events (
+       id INTEGER PRIMARY KEY,
+       source TEXT NOT NULL,
+       source_name TEXT NOT NULL DEFAULT '',
+       external_id TEXT NOT NULL,
+       title TEXT NOT NULL,
+       starts_at INTEGER NOT NULL,
+       ends_at INTEGER NOT NULL,
+       all_day INTEGER NOT NULL DEFAULT 0,
+       location TEXT NOT NULL DEFAULT '',
+       url TEXT NOT NULL DEFAULT ''
+     )`,
+    `CREATE INDEX IF NOT EXISTS calendar_events_start ON calendar_events(starts_at)`,
+  ],
 ];
 
 interface PersonRow {
@@ -228,6 +245,8 @@ export class CaptureStore {
 
   /** Tickets and epics synced from issue trackers. */
   readonly work: WorkStore;
+  /** Meetings synced from calendars. */
+  readonly calendar: CalendarStore;
   readonly settings: SettingsStore;
   /** The CPO's priorities and the roadmap given to leadership. */
   readonly leadership: LeadershipStore;
@@ -240,7 +259,8 @@ export class CaptureStore {
     this.settings = new SettingsStore(db);
     this.leadership = new LeadershipStore(db);
     this.influence = new InfluenceStore(db);
-    this.connections = new ConnectionStore(db, this.items, this.work);
+    this.calendar = new CalendarStore(db);
+    this.connections = new ConnectionStore(db, this.items, this.work, this.calendar);
   }
 
   /**
