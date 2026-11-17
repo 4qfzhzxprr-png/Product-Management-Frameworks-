@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-17 (usability test: setup steps, grouped sidebar, one waiting count).
+Last updated 2026-11-17 (UI and interaction polish: undo, confirmations, empty-state actions, shortcuts).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -34,7 +34,7 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Connecting to other systems | Plumbing and Connections screen built; calendars connect, and tickets import from any tracker's CSV export. |
 | AI features | Not started. Waiting on an approved provider. |
 | Apple distribution | Unsigned test builds only. |
-| Usability | Expert walkthrough done 2026-11-17 (`docs/USABILITY.md`); three fixes made. A session with David is next. |
+| Usability | Expert walkthrough and an overnight polish pass done 2026-11-17 (`docs/USABILITY.md`). A session with David is next. |
 
 Nothing has been run on a Mac yet. Everything below marked "built" has passed automated
 tests in a browser and, for the wrapper, on Linux under a virtual display.

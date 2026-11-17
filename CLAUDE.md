@@ -97,6 +97,11 @@ when a feature is built, a decision is made or scope changes.
   (Today, Team, Upward, Setup) and must fit without scrolling at 1240 by 860; the Overview shows
   a dismissible "Get set up" strip worked out in `src/core/setup.ts`; and the Overview's total
   waiting count is the menu bar's (`waitingTotal`: open captures plus items needing a decision).
+- Interaction conventions (2026-11-17 polish): frequent actions (done, clear, move, delete a
+  capture, save a capture) run at once and show an Undo toast (`useToast` in `src/ui/Toast.tsx`,
+  Command-Z too); lasting deletes of set-up data (people, projects, roadmap, priorities,
+  pre-reads, stakeholders) ask first with a Popconfirm. Empty states link to where their data
+  comes from via `useNavigate` (`src/ui/navigation.ts`). "?" opens the shortcuts list.
 - The morning brief must fit one screen at the smallest normal window (1240 by 860): today's
   meetings are a one-line strip, previews are one line, and the overnight list shows four.
 - A ticket deleted in the tracker stays in `work_items` until its connection is removed.
