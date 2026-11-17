@@ -3061,3 +3061,90 @@ kbd {
     grid-template-columns: 1fr;
   }
 }
+
+/* Decision register and metrics */
+
+.decision-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.decision {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--inset);
+  border: 1px solid var(--line);
+}
+
+.decision.due {
+  border-color: var(--gold);
+  box-shadow: inset 4px 0 0 var(--gold);
+}
+
+.decision-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.decision-head .alert-title {
+  flex: 1;
+}
+
+.decision-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.decision-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.decision-meta .ant-input {
+  max-width: 220px;
+}
+
+.revisit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metric-form {
+  align-items: flex-end;
+}
+
+.metric-form .field {
+  min-width: 110px;
+}
+
+.metric-form .field:first-child {
+  min-width: 200px;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metric-value .stat-value {
+  font-size: 34px;
+}

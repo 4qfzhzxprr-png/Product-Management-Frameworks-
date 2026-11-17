@@ -1,6 +1,8 @@
 import { AGENT_TABLES, AgentStore } from "./agents";
 import { CLAUDE_LOG_TABLES, ClaudeLog } from "./claude";
 import { LEADING_TABLES, TimeOffStore } from "./leading";
+import { DECISION_TABLES, DecisionStore } from "./decisions";
+import { METRIC_TABLES, MetricStore } from "./metrics";
 import type { Db, SqlParam } from "./db";
 import { CalendarStore } from "./calendar";
 import { ConnectionStore } from "./connectors";
@@ -227,6 +229,8 @@ const MIGRATIONS: Step[][] = [
   CLAUDE_LOG_TABLES,
   // Phase 6: time off for people and teams; see leading.ts.
   LEADING_TABLES,
+  // Phase 6: the decision register and metric targets; see decisions.ts and metrics.ts.
+  [...DECISION_TABLES, ...METRIC_TABLES],
 ];
 
 interface PersonRow {
@@ -270,6 +274,10 @@ export class CaptureStore {
   readonly claudeLog: ClaudeLog;
   /** Time off for people and whole teams. */
   readonly timeOff: TimeOffStore;
+  /** Why decisions were made, and whether they stand. */
+  readonly decisions: DecisionStore;
+  /** Metrics with targets and history. */
+  readonly metrics: MetricStore;
 
   /** The open database, for backups and exports. */
   get database(): Db {
@@ -286,6 +294,8 @@ export class CaptureStore {
     this.agents = new AgentStore(db);
     this.claudeLog = new ClaudeLog(db);
     this.timeOff = new TimeOffStore(db);
+    this.decisions = new DecisionStore(db);
+    this.metrics = new MetricStore(db);
     this.connections = new ConnectionStore(db, this.items, this.work, this.calendar);
   }
 
@@ -442,6 +452,7 @@ export class CaptureStore {
   }
 
   async deleteCapture(id: number): Promise<void> {
+    await this.db.run("DELETE FROM decision_details WHERE capture_id = ?", [id]);
     await this.db.run("DELETE FROM captures WHERE id = ?", [id]);
   }
 

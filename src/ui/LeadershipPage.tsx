@@ -27,11 +27,12 @@ import { personCard } from "../core/team";
 import { epicHealth, HEALTH_LABELS, type EpicHealth, type WorkItem } from "../core/work";
 import { openExternal } from "../platform";
 import { useNavigate } from "./navigation";
+import { DecisionsTab, MetricsTab } from "./RegisterTabs";
 import { GlassCard, NextMeeting } from "./components";
 import { AddLine, Checklist } from "./OneOnOnePage";
 import { message } from "./useStore";
 
-export type LeadershipTab = "update" | "prep" | "roadmap" | "priorities" | "shipped";
+export type LeadershipTab = "update" | "prep" | "roadmap" | "priorities" | "shipped" | "decisions" | "metrics";
 type Tab = LeadershipTab;
 
 const TABS: { value: Tab; label: string }[] = [
@@ -40,6 +41,8 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "roadmap", label: "Roadmap" },
   { value: "priorities", label: "Priorities" },
   { value: "shipped", label: "Shipped" },
+  { value: "decisions", label: "Decisions" },
+  { value: "metrics", label: "Metrics" },
 ];
 
 function shortDate(time: number): string {
@@ -135,6 +138,8 @@ export function LeadershipPage(props: Props) {
       {tab === "roadmap" && <Roadmap {...props} />}
       {tab === "priorities" && <Priorities {...props} />}
       {tab === "shipped" && <ShippedLog work={props.work} now={props.now} />}
+      {tab === "decisions" && <DecisionsTab store={props.store} captures={props.captures} now={props.now} change={props.change} />}
+      {tab === "metrics" && <MetricsTab store={props.store} now={props.now} />}
     </div>
   );
 }

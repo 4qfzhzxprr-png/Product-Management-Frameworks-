@@ -1,4 +1,5 @@
 import type { CalendarEventRecord } from "./calendar";
+import { decisionRegister, registerText, type DecisionDetails } from "./decisions";
 import { findSensitive } from "./claude";
 import { commitmentBoard } from "./commitments";
 import { narrativeBank, STORY_LABELS, storyType, type StakeholderProfile } from "./influence";
@@ -21,6 +22,8 @@ export interface SnapshotData {
   priorities: Priority[];
   profiles: StakeholderProfile[];
   meetings: CalendarEventRecord[];
+  /** Why decisions were made, by capture id. */
+  decisions?: Map<number, DecisionDetails>;
   now: number;
 }
 
@@ -137,6 +140,11 @@ export function buildSnapshot(data: SnapshotData): SnapshotFile[] {
       }),
     ].join("\n"),
   });
+
+  const register = decisionRegister(data.captures, data.decisions ?? new Map(), data.now);
+  if (register.length > 0) {
+    files.push({ name: "decisions.md", text: `# ${registerText(register)}` });
+  }
 
   const bank = narrativeBank(data.captures, { days: 365 }, data.now);
   if (bank.length > 0) {

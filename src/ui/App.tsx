@@ -34,6 +34,7 @@ import { SETUP_SETTINGS, setupSteps, waitingTotal, type SetupSettings } from "..
 import type { WorkItem } from "../core/work";
 import type { SnapshotData } from "../core/snapshot";
 import type { TimeOff } from "../core/leading";
+import type { DecisionDetails } from "../core/decisions";
 import type { SearchTarget } from "../core/search";
 import { isTauri, notifyDataChanged, openExternal, platformBackups, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
 import { AgentsPage } from "./AgentsPage";
@@ -157,6 +158,7 @@ function Shell({ store }: { store: CaptureStore }) {
   // Meetings from connected calendars, from today to two weeks out.
   const [upcoming, setUpcoming] = useState<CalendarEvent[]>([]);
   const [timeOff, setTimeOff] = useState<TimeOff[]>([]);
+  const [decisionDetails, setDecisionDetails] = useState<Map<number, DecisionDetails>>(new Map());
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
   const [setupDismissed, setSetupDismissed] = useState(false);
@@ -196,6 +198,7 @@ function Shell({ store }: { store: CaptureStore }) {
         loadedConnections,
         loadedMeetings,
         loadedTimeOff,
+        loadedDecisions,
       ] =
         await Promise.all([
         store.people(),
@@ -211,6 +214,7 @@ function Shell({ store }: { store: CaptureStore }) {
         store.connections.list(),
         store.calendar.between(dayStart(Date.now()), dayStart(Date.now(), -14)),
         store.timeOff.list(),
+        store.decisions.all(),
       ]);
       const openItems = allItems;
       setItems(openItems);
@@ -222,6 +226,7 @@ function Shell({ store }: { store: CaptureStore }) {
       setConnections(loadedConnections);
       setUpcoming(loadedMeetings);
       setTimeOff(loadedTimeOff);
+      setDecisionDetails(loadedDecisions);
       setConnected(await store.items.hasAny());
       setSetupDismissed((await store.settings.get<SetupSettings>(SETUP_SETTINGS))?.dismissed ?? false);
       setPeople(loadedPeople);
@@ -313,7 +318,7 @@ function Shell({ store }: { store: CaptureStore }) {
   const tomorrow = dayStart(now, -1);
   const meetings = upcoming.filter((meeting) => meeting.startsAt < tomorrow);
   const roadmap = roadmapStatus(roadmapItems, work, now);
-  snapshotData.current = { captures, people, projects, work, roadmap, priorities, profiles, meetings: upcoming, now };
+  snapshotData.current = { captures, people, projects, work, roadmap, priorities, profiles, meetings: upcoming, decisions: decisionDetails, now };
   useReminders(store, loaded, () => ({
     captures: snapshotData.current!.captures,
     decisions: items.filter((item) => item.bucket === "decision").length,

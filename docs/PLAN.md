@@ -265,6 +265,11 @@ on its own. Status is kept next to each item.
    `src/core/leadershipAI.ts`; every send is checked and logged.
 9. **Decisions and metrics.** A decision register (why, who agreed) and targets with trends for
    metrics.
+   *Built:* Leadership tabs "Decisions" (every decision capture with why, who agreed, standing,
+   to revisit or reversed, and a revisit date; filter and copy; also in the agent snapshot as
+   decisions.md) and "Metrics" (named metrics with a unit, target and direction; values over
+   time with a trend line and progress to target; one-click quote). `src/core/decisions.ts`,
+   `src/core/metrics.ts`.
 10. **The agent team, further.** Saved briefs, approved work sent on to the weekly update, a
    pre-read or a folder, and each agent's cost and quality over time.
 11. **Chat and tracker connectors.** Slack (and Teams) for asks and mentions; a live Jira

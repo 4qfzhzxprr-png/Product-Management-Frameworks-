@@ -262,4 +262,22 @@ export async function seedSampleData(store: CaptureStore): Promise<void> {
     meeting("Marco 1:1", ahead(2, 14), 30),
     meeting("Jordan / David weekly 1:1", ahead(3, 9), 45),
   ]);
+
+  // Why the sample decisions were made.
+  const decisions = (await store.captures()).filter((capture) => capture.kind === "decision");
+  const smsDecision = decisions.find((capture) => capture.body.startsWith("Pilot SMS"));
+  if (smsDecision) {
+    await store.decisions.save(smsDecision.id, {
+      why: "Cheapest way to learn whether reminders lift pickup before paying for a wider rollout.",
+      agreed: "Jordan, Morgan",
+      status: "standing",
+      revisitAt: now + 21 * DAY,
+    });
+  }
+
+  // Two metrics with a few months of history.
+  const pickup = await store.metrics.add({ name: "Refill pickup rate", unit: "%", target: 85, higherIsBetter: true, at: now - 120 * DAY });
+  for (const [daysAgo, value] of [[105, 71], [75, 74], [45, 79], [14, 84]] as const) await store.metrics.record(pickup, value, now - daysAgo * DAY);
+  const tickets = await store.metrics.add({ name: "Portal support tickets per week", unit: "", target: 40, higherIsBetter: false, at: now - 90 * DAY });
+  for (const [daysAgo, value] of [[84, 62], [56, 55], [28, 47], [7, 41]] as const) await store.metrics.record(tickets, value, now - daysAgo * DAY);
 }
