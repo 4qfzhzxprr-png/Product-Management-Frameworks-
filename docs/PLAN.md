@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-17 (Phase 5, the agent team, built; to be checked against David's real agents on his Mac).
+Last updated 2026-11-17 (Phase 6 agreed: safety, Claude-powered features, reminders, team leadership, connectors).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -33,6 +33,7 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Phase 4: C-suite influence | Built, apart from the three features that need AI. |
 | Connecting to other systems | Plumbing and Connections screen built; calendars connect, and tickets import from any tracker's CSV export. |
 | AI features | Not started. Claude is the approved provider (2026-11-17); calls go through Claude Code on the Mac first. |
+| Phase 6: making it daily | Agreed 2026-11-17; being built in the order below. |
 | Phase 5: the agent team | Built 2026-11-17: roster, runs, review queue, schedules and context. Needs a first real run on David's Mac. |
 | Apple distribution | Unsigned test builds only. |
 | Usability | Expert walkthrough and an overnight polish pass done 2026-11-17 (`docs/USABILITY.md`). A session with David is next. |
@@ -203,6 +204,39 @@ Done last, by David's decision, and built so that any system can be added.
    products they target depends on the open questions below.
 2. Removing tickets deleted in the tracker, for live tracker connectors (imports already do).
 3. Tuning the decision-queue rules against real mail.
+
+## Phase 6: making it daily
+
+Agreed with David 2026-11-17 ("Let's build these"). Built in this order, each step committed
+on its own. Status is kept next to each item.
+
+1. **One way to ask Claude.** Every model call goes through one interface that runs Claude Code
+   on the Mac (no tools, David's login), logs what was sent, and checks it first (step 2).
+2. **Safe for real data.** Back up and export everything; a log of every prompt sent to Claude
+   and its answer; a warning before anything that looks like patient or customer identifiers
+   is sent.
+3. **Meeting notes into actions.** Paste notes or a transcript; Claude lists decisions, David's
+   promises, asks of others and dates; he ticks what to keep and they become captures.
+4. **Agents read the app.** Each run gets a read-only snapshot of the app's data in a folder
+   Claude Code may read (`--add-dir`), so the lead can look things up mid-task.
+5. **Reminders and the weekly review.** Mac notifications for promises due or slipping, the
+   morning brief, the handoff window and agent work to review; a Friday wrap-up page.
+6. **Search and settings.** Command-K finds captures, tickets, people, decisions and agent runs;
+   one Settings page gathers the settings now spread across pages.
+7. **Leading the PM team.** 1:1 cadence check, a private feedback log per PM, review and
+   promotion prep over a chosen period, and time off that feeds delivery.
+8. **Leadership with Claude.** Exec translator, objection prep, pre-read section drafts and a
+   spec quality check.
+9. **Decisions and metrics.** A decision register (why, who agreed) and targets with trends for
+   metrics.
+10. **The agent team, further.** Saved briefs, approved work sent on to the weekly update, a
+   pre-read or a folder, and each agent's cost and quality over time.
+11. **Chat and tracker connectors.** Slack (and Teams) for asks and mentions; a live Jira
+   connector for Cloud or self-hosted. Built and tested against recorded API responses; not
+   switched on against company systems until IT and the workspace admins approve.
+
+Recorded, not built: capture from the phone (needs a hosted inbox or an iOS Shortcut route)
+and automatic updates (need the signed, notarized download first).
 
 ## Phase 5: the agent team
 
