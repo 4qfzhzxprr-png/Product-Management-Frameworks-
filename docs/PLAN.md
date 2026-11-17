@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-17 (meetings across the app, other names, monthly patterns).
+Last updated 2026-11-17 (usability test: setup steps, grouped sidebar, one waiting count).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -34,6 +34,7 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Connecting to other systems | Plumbing and Connections screen built; calendars connect, and tickets import from any tracker's CSV export. |
 | AI features | Not started. Waiting on an approved provider. |
 | Apple distribution | Unsigned test builds only. |
+| Usability | Expert walkthrough done 2026-11-17 (`docs/USABILITY.md`); three fixes made. A session with David is next. |
 
 Nothing has been run on a Mac yet. Everything below marked "built" has passed automated
 tests in a browser and, for the wrapper, on Linux under a virtual display.
@@ -246,9 +247,11 @@ Each push builds an unsigned Mac app for testing. Still to do:
 
 ## Suggested order from here
 
-1. Run the current build on a Mac and note what looks or behaves wrong.
+1. Run the current build on a Mac and note what looks or behaves wrong. Use the three
+   questions at the end of `docs/USABILITY.md` while doing it.
 2. Import a ticket export from Jira, set the weekly update format to the CPO's, and enter
    the real priorities, roadmap and stakeholders.
+3. Remaining low-severity usability items in `docs/USABILITY.md`, once David has used the app.
 5. Connecting: the secret store, request layer, connections screen and sync timer, then one
    connector at a time, tracker first because the most pages depend on it.
 6. AI features, once a provider is approved.

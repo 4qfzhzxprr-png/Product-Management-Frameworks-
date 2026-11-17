@@ -24,6 +24,7 @@ import type { Bucket, SourceItem } from "../core/items";
 import { noSurprises, roadmapStatus, type Priority, type RoadmapItem } from "../core/leadership";
 import type { Capture, CaptureKind, Person, Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
+import { SETUP_SETTINGS, setupSteps, waitingTotal, type SetupSettings } from "../core/setup";
 import type { WorkItem } from "../core/work";
 import { isTauri, notifyDataChanged, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
 import { AnalyticsPage } from "./AnalyticsPage";
@@ -41,7 +42,7 @@ import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
 import { TeamPage } from "./TeamPage";
 import { message, useStore } from "./useStore";
-import { useSync } from "./useSync";
+import { registry, useSync } from "./useSync";
 
 type View =
   | "overview"
@@ -57,20 +58,46 @@ type View =
   | "captures"
   | "connections";
 
-const NAV = [
-  { view: "overview", label: "Overview", icon: LayoutDashboard },
-  { view: "brief", label: "Brief", icon: Sunrise },
-  { view: "queue", label: "Queue", icon: ListChecks },
-  { view: "team", label: "Team", icon: Users },
-  { view: "leadership", label: "Leadership", icon: Landmark },
-  { view: "influence", label: "Influence", icon: Megaphone },
-  { view: "commitments", label: "Commitments", icon: Handshake },
-  { view: "delivery", label: "Delivery", icon: Truck },
-  { view: "handoff", label: "Handoff", icon: Send },
-  { view: "analytics", label: "Analytics", icon: BarChart3 },
-  { view: "captures", label: "Captures", icon: NotebookPen },
-  { view: "connections", label: "Connections", icon: Plug },
-] as const;
+interface NavEntry {
+  view: View;
+  label: string;
+  icon: typeof Plug;
+}
+
+const NAV_GROUPS: { heading: string; entries: NavEntry[] }[] = [
+  {
+    heading: "Today",
+    entries: [
+      { view: "overview", label: "Overview", icon: LayoutDashboard },
+      { view: "brief", label: "Brief", icon: Sunrise },
+      { view: "queue", label: "Queue", icon: ListChecks },
+      { view: "commitments", label: "Commitments", icon: Handshake },
+      { view: "captures", label: "Captures", icon: NotebookPen },
+    ],
+  },
+  {
+    heading: "Team",
+    entries: [
+      { view: "team", label: "Team", icon: Users },
+      { view: "delivery", label: "Delivery", icon: Truck },
+      { view: "handoff", label: "Handoff", icon: Send },
+    ],
+  },
+  {
+    heading: "Upward",
+    entries: [
+      { view: "leadership", label: "Leadership", icon: Landmark },
+      { view: "influence", label: "Influence", icon: Megaphone },
+      { view: "analytics", label: "Analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    heading: "Setup",
+    entries: [{ view: "connections", label: "Connections", icon: Plug }],
+  },
+];
+
+const NAV: NavEntry[] = NAV_GROUPS.flatMap((group) => group.entries);
 
 export function App() {
   const { store, error } = useStore();
@@ -100,6 +127,7 @@ function Shell({ store }: { store: CaptureStore }) {
   const [upcoming, setUpcoming] = useState<CalendarEvent[]>([]);
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
+  const [setupDismissed, setSetupDismissed] = useState(false);
   const [revision, setRevision] = useState(0);
   // False until the first load finishes, so pages never flash empty counts.
   const [loaded, setLoaded] = useState(false);
@@ -152,6 +180,7 @@ function Shell({ store }: { store: CaptureStore }) {
       setConnections(loadedConnections);
       setUpcoming(loadedMeetings);
       setConnected(await store.items.hasAny());
+      setSetupDismissed((await store.settings.get<SetupSettings>(SETUP_SETTINGS))?.dismissed ?? false);
       setPeople(loadedPeople);
       setProjects(loadedProjects);
       setCaptures(loadedCaptures);
@@ -160,7 +189,7 @@ function Shell({ store }: { store: CaptureStore }) {
       setRevision((value) => value + 1);
       setLoaded(true);
       // The menu bar counts open captures waiting on David plus synced items needing his decision.
-      await setWaitingCount(count + openItems.filter((item) => item.bucket === "decision").length);
+      await setWaitingCount(waitingTotal(count, openItems.filter((item) => item.bucket === "decision").length));
     } catch (cause) {
       setError(message(cause));
     }
@@ -205,6 +234,13 @@ function Shell({ store }: { store: CaptureStore }) {
   const roadmap = roadmapStatus(roadmapItems, work, now);
   const alerts = noSurprises(roadmap);
   const decisions = items.filter((item) => item.bucket === "decision").length;
+  const setup = setupSteps({
+    connections,
+    manual: (connection) => registry.get(connection.connectorId)?.manual === true,
+    hasPMs: people.some((person) => person.isPM),
+    managerChosen: leadershipSettings?.managerId != null,
+    hasCaptures: captures.length > 0,
+  });
   const moveItem = (item: SourceItem, bucket: Bucket) => void change(() => store.items.move(item.id, bucket));
   const dismissItem = (item: SourceItem) => void change(() => store.items.dismiss(item.id));
 
@@ -219,34 +255,41 @@ function Shell({ store }: { store: CaptureStore }) {
         </div>
 
         <nav aria-label="Main">
-          {NAV.map(({ view: target, label, icon: Icon }) => (
-            <button
-              key={target}
-              className={view === target ? "nav-item selected" : "nav-item"}
-              aria-current={view === target ? "page" : undefined}
-              onClick={() => {
-                setView(target);
-                setOneOnOne(null);
-              }}
-            >
-              <Icon size={18} aria-hidden="true" />
-              <span>{label}</span>
-              {target === "leadership" && alerts.length > 0 && (
-                <span className="nav-badge" aria-label={`${alerts.length} leadership commitments slipping`}>
-                  {alerts.length}
-                </span>
-              )}
-              {target === "queue" && decisions > 0 && (
-                <span className="nav-badge" aria-label={`${decisions} need your decision`}>
-                  {decisions}
-                </span>
-              )}
-              {target === "captures" && waiting > 0 && (
-                <span className="nav-badge" aria-label={`${waiting} waiting on you`}>
-                  {waiting}
-                </span>
-              )}
-            </button>
+          {NAV_GROUPS.map((group) => (
+            <div key={group.heading} className="nav-group" role="group" aria-label={group.heading}>
+              <p className="nav-heading" aria-hidden="true">
+                {group.heading}
+              </p>
+              {group.entries.map(({ view: target, label, icon: Icon }) => (
+                <button
+                  key={target}
+                  className={view === target ? "nav-item selected" : "nav-item"}
+                  aria-current={view === target ? "page" : undefined}
+                  onClick={() => {
+                    setView(target);
+                    setOneOnOne(null);
+                  }}
+                >
+                  <Icon size={18} aria-hidden="true" />
+                  <span>{label}</span>
+                  {target === "leadership" && alerts.length > 0 && (
+                    <span className="nav-badge" aria-label={`${alerts.length} leadership commitments slipping`}>
+                      {alerts.length}
+                    </span>
+                  )}
+                  {target === "queue" && decisions > 0 && (
+                    <span className="nav-badge" aria-label={`${decisions} need your decision`}>
+                      {decisions}
+                    </span>
+                  )}
+                  {target === "captures" && waiting > 0 && (
+                    <span className="nav-badge" aria-label={`${waiting} waiting on you`}>
+                      {waiting}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -289,6 +332,14 @@ function Shell({ store }: { store: CaptureStore }) {
         {loaded && oneOnOne === null && view === "overview" && (
           <OverviewPage
             alerts={alerts}
+            decisions={decisions}
+            onOpenQueue={() => setView("queue")}
+            setup={setupDismissed ? null : setup}
+            onSetupStep={(step) => {
+              if (step === "capture") void openCapture();
+              else setView(step === "calendar" || step === "tickets" ? "connections" : step === "team" ? "team" : "leadership");
+            }}
+            onDismissSetup={() => void change(() => store.settings.set(SETUP_SETTINGS, { dismissed: true } satisfies SetupSettings))}
             onOpenLeadership={() => setView("leadership")}
             captures={captures}
             now={now}

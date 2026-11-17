@@ -1,8 +1,9 @@
 import { Button, Checkbox } from "antd";
-import { ArrowUpRight, Hourglass, Inbox, PenLine, Plus, Trophy } from "lucide-react";
+import { ArrowUpRight, Check, Hourglass, Inbox, PenLine, Plus, Trophy, X } from "lucide-react";
 import { overviewStats } from "../core/insights";
 import type { RoadmapStatus } from "../core/leadership";
 import { KIND_LABELS, type Capture } from "../core/models";
+import { waitingTotal, type SetupStep } from "../core/setup";
 import { CircularProgress, GlassCard, Sparkline, StatCard } from "./components";
 import type { Selection } from "./CapturesPage";
 
@@ -26,6 +27,11 @@ export function OverviewPage({
   onDone,
   alerts,
   onOpenLeadership,
+  decisions,
+  onOpenQueue,
+  setup,
+  onSetupStep,
+  onDismissSetup,
 }: {
   captures: Capture[];
   now: number;
@@ -37,11 +43,20 @@ export function OverviewPage({
   alerts: RoadmapStatus[];
   onOpenLeadership: () => void;
   onDone: (capture: Capture) => void;
+  /** Synced items waiting on David's decision, counted in the menu bar too. */
+  decisions: number;
+  onOpenQueue: () => void;
+  /** First-run steps, or null once dismissed. */
+  setup: SetupStep[] | null;
+  onSetupStep: (step: SetupStep["id"]) => void;
+  onDismissSetup: () => void;
 }) {
   const stats = overviewStats(captures, now);
   const clear = stats.clearTotal === 0;
   const change = stats.capturedThisWeek - stats.capturedLastWeek;
   const oldest = stats.waitingList[0];
+  const total = waitingTotal(stats.waitingOnMe, decisions);
+  const setupLeft = setup?.filter((step) => !step.done).length ?? 0;
   const today = new Date(now);
   // The current week, Monday first.
   const week = Array.from({ length: 7 }, (_, index) => {
@@ -56,11 +71,56 @@ export function OverviewPage({
         <p>
           {new Date(now).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
           {" · "}
-          {stats.waitingOnMe === 0
+          {total === 0
             ? "nothing is waiting on you"
-            : `${stats.waitingOnMe} ${stats.waitingOnMe === 1 ? "item is" : "items are"} waiting on you`}
+            : `${total} ${total === 1 ? "item is" : "items are"} waiting on you`}
+          {decisions > 0 && (
+            <>
+              {" "}
+              ({stats.waitingOnMe} captured, {decisions}{" "}
+              <button type="button" className="link-button" onClick={onOpenQueue}>
+                {decisions === 1 ? "needs your decision" : "need your decision"}
+              </button>
+              )
+            </>
+          )}
         </p>
       </header>
+
+      {setup && setupLeft > 0 && (
+        <section className="setup-strip" aria-labelledby="setup-title">
+          <header>
+            <h2 id="setup-title">Get set up</h2>
+            <span className="muted small">
+              {setup.length - setupLeft} of {setup.length} done
+            </span>
+            <Button
+              type="text"
+              size="small"
+              shape="circle"
+              icon={<X size={14} aria-hidden="true" />}
+              aria-label="Hide setup steps"
+              title="Hide setup steps"
+              onClick={onDismissSetup}
+            />
+          </header>
+          <ol>
+            {setup.map((step) => (
+              <li key={step.id} className={step.done ? "done" : ""}>
+                <button type="button" onClick={() => onSetupStep(step.id)} disabled={step.done} title={step.detail}>
+                  <span className="setup-mark" aria-hidden="true">
+                    {step.done ? <Check size={12} /> : null}
+                  </span>
+                  <span>
+                    <span className="setup-label">{step.label}</span>
+                    <span className="muted small">{step.detail}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {alerts.length > 0 && (
         <section className="slip-banner" aria-label="Leadership commitments slipping">
@@ -92,8 +152,8 @@ export function OverviewPage({
                 </>
               ) : (
                 <>
-                  {stats.waitingOnMe} {stats.waitingOnMe === 1 ? "thing is" : "things are"} still <em>waiting</em> on
-                  you
+                  {stats.waitingOnMe} {stats.waitingOnMe === 1 ? "capture is" : "captures are"} still <em>waiting</em>{" "}
+                  on you
                 </>
               )}
             </h2>

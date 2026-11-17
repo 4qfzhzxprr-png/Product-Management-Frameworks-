@@ -9,7 +9,7 @@ test.describe("with sample data", () => {
     expect(waiting).toBeGreaterThan(0);
     await expect(card(page, "Waiting on you").locator("ul li")).toHaveCount(Math.min(waiting, 5));
     await expect(page.locator(".nav-item", { hasText: "Captures" }).locator(".nav-badge")).toHaveText(String(waiting));
-    await expect(page.locator(".hero h2")).toContainText(`${waiting} things are still waiting on you`);
+    await expect(page.locator(".hero h2")).toContainText(`${waiting} captures are still waiting on you`);
 
     // The ring matches "closed X of Y".
     const [, cleared, total] = /closed (\d+) of (\d+)/.exec(await page.locator(".hero-text").innerText())!;

@@ -62,7 +62,7 @@ test.describe("first run, with nothing stored", () => {
     await go(page, "Overview");
     await expect(stat(page, "Waiting on me")).toHaveText("1");
     await expect(stat(page, "Captured this week")).toHaveText("1");
-    await expect(page.locator(".hero h2")).toContainText("1 thing is still waiting on you");
+    await expect(page.locator(".hero h2")).toContainText("1 capture is still waiting on you");
     await expect(page.locator(".ring-text strong")).toHaveText("0%");
     await expect(card(page, "Waiting on you")).toContainText("Send Priya the roadmap draft");
 

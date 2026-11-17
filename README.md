@@ -14,7 +14,8 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
 - **Quick capture.** Control-Option-Space from any app opens a small window. Type a thought,
   commitment, ask or 1:1 note, optionally attach a person and a project, tag it as a win, and
   press Return.
-- **Overview.** What is waiting on you, how much you cleared this week, and four headline counts.
+- **Overview.** What is waiting on you (the same total as the menu bar), how much you cleared this
+  week, and four headline counts. On a new install, five setup steps lead to where each is done.
 - **Brief and Queue.** The morning brief (what needs your decision, what happened since last
   evening, what is awaiting your review, what has gone three days without a reply) and the decision queue (three lists you can
   move items between or dismiss from). Both read activity synced from connected systems, so
@@ -41,7 +42,8 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
 - **Analytics.** Captures per day or week over 7 days, 30 days or 13 weeks, with totals for the period.
 - **Captures.** Browse and search captures by person, project, open items and wins. Mark
   commitments and asks done.
-- **Menu bar item.** Shows how many open commitments and asks of you there are.
+- **Menu bar item.** Shows how many open commitments and asks of you there are, plus items
+  needing your decision.
 
 - **Connections.** Add, pause, sync and remove connections to other systems. The first is any
   calendar that can publish an iCalendar (.ics) address; its meetings show on the Handoff page.

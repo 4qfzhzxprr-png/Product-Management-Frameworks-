@@ -93,6 +93,10 @@ when a feature is built, a decision is made or scope changes.
   or meeting notes needs the AI provider, so it waits for that decision.
 - Epics and meetings are matched to people by name or any of their other names
   (`Person.aliases`, edited on the Team card; `isNamed` and `isMentioned` in `models.ts`).
+- Usability walkthrough (2026-11-17) is in `docs/USABILITY.md`. From it: the sidebar is grouped
+  (Today, Team, Upward, Setup) and must fit without scrolling at 1240 by 860; the Overview shows
+  a dismissible "Get set up" strip worked out in `src/core/setup.ts`; and the Overview's total
+  waiting count is the menu bar's (`waitingTotal`: open captures plus items needing a decision).
 - The morning brief must fit one screen at the smallest normal window (1240 by 860): today's
   meetings are a one-line strip, previews are one line, and the overnight list shows four.
 - A ticket deleted in the tracker stays in `work_items` until its connection is removed.

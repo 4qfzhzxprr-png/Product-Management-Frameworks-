@@ -275,10 +275,26 @@ select {
 .sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-heading {
+  padding: 0 12px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sidebar-muted);
+  opacity: 0.75;
 }
 
 .nav-item {
@@ -286,7 +302,7 @@ select {
   align-items: center;
   gap: 10px;
   border-radius: 14px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   text-align: left;
   color: var(--sidebar-muted);
   font-weight: 500;
@@ -2024,6 +2040,15 @@ button.pm-name:hover {
     scrollbar-width: none;
   }
 
+  .nav-group {
+    flex-direction: row;
+    flex: none;
+  }
+
+  .nav-heading {
+    display: none;
+  }
+
   .nav-item {
     flex: none;
   }
@@ -2119,4 +2144,102 @@ button.pm-name:hover {
   .hero-stats div {
     padding: 0 12px;
   }
+}
+
+/* First-run steps on the Overview. */
+.setup-strip {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.setup-strip header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.setup-strip h2 {
+  font-size: 16px;
+}
+
+.setup-strip header .muted {
+  flex: 1;
+}
+
+.setup-strip ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.setup-strip li button {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  border-radius: 14px;
+  text-align: left;
+  font-size: 13px;
+  background: var(--inset);
+  color: var(--text);
+}
+
+.setup-strip li button:not(:disabled):hover {
+  background: var(--hover);
+}
+
+.setup-strip li button > span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.setup-strip li .muted.small {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.setup-label {
+  font-weight: 600;
+}
+
+.setup-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 2px solid var(--bar);
+}
+
+.setup-strip li.done button {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.setup-strip li.done .setup-mark {
+  background: var(--bar);
+  color: #ffffff;
+}
+
+.link-button {
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
