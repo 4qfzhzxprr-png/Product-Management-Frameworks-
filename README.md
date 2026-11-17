@@ -45,10 +45,12 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
 
 - **Connections.** Add, pause, sync and remove connections to other systems. The first is any
   calendar that can publish an iCalendar (.ics) address; its meetings show on the Handoff page.
+  Tickets and epics import from a CSV export of any tracker, such as Jira, and fill Delivery,
+  the Team page and the Leadership page.
   Secrets go in the Mac Keychain. Nothing is ever written back to a connected system.
 
-Every number comes from what is stored on the Mac. Only calendars can be connected so far; mail,
-issue trackers and wikis come next. No data leaves the Mac.
+Every number comes from what is stored on the Mac. Calendars connect and tickets import from a file;
+live mail, tracker and wiki connections come next. No data leaves the Mac.
 
 ## Build and run on a Mac
 

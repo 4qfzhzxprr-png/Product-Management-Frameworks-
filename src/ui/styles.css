@@ -1163,6 +1163,50 @@ button.item-title:hover {
   min-width: 0;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.import-form {
+  max-width: none;
+}
+
+.file-name {
+  margin-left: 10px;
+}
+
+.pm-section .column-map {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: 8px 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pm-section .column-map li {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  align-items: center;
+  gap: 2px 10px;
+}
+
+.column-map .ant-select {
+  width: 100%;
+}
+
+.column-map .sample {
+  grid-column: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Handoff */
 
 .handoff-grid {

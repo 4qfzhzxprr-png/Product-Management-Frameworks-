@@ -24,6 +24,11 @@ export interface Connector {
   description: string;
   /** What the user fills in to connect. */
   fields: ConfigField[];
+  /**
+   * True for connectors fed by hand, such as a file import: the timed sync skips them, and
+   * the Connections page offers to import a new file instead of syncing.
+   */
+  manual?: boolean;
   /** Reads the system. Must not write to it. */
   sync(context: SyncContext): Promise<SyncResult>;
 }
@@ -167,6 +172,11 @@ export class ConnectionStore {
     await this.db.run("UPDATE connections SET enabled = ? WHERE id = ?", [enabled ? 1 : 0, id]);
   }
 
+  /** Saves new settings for a connection, such as an import's column choices. */
+  async updateConfig(id: number, config: Record<string, string>): Promise<void> {
+    await this.db.run("UPDATE connections SET config = ? WHERE id = ?", [JSON.stringify(config), id]);
+  }
+
   /** Records how a sync went. A failed sync keeps the old cursor, so nothing is skipped. */
   async recordSync(id: number, at: number, outcome: { cursor?: string | null } | { error: string }): Promise<void> {
     if ("error" in outcome) {
@@ -232,7 +242,9 @@ export async function syncAll(deps: {
   now?: () => number;
 }): Promise<SyncReport[]> {
   const now = deps.now ?? Date.now;
-  const enabled = (await deps.connections.list()).filter((connection) => connection.enabled);
+  const enabled = (await deps.connections.list()).filter(
+    (connection) => connection.enabled && !deps.registry.get(connection.connectorId)?.manual,
+  );
 
   return Promise.all(
     enabled.map(async (connection): Promise<SyncReport> => {

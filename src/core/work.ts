@@ -128,6 +128,22 @@ export class WorkStore {
   async deleteSource(source: string): Promise<void> {
     await this.db.run("DELETE FROM work_items WHERE source = ?", [source]);
   }
+
+  /**
+   * Makes a connection's tickets exactly these: new ones are added, changed ones updated, and
+   * ones no longer present (deleted in the tracker, or left out of a new export) removed.
+   */
+  async replaceSource(source: string, sourceName: string, records: WorkRecord[]): Promise<void> {
+    const keep = new Set(records.map((record) => record.externalId));
+    for (const record of records) await this.upsert({ ...record, source, sourceName });
+    const stored = await this.db.all<{ id: number; external_id: string }>(
+      "SELECT id, external_id FROM work_items WHERE source = ?",
+      [source],
+    );
+    for (const row of stored) {
+      if (!keep.has(row.external_id)) await this.db.run("DELETE FROM work_items WHERE id = ?", [row.id]);
+    }
+  }
 }
 
 const DAY = 86_400_000;

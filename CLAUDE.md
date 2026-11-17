@@ -57,8 +57,11 @@ when a feature is built, a decision is made or scope changes.
   Web requests go through the injected `HttpClient`: `tauri-plugin-http` with native TLS in
   the app (so company inspection certificates are trusted), `window.fetch` in the preview.
 - Connectors live in `src/core/connectors/`, one file each, registered in
-  `src/core/connectors/index.ts`. The first is `ical.ts` (any .ics calendar feed), which
-  reports neutral `CalendarEventRecord`s (`src/core/calendar.ts`).
+  `src/core/connectors/index.ts`. So far: `ical.ts` (any .ics calendar feed, reporting
+  neutral `CalendarEventRecord`s from `src/core/calendar.ts`) and `ticketFile.ts` (a CSV
+  export of any tracker). A connector with `manual: true` is fed by hand and skipped by the
+  timed sync; the import screen is `src/ui/TicketImport.tsx` and replaces the connection's
+  tickets with `WorkStore.replaceSource`.
 - `src/ui/useSync.ts` syncs on launch, every 15 minutes and on demand, in the main window only.
   The Connections page (`src/ui/ConnectionsPage.tsx`) adds, pauses and removes connections.
 - In cloud sessions the wrapper's requests only reach hosts the sandbox allows; the npm
@@ -92,9 +95,8 @@ when a feature is built, a decision is made or scope changes.
   and the app, add aliases to people rather than special-casing a tracker.
 - A ticket deleted in the tracker stays in `work_items` until its connection is removed.
   Handle that when the first tracker connector is written.
-- Only calendars can be connected so far. Nothing writes activity or tickets except the
-  browser preview's sample data, so in the Mac app the brief, queue and delivery pages say
-  nothing is connected.
+- Calendars connect live, and tickets import from a CSV export. Nothing writes activity
+  (mail, wiki) yet, so in the Mac app the brief and queue say nothing is connected.
 - The sorting rules in `classify()` were written without seeing real mail. Expect to tune them
   once a connector delivers real items.
 - Still open with David: the approved AI vendor, and what "distribution through Apple" means

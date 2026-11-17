@@ -1,10 +1,11 @@
 import { Alert, Button, Input, Popconfirm, Switch, Tag } from "antd";
-import { Plug, RefreshCw, Trash2 } from "lucide-react";
+import { FileUp, Plug, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { Connection, Connector, SyncReport } from "../core/connectors";
 import type { CaptureStore } from "../core/store";
 import { platformSecrets } from "../platform";
 import { GlassCard } from "./components";
+import { readSettings, TicketImport } from "./TicketImport";
 import { registry, SYNC_EVERY_MINUTES } from "./useSync";
 import { message } from "./useStore";
 
@@ -113,6 +114,9 @@ export function ConnectionsPage({
   change: (work: () => Promise<unknown>) => Promise<void>;
 }) {
   const [adding, setAdding] = useState<Connector | null>(null);
+  // A file import in progress: "new", or the import connection being refreshed.
+  const [importing, setImporting] = useState<Connection | "new" | null>(null);
+  const syncable = connections.filter((connection) => !registry.get(connection.connectorId)?.manual);
   const [error, setError] = useState<string | null>(null);
   const secrets = platformSecrets();
 
@@ -132,7 +136,7 @@ export function ConnectionsPage({
         <Button
           icon={<RefreshCw size={15} aria-hidden="true" />}
           loading={syncing}
-          disabled={connections.length === 0}
+          disabled={syncable.length === 0}
           onClick={() => void syncNow()}
         >
           Sync now
@@ -152,6 +156,7 @@ export function ConnectionsPage({
           {connections.map((connection, index) => {
             const connector = registry.get(connection.connectorId);
             const count = received(connection);
+            const imported = connector?.manual ? readSettings(connection) : null;
             return (
               <GlassCard key={connection.id} className="pm-card" index={index} aria-label={connection.name}>
                 <header className="roadmap-head">
@@ -162,14 +167,18 @@ export function ConnectionsPage({
                     <h2>{connection.name}</h2>
                     <p className="muted small">{connector?.name ?? `Unknown connector "${connection.connectorId}"`}</p>
                   </div>
+                  {!connector?.manual && (
                   <Switch
                     checked={connection.enabled}
                     aria-label={connection.enabled ? `Pause ${connection.name}` : `Resume ${connection.name}`}
                     onChange={(enabled) => void change(() => store.connections.setEnabled(connection.id, enabled))}
                   />
+                  )}
                 </header>
                 <p className="small">
-                  {!connection.enabled
+                  {imported
+                    ? `Imported ${imported.fileName}: ${imported.count} tickets and epics, ${when(imported.importedAt, now)}.`
+                    : !connection.enabled
                     ? "Paused. It keeps what it brought in but does not sync."
                     : connection.lastSyncAt === null
                       ? "Not synced yet."
@@ -181,6 +190,19 @@ export function ConnectionsPage({
                   <Alert type="error" showIcon title="Last sync failed" description={connection.lastError} />
                 )}
                 <div className="pm-actions">
+                  {connector?.manual && (
+                    <Button
+                      size="small"
+                      type="primary"
+                      icon={<FileUp size={14} aria-hidden="true" />}
+                      onClick={() => {
+                        setAdding(null);
+                        setImporting(connection);
+                      }}
+                    >
+                      Import a newer file
+                    </Button>
+                  )}
                   <Popconfirm
                     title={`Remove ${connection.name}?`}
                     description="Everything it brought in is deleted from this Mac, and its secrets leave the Keychain."
@@ -204,7 +226,20 @@ export function ConnectionsPage({
         </div>
       )}
 
-      {adding ? (
+      {importing ? (
+        <GlassCard>
+          <TicketImport
+            store={store}
+            existing={importing === "new" ? null : importing}
+            now={now}
+            onCancel={() => setImporting(null)}
+            onDone={async () => {
+              setImporting(null);
+              await change(async () => {});
+            }}
+          />
+        </GlassCard>
+      ) : adding ? (
         <GlassCard>
           <ConnectForm
             connector={adding}
@@ -239,8 +274,8 @@ export function ConnectionsPage({
                   <p className="alert-title">{connector.name}</p>
                   <p className="muted small">{connector.description}</p>
                 </div>
-                <Button type="primary" onClick={() => setAdding(connector)}>
-                  Connect
+                <Button type="primary" onClick={() => (connector.manual ? setImporting("new") : setAdding(connector))}>
+                  {connector.manual ? "Import" : "Connect"}
                 </Button>
               </li>
             ))}
@@ -250,7 +285,7 @@ export function ConnectionsPage({
 
       {lastRun !== null && (
         <p className="muted small">
-          Last sync run {when(lastRun, now)}. <Tag variant="filled">{connections.filter((entry) => entry.enabled).length} active</Tag>
+          Last sync run {when(lastRun, now)}. <Tag variant="filled">{syncable.filter((entry) => entry.enabled).length} syncing</Tag>
         </p>
       )}
     </div>

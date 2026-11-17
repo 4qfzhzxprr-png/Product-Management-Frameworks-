@@ -1,6 +1,6 @@
 # Daily Work: project plan
 
-Last updated 2026-11-17 (connections and the calendar feed built).
+Last updated 2026-11-17 (ticket import from a file built).
 
 This is the full plan for the Daily Work app: every phase, what is in and out of scope, what
 is built, and what is left. [HANDOVER.md](HANDOVER.md) is the original brief this grew from;
@@ -31,7 +31,7 @@ PMs who need decisions from him, and an offshore team that works while he sleeps
 | Phase 2: team and delivery | Built, apart from the parts that need connectors or AI. |
 | Phase 3: the CPO | Built, apart from the parts that need connectors or AI. |
 | Phase 4: C-suite influence | Built, apart from the three features that need AI. |
-| Connecting to other systems | Plumbing, Connections screen and the first connector (any calendar feed) built. |
+| Connecting to other systems | Plumbing and Connections screen built; calendars connect, and tickets import from any tracker's CSV export. |
 | AI features | Not started. Waiting on an approved provider. |
 | Apple distribution | Unsigned test builds only. |
 
@@ -177,6 +177,14 @@ Done last, by David's decision, and built so that any system can be added.
   exceptions, moved occurrences, cancellations and Outlook's time zone names. Monthly rules
   like "the second Tuesday" show only their first meeting for now.
 - The handoff window now lists today's meetings and how much shared time is left after them.
+- **Tickets from a file.** Imports tickets and epics from a CSV export of any tracker (Jira,
+  Linear, Asana, Azure DevOps, GitHub and others), with no API access or admin approval.
+  Columns are matched by name (including Jira's numeric parent ids and repeated Sprint
+  columns) and can be corrected before importing; a preview shows how statuses map and which
+  rows are left out and why. Re-importing a newer export replaces the old one, so tickets
+  deleted in the tracker disappear. It fills Delivery, epic health on the Team page, the
+  shipped log and roadmap progress with real data. Sprint end dates are not in most exports,
+  so "not started with the sprint nearly over" cannot fire for imported tickets.
 
 **To build**
 
@@ -184,7 +192,7 @@ Done last, by David's decision, and built so that any system can be added.
    Expected next: an issue tracker (the most pages depend on it), mail, and a wiki. Which
    products they target depends on the open questions below.
 2. Name aliases on people, for matching epic owners.
-3. Removing tickets that were deleted in the tracker.
+3. Removing tickets deleted in the tracker, for live tracker connectors (imports already do).
 4. Tuning the decision-queue rules against real mail.
 5. Using meetings elsewhere: 1:1 prep could find the next 1:1, and the brief could list
    today's meetings.
@@ -235,8 +243,8 @@ Each push builds an unsigned Mac app for testing. Still to do:
 ## Suggested order from here
 
 1. Run the current build on a Mac and note what looks or behaves wrong.
-2. Set the weekly update format to the CPO's, and enter the real priorities, roadmap and
-   stakeholders.
+2. Import a ticket export from Jira, set the weekly update format to the CPO's, and enter
+   the real priorities, roadmap and stakeholders.
 5. Connecting: the secret store, request layer, connections screen and sync timer, then one
    connector at a time, tracker first because the most pages depend on it.
 6. AI features, once a provider is approved.
