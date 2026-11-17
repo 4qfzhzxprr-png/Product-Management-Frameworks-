@@ -212,9 +212,14 @@ on its own. Status is kept next to each item.
 
 1. **One way to ask Claude.** Every model call goes through one interface that runs Claude Code
    on the Mac (no tools, David's login), logs what was sent, and checks it first (step 2).
+   *Built:* `askClaude` in `src/core/claude.ts`, used by `useAgents().ask`.
 2. **Safe for real data.** Back up and export everything; a log of every prompt sent to Claude
    and its answer; a warning before anything that looks like patient or customer identifiers
-   is sent.
+   is sent. *Built:* Settings page with backups (daily on launch, keep 14, in
+   ~/Documents/Daily Work Backups; restore swaps the file in at the next launch and keeps the
+   old one), "Export everything" as JSON, and the "Sent to Claude" log. Agent runs and every
+   ask pass `findSensitive` first; David can send anyway, and the log marks it. Checked in the
+   Linux build: daily backup written, restore applied at relaunch.
 3. **Meeting notes into actions.** Paste notes or a transcript; Claude lists decisions, David's
    promises, asks of others and dates; he ticks what to keep and they become captures.
 4. **Agents read the app.** Each run gets a read-only snapshot of the app's data in a folder

@@ -2713,3 +2713,52 @@ kbd {
   flex-direction: column;
   gap: 16px;
 }
+
+/* Settings: backups and the Claude log */
+
+.sensitive-warning ul {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+
+.sensitive-warning code {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--chip);
+}
+
+.backup-list .item {
+  align-items: center;
+}
+
+.claude-log .run-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.log-tags {
+  display: flex;
+  gap: 4px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.log-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px 14px;
+}
+
+.log-detail h3 {
+  margin-top: 4px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--eyebrow);
+}
+
+.log-detail .run-output {
+  max-height: 220px;
+  font-size: 12px;
+}

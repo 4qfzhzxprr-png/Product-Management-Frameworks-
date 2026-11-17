@@ -19,6 +19,10 @@ import { isTauri } from "../platform";
 import { GlassCard } from "./components";
 import { quote, useToast } from "./Toast";
 import type { Agents } from "./useAgents";
+import { useSensitiveGuard } from "./useSensitiveGuard";
+
+/** Thrown when David chose not to send after the sensitive-data warning; nothing to report. */
+class NotSent extends Error {}
 import { message } from "./useStore";
 
 type Tab = "team" | "runs" | "schedules" | "settings";
@@ -47,7 +51,7 @@ const statusOf = (run: AgentRun) => (run.status === "done" ? (run.review ?? "pen
 
 /** The agent team: who they are, what they are doing, what waits for review, and what repeats. */
 export function AgentsPage({
-  agents: team,
+  agents: rawTeam,
   store,
   work,
   captures,
@@ -65,6 +69,21 @@ export function AgentsPage({
 }) {
   const [tab, setTab] = useState<Tab>("team");
   const [openRun, setOpenRun] = useState<number | null>(null);
+  const [guard, guardHolder] = useSensitiveGuard();
+  // Every send to Claude from this page passes the sensitive-data check first.
+  const team: Agents = {
+    ...rawTeam,
+    async start(request) {
+      const runId = await guard((allowSensitive) => rawTeam.start({ ...request, allowSensitive }));
+      if (runId === null) throw new NotSent();
+      return runId;
+    },
+    async sendBack(run, feedback) {
+      const runId = await guard((allowSensitive) => rawTeam.sendBack(run, feedback, allowSensitive));
+      if (runId === null) throw new NotSent();
+      return runId;
+    },
+  };
   const [chosenAgent, setChosenAgent] = useState<string | null>(null);
 
   const openRunPage = (runId: number) => {
@@ -74,6 +93,7 @@ export function AgentsPage({
 
   return (
     <div className="page">
+      {guardHolder}
       <header className="page-head with-controls">
         <div>
           <h1>Agents</h1>
@@ -361,7 +381,7 @@ function JobForm({
       setChoices([]);
       onStarted(runId);
     } catch (cause) {
-      setError(message(cause));
+      if (!(cause instanceof NotSent)) setError(message(cause));
     } finally {
       setStarting(false);
     }
@@ -536,7 +556,7 @@ function RunDetail({ run, team, store, onOpen }: { run: AgentRun; team: Agents; 
     try {
       await work();
     } catch (cause) {
-      setError(message(cause));
+      if (!(cause instanceof NotSent)) setError(message(cause));
     }
   };
 
@@ -726,7 +746,7 @@ function SchedulesTab({ team, store, now, onOpenRun }: { team: Agents; store: Ca
       await work();
       await team.refresh();
     } catch (cause) {
-      setError(message(cause));
+      if (!(cause instanceof NotSent)) setError(message(cause));
     }
   };
 

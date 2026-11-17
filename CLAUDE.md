@@ -113,6 +113,11 @@ when a feature is built, a decision is made or scope changes.
   unless switched on per agent. The brief goes in on standard input; there is no shell. Every
   finished run waits for review. Runs and schedules live in the main window only
   (`useAgents`). Agent reviews are not in the menu bar count yet.
+- Phase 6 is under way (order in `docs/PLAN.md`). Every model call goes through `askClaude`
+  (`src/core/claude.ts`) or an agent run; both pass `findSensitive` first (the UI asks with
+  `useSensitiveGuard`) and are written to `claude_log`, shown under Settings. Backups use
+  `VACUUM INTO` into ~/Documents/Daily Work Backups (`src-tauri/src/files.rs`); a restore is
+  applied in `setup()` before the web app opens the database.
 - The morning brief must fit one screen at the smallest normal window (1240 by 860): today's
   meetings are a one-line strip, previews are one line, and the overnight list shows four.
 - A ticket deleted in the tracker stays in `work_items` until its connection is removed.

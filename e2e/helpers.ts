@@ -61,4 +61,4 @@ export async function noSidewaysScroll(page: Page): Promise<void> {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
 }
 
-export const PAGES = ["Overview", "Brief", "Queue", "Team", "Agents", "Leadership", "Influence", "Commitments", "Delivery", "Handoff", "Analytics", "Captures", "Connections"];
+export const PAGES = ["Overview", "Brief", "Queue", "Team", "Agents", "Leadership", "Influence", "Commitments", "Delivery", "Handoff", "Analytics", "Captures", "Connections", "Settings"];

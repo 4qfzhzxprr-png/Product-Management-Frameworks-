@@ -231,3 +231,42 @@ function previewAgentRunner(): AgentRunner {
     },
   };
 }
+
+export interface BackupFile {
+  name: string;
+  path: string;
+  size: number;
+  modifiedMs: number;
+}
+
+/** Backup files in ~/Documents/Daily Work Backups. The browser preview has none: it saves nothing. */
+export const platformBackups = {
+  available: isTauri,
+  async folder(): Promise<string> {
+    return (await import("@tauri-apps/api/core")).invoke<string>("backups_folder");
+  },
+  async list(): Promise<BackupFile[]> {
+    if (!isTauri) return [];
+    return (await import("@tauri-apps/api/core")).invoke<BackupFile[]>("backups_list");
+  },
+  async newPath(name: string): Promise<string> {
+    return (await import("@tauri-apps/api/core")).invoke<string>("backups_new_path", { name });
+  },
+  async prune(keep: number): Promise<number> {
+    return (await import("@tauri-apps/api/core")).invoke<number>("backups_prune", { keep });
+  },
+  /** Saves text: into the backup folder in the app, as a download in the browser. Returns where it went. */
+  async saveText(name: string, text: string): Promise<string> {
+    if (isTauri) return (await import("@tauri-apps/api/core")).invoke<string>("backups_write_text", { name, text });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    link.download = name;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    return `your Downloads folder as ${name}`;
+  },
+  /** Restarts the app with the chosen backup in place of the current data. */
+  async restore(name: string): Promise<void> {
+    await (await import("@tauri-apps/api/core")).invoke("backups_restore", { name });
+  },
+};

@@ -2,6 +2,7 @@
 //! All product logic lives in the web app under `src/`.
 
 mod agents;
+mod files;
 
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
@@ -189,10 +190,20 @@ pub fn run() {
             agents::agents_read_dir,
             agents::agent_find_claude,
             agents::agent_start,
-            agents::agent_cancel
+            agents::agent_cancel,
+            files::backups_folder,
+            files::backups_list,
+            files::backups_new_path,
+            files::backups_prune,
+            files::backups_write_text,
+            files::backups_restore
         ])
         .manage(agents::Runs::default())
         .setup(|app| {
+            // A restore chosen before the last restart is swapped in before anything opens the database.
+            if let Ok(config) = app.path().app_config_dir() {
+                files::apply_pending_restore(&config);
+            }
             build_tray(app.handle())?;
 
             // Control-Option-Space. If another app owns it, capture still works from the menu.

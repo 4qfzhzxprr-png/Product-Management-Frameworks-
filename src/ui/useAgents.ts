@@ -16,6 +16,7 @@ import {
   type RunResult,
   type RunStep,
 } from "../core/agents";
+import { askClaude, findSensitive, SensitiveDataError, type Purpose } from "../core/claude";
 import type { CaptureStore } from "../core/store";
 import { platformAgentRunner } from "../platform";
 import { message } from "./useStore";
@@ -33,6 +34,8 @@ export interface StartRequest {
   parentId?: number | null;
   scheduleId?: number | null;
   previous?: { output: string; feedback: string };
+  /** David saw the sensitive-data warning and chose to send anyway. */
+  allowSensitive?: boolean;
 }
 
 export interface Agents {
@@ -57,9 +60,11 @@ export interface Agents {
   cancel: (runId: number) => Promise<void>;
   approve: (run: AgentRun) => Promise<void>;
   reject: (run: AgentRun) => Promise<void>;
-  sendBack: (run: AgentRun, feedback: string) => Promise<number>;
+  sendBack: (run: AgentRun, feedback: string, allowSensitive?: boolean) => Promise<number>;
   undoReview: (run: AgentRun) => Promise<void>;
   refresh: () => Promise<void>;
+  /** Asks Claude one question with no tools; checked and logged like an agent run. */
+  ask: (request: { purpose: Purpose; system: string; prompt: string; allowSensitive?: boolean }) => Promise<string>;
 }
 
 /**
@@ -129,6 +134,9 @@ export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
       setClaude(check);
       if (!check.ok) throw new Error(check.reason);
       const { agent } = request;
+      const prompt = composePrompt({ brief: request.brief, context: request.context?.text, previous: request.previous });
+      const findings = findSensitive(prompt);
+      if (findings.length > 0 && !request.allowSensitive) throw new SensitiveDataError(findings);
       const runId = await store.agents.startRun({
         agentId: agent.id,
         agentName: agent.name,
@@ -137,6 +145,7 @@ export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
         parentId: request.parentId ?? null,
         scheduleId: request.scheduleId ?? null,
       });
+      const logId = await store.claudeLog.add({ purpose: "agent", agentName: agent.name, runId, system: agent.prompt, prompt, warnings: findings });
       setLive((now) => ({ ...now, [runId]: [] }));
       await changed();
 
@@ -150,7 +159,7 @@ export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
               runId,
               program: check.program,
               args: claudeArgs(agent, current.switchedOn[agent.id] ?? []),
-              prompt: composePrompt({ brief: request.brief, context: request.context?.text, previous: request.previous }),
+              prompt,
               cwd: current.workFolder,
             },
             (line) => {
@@ -165,6 +174,12 @@ export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
             },
           );
           const finished = result as RunResult | null;
+          await store.claudeLog.finish(logId, {
+            status: finished && !finished.isError ? "done" : "failed",
+            response: finished?.output || exit.stderr.trim().split("\n").slice(-6).join("\n"),
+            costUsd: finished?.costUsd,
+            durationMs: finished?.durationMs,
+          });
           if (cancelled.current.has(runId)) {
             await store.agents.finishRun(runId, { status: "cancelled", output: finished?.output ?? "", steps });
           } else if (finished && !finished.isError) {
@@ -211,16 +226,21 @@ export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
   };
 
   const sendBack = useCallback(
-    async (run: AgentRun, feedback: string) => {
+    async (run: AgentRun, feedback: string, allowSensitive = false) => {
       const agent = agentFor(run);
-      await store.agents.setReview(run.id, "sent_back", feedback.trim());
-      return start({
+      const next = start({
         agent,
         brief: run.brief,
         parentId: run.id,
         scheduleId: run.scheduleId,
         previous: { output: run.output, feedback: feedback.trim() },
+        allowSensitive,
       });
+      // Marked sent back only once the revision has started, so a refused send changes nothing.
+      const runId = await next;
+      await store.agents.setReview(run.id, "sent_back", feedback.trim());
+      await changed();
+      return runId;
     },
     [store, start],
   );
@@ -293,5 +313,13 @@ export function useAgents(store: CaptureStore, onChanged: () => void): Agents {
       await changed();
     },
     refresh: changed,
+    async ask(request) {
+      const current = latest.current.settings;
+      const check = await runner.check(current.claudePath);
+      setClaude(check);
+      if (!check.ok) throw new Error(check.reason);
+      const result = await askClaude({ runner, log: store.claudeLog, program: check.program, workFolder: current.workFolder }, request);
+      return result.output;
+    },
   };
 }

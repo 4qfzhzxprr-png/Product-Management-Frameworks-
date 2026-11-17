@@ -1,4 +1,5 @@
 import { AGENT_TABLES, AgentStore } from "./agents";
+import { CLAUDE_LOG_TABLES, ClaudeLog } from "./claude";
 import type { Db, SqlParam } from "./db";
 import { CalendarStore } from "./calendar";
 import { ConnectionStore } from "./connectors";
@@ -221,6 +222,8 @@ const MIGRATIONS: Step[][] = [
   [addColumn("people", "aliases", "TEXT NOT NULL DEFAULT ''")],
   // Phase 5: runs of David's agents and their schedules; see agents.ts.
   AGENT_TABLES,
+  // Phase 6: everything sent to Claude; see claude.ts.
+  CLAUDE_LOG_TABLES,
 ];
 
 interface PersonRow {
@@ -260,6 +263,13 @@ export class CaptureStore {
   readonly influence: InfluenceStore;
   /** Runs of David's agents, and their schedules. */
   readonly agents: AgentStore;
+  /** Everything sent to Claude. */
+  readonly claudeLog: ClaudeLog;
+
+  /** The open database, for backups and exports. */
+  get database(): Db {
+    return this.db;
+  }
 
   private constructor(private readonly db: Db) {
     this.items = new ItemStore(db);
@@ -269,6 +279,7 @@ export class CaptureStore {
     this.influence = new InfluenceStore(db);
     this.calendar = new CalendarStore(db);
     this.agents = new AgentStore(db);
+    this.claudeLog = new ClaudeLog(db);
     this.connections = new ConnectionStore(db, this.items, this.work, this.calendar);
   }
 

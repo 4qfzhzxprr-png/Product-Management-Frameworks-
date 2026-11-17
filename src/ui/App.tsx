@@ -11,6 +11,7 @@ import {
   ListChecks,
   Megaphone,
   Plug,
+  Settings,
   NotebookPen,
   Plus,
   Sunrise,
@@ -26,9 +27,10 @@ import { BUCKET_LABELS, type Bucket, type SourceItem } from "../core/items";
 import { noSurprises, roadmapStatus, type Priority, type RoadmapItem } from "../core/leadership";
 import { KIND_LABELS, type Capture, type CaptureKind, type Person, type Project } from "../core/models";
 import type { CaptureStore } from "../core/store";
+import { BACKUP_SETTINGS, completeBackupSettings, isBackupDue, type BackupSettings } from "../core/backup";
 import { SETUP_SETTINGS, setupSteps, waitingTotal, type SetupSettings } from "../core/setup";
 import type { WorkItem } from "../core/work";
-import { isTauri, notifyDataChanged, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
+import { isTauri, notifyDataChanged, platformBackups, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
 import { AgentsPage } from "./AgentsPage";
 import { AnalyticsPage } from "./AnalyticsPage";
 import { BriefPage } from "./BriefPage";
@@ -43,6 +45,7 @@ import { LeadershipPage, useLeadershipSettings } from "./LeadershipPage";
 import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
+import { makeBackup, SettingsPage } from "./SettingsPage";
 import { Shortcuts } from "./Shortcuts";
 import { TeamPage } from "./TeamPage";
 import { quote, ToastProvider, useToast } from "./Toast";
@@ -64,7 +67,8 @@ type View =
   | "analytics"
   | "captures"
   | "connections"
-  | "agents";
+  | "agents"
+  | "settings";
 
 interface NavEntry {
   view: View;
@@ -102,7 +106,10 @@ const NAV_GROUPS: { heading: string; entries: NavEntry[] }[] = [
   },
   {
     heading: "Setup",
-    entries: [{ view: "connections", label: "Connections", icon: Plug }],
+    entries: [
+      { view: "connections", label: "Connections", icon: Plug },
+      { view: "settings", label: "Settings", icon: Settings },
+    ],
   },
 ];
 
@@ -216,6 +223,15 @@ function Shell({ store }: { store: CaptureStore }) {
 
   const sync = useSync(store, refresh);
   const agents = useAgents(store, () => void refresh());
+
+  // One automatic backup a day, when the app opens. The browser preview saves nothing to back up.
+  useEffect(() => {
+    if (!loaded || !platformBackups.available) return;
+    void (async () => {
+      const settings = completeBackupSettings(await store.settings.get<Partial<BackupSettings>>(BACKUP_SETTINGS));
+      if (isBackupDue(settings, Date.now())) await makeBackup(store);
+    })().catch((cause) => console.warn("Daily backup failed:", cause));
+  }, [loaded, store]);
 
   // Escape leaves the 1:1 workspace, unless a dialog or list is open or a field is being typed in.
   useEffect(() => {
@@ -529,6 +545,7 @@ function Shell({ store }: { store: CaptureStore }) {
               change={change}
             />
           )}
+          {loaded && oneOnOne === null && view === "settings" && <SettingsPage store={store} revision={revision} />}
           {loaded && oneOnOne === null && view === "agents" && (
             <AgentsPage
               agents={agents}
