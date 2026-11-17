@@ -19,7 +19,7 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
   evening, what is awaiting your review, what has gone three days without a reply) and the decision queue (three lists you can
   move items between or dismiss from). Both read activity synced from connected systems, so
   in the Mac app they are empty until a connector exists. Any system can be connected by
-  writing one small adapter; see `src/core/connectors.ts`. The sorting is rule-based, with no AI.
+  writing one small adapter in `src/core/connectors/`. The sorting is rule-based, with no AI.
 - **Team.** One card per PM: what they need from you, what you are waiting on, their wins and your
   last 1:1 note. Each card also lists the PM's epics with a health call once an issue tracker is connected.
 - **1:1 workspace.** Open it from a PM's card: a running agenda whose untouched topics carry over,
@@ -43,8 +43,12 @@ supplies the menu bar item, the global shortcut and the Mac app bundle. Controls
   commitments and asks done.
 - **Menu bar item.** Shows how many open commitments and asks of you there are.
 
-Every number comes from the captures stored on the Mac. Nothing connects to Gmail, Calendar,
-Jira or Confluence yet, and no data leaves the Mac.
+- **Connections.** Add, pause, sync and remove connections to other systems. The first is any
+  calendar that can publish an iCalendar (.ics) address; its meetings show on the Handoff page.
+  Secrets go in the Mac Keychain. Nothing is ever written back to a connected system.
+
+Every number comes from what is stored on the Mac. Only calendars can be connected so far; mail,
+issue trackers and wikis come next. No data leaves the Mac.
 
 ## Build and run on a Mac
 
