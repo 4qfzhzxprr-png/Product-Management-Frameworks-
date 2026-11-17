@@ -1,11 +1,14 @@
 import { Button, Checkbox, Input, Tag } from "antd";
-import { ArrowLeft, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardList, Sparkles, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { CalendarEventRecord } from "../core/calendar";
 import type { Capture, CaptureKind, Person } from "../core/models";
 import { isCarriedOver, personCard } from "../core/team";
 import { GlassCard, NextMeeting } from "./components";
 import { useAppActions } from "./navigation";
+import { ReviewPrep } from "./ReviewPrep";
+import type { Agents } from "./useAgents";
+import type { WorkItem } from "../core/work";
 
 function day(time: number): string {
   return new Date(time).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
@@ -91,6 +94,9 @@ export function OneOnOnePage({
   onAdd,
   onDone,
   onDelete,
+  onToggleWin,
+  work,
+  ask,
 }: {
   personId: number;
   people: Person[];
@@ -104,8 +110,12 @@ export function OneOnOnePage({
   onAdd: (kind: CaptureKind, body: string) => void;
   onDone: (capture: Capture, done: boolean) => void;
   onDelete: (capture: Capture) => void;
+  onToggleWin: (capture: Capture) => void;
+  work: WorkItem[];
+  ask: Agents["ask"];
 }) {
   const [note, setNote] = useState("");
+  const [reviewing, setReviewing] = useState(false);
   const actions = useAppActions();
   const person = people.find((candidate) => candidate.id === personId);
   const card = person ? personCard(person, captures, now) : null;
@@ -129,7 +139,8 @@ export function OneOnOnePage({
       <Button type="link" className="back" icon={<ArrowLeft size={15} aria-hidden="true" />} onClick={onBack}>
         {backLabel}
       </Button>
-      <header className="page-head">
+      <header className="page-head with-controls">
+        <div>
         <h1>1:1 with {card.person.name}</h1>
         <p>
           {card.lastOneOnOne ? `Last 1:1 note ${age(card.lastOneOnOne.createdAt, now)}` : "No 1:1 notes yet"}
@@ -137,6 +148,10 @@ export function OneOnOnePage({
           {card.agenda.length} on the agenda
           {carried > 0 ? `, ${carried} carried over` : ""}
         </p>
+        </div>
+        <Button icon={<ClipboardList size={14} aria-hidden="true" />} onClick={() => setReviewing(true)}>
+          Review prep
+        </Button>
       </header>
       <NextMeeting person={card.person} upcoming={upcoming} now={now} />
 
@@ -234,6 +249,80 @@ export function OneOnOnePage({
           )}
         </GlassCard>
       </div>
+
+      <FeedbackCard
+        person={card.person}
+        captures={captures}
+        now={now}
+        onAdd={(body) => onAdd("feedback", body)}
+        onToggleWin={onToggleWin}
+        onDelete={onDelete}
+      />
+      {reviewing && <ReviewPrep person={card.person} captures={captures} work={work} now={now} ask={ask} onClose={() => setReviewing(false)} />}
     </div>
+  );
+}
+
+/** Private notes about how someone is doing. Star one to count it as praise. */
+function FeedbackCard({
+  person,
+  captures,
+  now,
+  onAdd,
+  onToggleWin,
+  onDelete,
+}: {
+  person: Person;
+  captures: Capture[];
+  now: number;
+  onAdd: (body: string) => void;
+  onToggleWin: (capture: Capture) => void;
+  onDelete: (capture: Capture) => void;
+}) {
+  const entries = captures
+    .filter((capture) => capture.personId === person.id && (capture.kind === "feedback" || capture.isWin))
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, 20);
+  return (
+    <GlassCard className="workspace-card" aria-labelledby="feedback-title">
+      <h2 id="feedback-title">Feedback and praise</h2>
+      <p className="muted small">Private to you. Star an entry to count it as praise; it feeds review prep.</p>
+      <AddLine placeholder="Feedback to remember" onAdd={onAdd} />
+      {entries.length === 0 ? (
+        <p className="muted small">Nothing yet.</p>
+      ) : (
+        <ul className="workspace-list">
+          {entries.map((entry) => (
+            <li key={entry.id}>
+              <Button
+                type="text"
+                size="small"
+                shape="circle"
+                className={entry.isWin ? "star on" : "star"}
+                icon={<Star size={15} aria-hidden="true" fill={entry.isWin ? "currentColor" : "none"} />}
+                aria-label={entry.isWin ? `Not praise: ${entry.body}` : `Mark as praise: ${entry.body}`}
+                aria-pressed={entry.isWin}
+                onClick={() => onToggleWin(entry)}
+              />
+              <div>
+                <p>{entry.body}</p>
+                <p className="muted small">
+                  {entry.kind === "feedback" ? (entry.isWin ? "Praise" : "Feedback") : "Win"} · {age(entry.createdAt, now)}
+                </p>
+              </div>
+              <Button
+                type="text"
+                size="small"
+                shape="circle"
+                className="danger-hover"
+                icon={<Trash2 size={14} aria-hidden="true" />}
+                aria-label={`Delete: ${entry.body}`}
+                onClick={() => onDelete(entry)}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </GlassCard>
   );
 }

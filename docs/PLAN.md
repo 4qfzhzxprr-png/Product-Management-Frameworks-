@@ -251,6 +251,12 @@ on its own. Status is kept next to each item.
    the two settings that live beside what they shape (update format, connections).
 7. **Leading the PM team.** 1:1 cadence check, a private feedback log per PM, review and
    promotion prep over a chosen period, and time off that feeds delivery.
+   *Built:* `src/core/leading.ts`. Team flags PMs with no 1:1 note in 14 days and nothing booked
+   in the next three, and nudges when no praise or win is recorded in 30 days. The 1:1
+   workspace has a private "Feedback and praise" card (a new `feedback` capture kind; a star
+   marks praise) and "Review prep": wins, feedback, delivery, open asks, owned epics and 1:1
+   notes over 3, 6 or 12 months, copied as evidence or drafted by Claude. A Time off card on
+   Team (`time_off` table) feeds a banner on Delivery for the sprint.
 8. **Leadership with Claude.** Exec translator, objection prep, pre-read section drafts and a
    spec quality check.
 9. **Decisions and metrics.** A decision register (why, who agreed) and targets with trends for

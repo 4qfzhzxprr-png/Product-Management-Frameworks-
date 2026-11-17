@@ -18,6 +18,8 @@ export const CAPTURE_KINDS = [
   "evidence",
   /** A number worth quoting, such as "support tickets down 33%". */
   "metric",
+  /** Private feedback about one of David's people; marked as a win when it is praise. */
+  "feedback",
 ] as const;
 
 export type CaptureKind = (typeof CAPTURE_KINDS)[number];
@@ -33,6 +35,7 @@ export const KIND_LABELS: Record<CaptureKind, string> = {
   decision: "Decision",
   evidence: "Customer evidence",
   metric: "Metric",
+  feedback: "Feedback",
 };
 
 /** Can be open or done. */

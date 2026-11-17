@@ -33,6 +33,7 @@ import { BACKUP_SETTINGS, completeBackupSettings, isBackupDue, type BackupSettin
 import { SETUP_SETTINGS, setupSteps, waitingTotal, type SetupSettings } from "../core/setup";
 import type { WorkItem } from "../core/work";
 import type { SnapshotData } from "../core/snapshot";
+import type { TimeOff } from "../core/leading";
 import type { SearchTarget } from "../core/search";
 import { isTauri, notifyDataChanged, openExternal, platformBackups, onDataChanged, setWaitingCount, showCaptureWindow } from "../platform";
 import { AgentsPage } from "./AgentsPage";
@@ -155,6 +156,7 @@ function Shell({ store }: { store: CaptureStore }) {
   const [connections, setConnections] = useState<Connection[]>([]);
   // Meetings from connected calendars, from today to two weeks out.
   const [upcoming, setUpcoming] = useState<CalendarEvent[]>([]);
+  const [timeOff, setTimeOff] = useState<TimeOff[]>([]);
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
   const [setupDismissed, setSetupDismissed] = useState(false);
@@ -193,6 +195,7 @@ function Shell({ store }: { store: CaptureStore }) {
         loadedPrereads,
         loadedConnections,
         loadedMeetings,
+        loadedTimeOff,
       ] =
         await Promise.all([
         store.people(),
@@ -207,6 +210,7 @@ function Shell({ store }: { store: CaptureStore }) {
         store.influence.prereads(),
         store.connections.list(),
         store.calendar.between(dayStart(Date.now()), dayStart(Date.now(), -14)),
+        store.timeOff.list(),
       ]);
       const openItems = allItems;
       setItems(openItems);
@@ -217,6 +221,7 @@ function Shell({ store }: { store: CaptureStore }) {
       setPrereads(loadedPrereads);
       setConnections(loadedConnections);
       setUpcoming(loadedMeetings);
+      setTimeOff(loadedTimeOff);
       setConnected(await store.items.hasAny());
       setSetupDismissed((await store.settings.get<SetupSettings>(SETUP_SETTINGS))?.dismissed ?? false);
       setPeople(loadedPeople);
@@ -480,6 +485,9 @@ function Shell({ store }: { store: CaptureStore }) {
               onAdd={(kind, body) => void change(() => store.addCapture({ kind, body, personId: oneOnOne.personId }))}
               onDone={setDone}
               onDelete={removeCapture}
+              onToggleWin={(capture) => void change(() => store.setCaptureWin(capture.id, !capture.isWin))}
+              work={work}
+              ask={agents.ask}
             />
           )}
           {loaded && oneOnOne === null && view === "overview" && (
@@ -521,6 +529,12 @@ function Shell({ store }: { store: CaptureStore }) {
             <TeamPage
               upcoming={upcoming}
               onSetAliases={(personId, aliases) => void change(() => store.setAliases(personId, aliases))}
+              timeOff={timeOff}
+              onAddTimeOff={async (entry) => {
+                await store.timeOff.add(entry);
+                await refresh();
+              }}
+              onRemoveTimeOff={(entry) => void change(() => store.timeOff.remove(entry.id))}
               work={work}
               onOpen={(personId) => setOneOnOne({ personId, from: "team" })}
               people={people}
@@ -577,7 +591,7 @@ function Shell({ store }: { store: CaptureStore }) {
               onEdit={(capture) => setInlineCapture({ editing: capture })}
             />
           )}
-          {loaded && oneOnOne === null && view === "delivery" && <DeliveryPage work={work} now={now} />}
+          {loaded && oneOnOne === null && view === "delivery" && <DeliveryPage work={work} now={now} timeOff={timeOff} people={people} />}
           {loaded && oneOnOne === null && view === "handoff" && (
             <HandoffPage store={store} work={work} captures={captures} meetings={meetings} now={now} />
           )}

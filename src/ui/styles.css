@@ -2993,3 +2993,50 @@ kbd {
 [id^="settings-"] {
   scroll-margin-top: 16px;
 }
+
+/* Leading the team */
+
+.nudges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.nudge.ant-tag {
+  margin: 0;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--text);
+}
+
+.time-off .review-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.time-off-form {
+  align-items: flex-end;
+}
+
+.time-off-form .field {
+  min-width: 140px;
+}
+
+.time-off-banner {
+  border-color: var(--bar);
+  box-shadow: inset 4px 0 0 var(--bar), var(--shadow);
+}
+
+.review-packet {
+  max-height: 300px;
+  font-size: 12px;
+}
+
+.draft-heading {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--eyebrow);
+}

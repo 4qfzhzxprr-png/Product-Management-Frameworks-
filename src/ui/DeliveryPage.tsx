@@ -4,6 +4,8 @@ import { blockers, deliveryPulse, staleItems, type WorkItem } from "../core/work
 import { openExternal } from "../platform";
 import { GlassCard } from "./components";
 import { useNavigate } from "./navigation";
+import { describeTimeOff, offDuring, workingDays, type TimeOff } from "../core/leading";
+import type { Person } from "../core/models";
 
 function daysSince(time: number, now: number): string {
   const days = Math.floor((now - time) / 86_400_000);
@@ -37,11 +39,14 @@ function WorkRow({ item, now, note }: { item: WorkItem; now: number; note: strin
 }
 
 /** Sprint progress per team, what is stuck, and what has gone quiet. */
-export function DeliveryPage({ work, now }: { work: WorkItem[]; now: number }) {
+export function DeliveryPage({ work, now, timeOff = [], people = [] }: { work: WorkItem[]; now: number; timeOff?: TimeOff[]; people?: Person[] }) {
   const pulse = deliveryPulse(work, now);
   const stuck = blockers(work);
   const quiet = staleItems(work, now);
   const navigate = useNavigate();
+  // Who is out between now and the latest sprint end (or the next two weeks without sprints).
+  const horizon = Math.max(now + 14 * 86_400_000, ...work.map((item) => item.sprintEndsAt ?? 0));
+  const away = offDuring(timeOff, now, horizon);
 
   return (
     <div className="page">
@@ -49,6 +54,18 @@ export function DeliveryPage({ work, now }: { work: WorkItem[]; now: number }) {
         <h1>Delivery</h1>
         <p>Sprint progress per team, what is stuck, and what has gone quiet.</p>
       </header>
+
+      {away.length > 0 && (
+        <section className="slip-banner time-off-banner" aria-label="Time off this sprint">
+          <p>
+            <strong>Out before the sprint ends:</strong>{" "}
+            {away
+              .map((entry) => `${describeTimeOff(entry, people)} (${workingDays(Math.max(entry.startsAt, now), Math.min(entry.endsAt, horizon))} working days)`)
+              .join("; ")}
+            .
+          </p>
+        </section>
+      )}
 
       {work.length === 0 ? (
         <GlassCard className="team-empty">

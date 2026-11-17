@@ -1,5 +1,6 @@
 import { AGENT_TABLES, AgentStore } from "./agents";
 import { CLAUDE_LOG_TABLES, ClaudeLog } from "./claude";
+import { LEADING_TABLES, TimeOffStore } from "./leading";
 import type { Db, SqlParam } from "./db";
 import { CalendarStore } from "./calendar";
 import { ConnectionStore } from "./connectors";
@@ -224,6 +225,8 @@ const MIGRATIONS: Step[][] = [
   AGENT_TABLES,
   // Phase 6: everything sent to Claude; see claude.ts.
   CLAUDE_LOG_TABLES,
+  // Phase 6: time off for people and teams; see leading.ts.
+  LEADING_TABLES,
 ];
 
 interface PersonRow {
@@ -265,6 +268,8 @@ export class CaptureStore {
   readonly agents: AgentStore;
   /** Everything sent to Claude. */
   readonly claudeLog: ClaudeLog;
+  /** Time off for people and whole teams. */
+  readonly timeOff: TimeOffStore;
 
   /** The open database, for backups and exports. */
   get database(): Db {
@@ -280,6 +285,7 @@ export class CaptureStore {
     this.calendar = new CalendarStore(db);
     this.agents = new AgentStore(db);
     this.claudeLog = new ClaudeLog(db);
+    this.timeOff = new TimeOffStore(db);
     this.connections = new ConnectionStore(db, this.items, this.work, this.calendar);
   }
 
@@ -345,6 +351,7 @@ export class CaptureStore {
     await this.db.run("UPDATE captures SET person_id = NULL WHERE person_id = ?", [id]);
     await this.db.run("DELETE FROM stakeholders WHERE person_id = ?", [id]);
     await this.db.run("UPDATE prereads SET person_id = NULL WHERE person_id = ?", [id]);
+    await this.db.run("DELETE FROM time_off WHERE person_id = ?", [id]);
     await this.db.run("DELETE FROM people WHERE id = ?", [id]);
   }
 
