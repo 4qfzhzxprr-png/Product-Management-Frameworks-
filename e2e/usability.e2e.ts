@@ -124,4 +124,16 @@ test.describe("usability fixes", () => {
     await expect(page.locator(".page-head h1")).toHaveText("Team");
     expect(errors).toEqual([]);
   });
+
+  test("the keyboard shortcuts open with ? or from the sidebar", async ({ page }) => {
+    const errors = await open(page);
+    await page.keyboard.press("?");
+    const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+    await expect(dialog).toContainText("Quick capture, from any app");
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await page.getByRole("button", { name: "Keyboard shortcuts" }).click();
+    await expect(dialog).toBeVisible();
+    expect(errors).toEqual([]);
+  });
 });

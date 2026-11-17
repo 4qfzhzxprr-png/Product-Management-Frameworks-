@@ -4,6 +4,7 @@ import {
   Handshake,
   Send,
   Inbox,
+  Keyboard,
   Landmark,
   LayoutDashboard,
   ListChecks,
@@ -40,6 +41,7 @@ import { LeadershipPage, useLeadershipSettings } from "./LeadershipPage";
 import { OneOnOnePage } from "./OneOnOnePage";
 import { OverviewPage } from "./OverviewPage";
 import { QueuePage } from "./QueuePage";
+import { Shortcuts } from "./Shortcuts";
 import { TeamPage } from "./TeamPage";
 import { quote, ToastProvider, useToast } from "./Toast";
 import { message, useStore } from "./useStore";
@@ -134,6 +136,7 @@ function Shell({ store }: { store: CaptureStore }) {
   // True once anything has ever been synced, including items since dismissed.
   const [connected, setConnected] = useState(false);
   const [setupDismissed, setSetupDismissed] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [revision, setRevision] = useState(0);
   // False until the first load finishes, so pages never flash empty counts.
   const [loaded, setLoaded] = useState(false);
@@ -367,6 +370,10 @@ function Shell({ store }: { store: CaptureStore }) {
           >
             <span className="capture-button-label">Quick capture</span>
           </Button>
+          <button type="button" className="shortcuts-link" onClick={() => setShortcutsOpen(true)}>
+            <Keyboard size={14} aria-hidden="true" />
+            Keyboard shortcuts
+          </button>
           <p>
             {isTauri
               ? "Stored on this Mac"
@@ -530,6 +537,7 @@ function Shell({ store }: { store: CaptureStore }) {
         </main>
       </NavigateContext.Provider>
 
+      <Shortcuts open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <Modal
         open={inlineCapture !== null}
         title={inlineCapture?.editing ? "Edit capture" : "Quick capture"}

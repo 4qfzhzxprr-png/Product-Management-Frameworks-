@@ -346,6 +346,20 @@ select {
   gap: 10px;
 }
 
+.shortcuts-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--sidebar-muted);
+}
+
+.shortcuts-link:hover {
+  color: var(--sidebar-text);
+  text-decoration: underline;
+}
+
 .sidebar-foot p {
   padding: 0 4px;
   font-size: 12px;
@@ -2104,6 +2118,7 @@ button.pm-name:hover {
   }
 
   .sidebar-foot p,
+  .shortcuts-link,
   .capture-button-label {
     display: none;
   }
@@ -2402,4 +2417,44 @@ button.pm-name:hover {
   .setup-strip li .muted.small {
     display: none;
   }
+}
+
+/* The keyboard shortcuts list. */
+.shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0 0;
+}
+
+.shortcuts div {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.shortcuts dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.shortcuts dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  background: var(--chip);
+  color: var(--text);
+  font: 600 12px/1.6 inherit;
+  font-family: inherit;
+  text-align: center;
 }
